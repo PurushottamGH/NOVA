@@ -1,0 +1,140 @@
+"""
+NovaMind Quick Chat — Terminal Interface
+==========================================
+Talk to Nova directly from the terminal after training.
+
+Usage:
+    python scripts/quick_chat.py
+    python scripts/quick_chat.py --model_path weights/best.pt --tokenizer_path tokenizer_data
+"""
+
+import sys
+import argparse
+from pathlib import Path
+
+# Add project root to path
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+import torch
+from model.config import NovaMindConfig
+from model.architecture import NovaMind
+from tokenizer.tokenizer import NovaMindTokenizer
+from inference.generate import generate_text
+
+
+# Nova's system prompt
+SYSTEM_PROMPT = (
+    "You are Nova, an intelligent personal AI assistant built for Purushottam. "
+    "You are knowledgeable in AI, space, astronomy, data science, and software engineering."
+)
+
+
+def format_prompt(user_message: str, history: list) -> str:
+    """Build the full prompt with system prompt + history + new message."""
+    parts = [f"System: {SYSTEM_PROMPT}\n"]
+    for turn in history:
+        parts.append(f"User: {turn['user']}")
+        parts.append(f"Nova: {turn['nova']}")
+    parts.append(f"User: {user_message}")
+    parts.append("Nova:")
+    return "\n".join(parts)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Chat with Nova in the terminal")
+    parser.add_argument("--model_path", type=str, default="weights/final_model",
+                        help="Path to saved model directory")
+    parser.add_argument("--tokenizer_path", type=str, default="tokenizer_data",
+                        help="Path to saved tokenizer directory")
+    parser.add_argument("--device", type=str, default="auto", help="Device: auto/cuda/cpu")
+    args = parser.parse_args()
+
+    print("=" * 50)
+    print("  NOVA — Personal AI Assistant")
+    print("  Powered by NovaMind (your own LLM)")
+    print("  Type 'exit' or 'quit' to leave")
+    print("=" * 50)
+
+    model_path = Path(args.model_path)
+    tokenizer_path = Path(args.tokenizer_path)
+
+    # Load tokenizer
+    if (tokenizer_path / "vocab.json").exists():
+        print(f"\n[Loading tokenizer from {tokenizer_path}...]")
+        tokenizer = NovaMindTokenizer.load(str(tokenizer_path))
+    else:
+        print(f"\n[WARNING] No tokenizer found at {tokenizer_path}")
+        print("[Training a tiny tokenizer on sample text...]")
+        tokenizer = NovaMindTokenizer()
+        sample = "Hello Nova is a personal AI assistant. Nova answers questions about AI and space."
+        temp_file = Path("scripts/_temp_chat.txt")
+        temp_file.write_text(sample, encoding="utf-8")
+        tokenizer.train([str(temp_file)], vocab_size=200)
+        temp_file.unlink(missing_ok=True)
+
+    # Load model
+    config_path = model_path / "config.json"
+    if config_path.exists():
+        print(f"[Loading model from {model_path}...]")
+        model = NovaMind.load(str(model_path), device=args.device)
+    else:
+        print(f"[WARNING] No trained model found at {model_path}")
+        print("[Creating random model for demo — responses will be gibberish until trained]")
+        config = NovaMindConfig(vocab_size=tokenizer.vocab_size, device=args.device)
+        model = NovaMind(config)
+        model.to(config.device)
+
+    model.eval()
+    print("\n[Nova is ready. Start chatting!]\n")
+
+    history = []
+
+    while True:
+        try:
+            user_input = input("You: ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\nNova: Goodbye!")
+            break
+
+        if user_input.lower() in ("exit", "quit", "bye", "q"):
+            print("Nova: Goodbye!")
+            break
+
+        if not user_input:
+            continue
+
+        # Build prompt
+        prompt = format_prompt(user_input, history)
+
+        # Generate response
+        try:
+            response = generate_text(
+                model, tokenizer, prompt,
+                max_new_tokens=200,
+                temperature=0.8, top_k=50, top_p=0.9,
+                repetition_penalty=1.15,
+            )
+
+            # Extract Nova's response
+            nova_response = response
+            if "Nova:" in nova_response:
+                parts = nova_response.rsplit("Nova:", 1)
+                if len(parts) > 1:
+                    nova_response = parts[1].strip()
+
+            # Stop at "User:" if model continues
+            if "User:" in nova_response:
+                nova_response = nova_response.split("User:")[0].strip()
+
+            if not nova_response:
+                nova_response = "I need more training data to answer that."
+
+        except Exception as e:
+            nova_response = f"[Error: {e}]"
+
+        print(f"Nova: {nova_response}\n")
+        history.append({"user": user_input, "nova": nova_response})
+
+
+if __name__ == "__main__":
+    main()
