@@ -22,7 +22,7 @@ from typing import Generator
 from inference.sampler import combined_sample
 
 
-@torch.no_grad()
+@torch.inference_mode()
 def stream_generate(
     model,
     tokenizer,
@@ -60,12 +60,18 @@ def stream_generate(
     context_length = model.config.context_length
     eos_id = model.config.eos_token_id
 
-    for _ in range(max_new_tokens):
-        # Crop to context window
-        seq = input_ids[:, -context_length:]  # (1, ≤context_length)
+    past_kv = None
 
-        # Forward pass
-        logits, _ = model(seq)  # (1, seq_len, vocab_size)
+    for _ in range(max_new_tokens):
+        if past_kv is None:
+            # First pass: process the full prompt
+            seq = input_ids[:, -context_length:]  # (1, ≤context_length)
+        else:
+            # Subsequent passes: only process the last generated token
+            seq = input_ids[:, -1:]  # (1, 1)
+
+        # Forward pass returning next token logits and updated KV cache
+        logits, past_kv = model(seq, past_key_values=past_kv, use_cache=True)
         next_logits = logits[0, -1, :]  # (vocab_size,)
 
         # Sample next token using combined strategy
@@ -94,7 +100,7 @@ def stream_generate(
         yield token_text
 
 
-@torch.no_grad()
+@torch.inference_mode()
 def generate_text(
     model,
     tokenizer,

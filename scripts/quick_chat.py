@@ -9,6 +9,7 @@ Usage:
 """
 
 import sys
+import time
 import argparse
 from pathlib import Path
 
@@ -16,6 +17,30 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import torch
+
+# 1. Use all CPU cores
+torch.set_num_threads(torch.get_num_threads())
+torch.set_num_interop_threads(2)
+
+# 2. INT8 Quantization + 3. Compilation functions
+def optimize_model(model):
+    model.eval()
+    model = torch.quantization.quantize_dynamic(
+        model, {torch.nn.Linear}, dtype=torch.qint8
+    )
+    base_model = model
+    try:
+        compiled_model = torch.compile(model, mode="reduce-overhead")
+        # Force evaluation to trigger lazy compilation immediately
+        with torch.inference_mode():
+            device = next(model.parameters()).device
+            _ = compiled_model(torch.zeros(1, 1, dtype=torch.long, device=device))
+        print("[Nova] Model compiled for faster inference")
+        return compiled_model
+    except Exception as e:
+        print(f"[Nova] Running without compile (Compiler not bound: {type(e).__name__})")
+        return base_model
+
 from model.config import NovaMindConfig
 from model.architecture import NovaMind
 from tokenizer.tokenizer import NovaMindTokenizer
@@ -44,7 +69,7 @@ def main():
     parser = argparse.ArgumentParser(description="Chat with Nova in the terminal")
     parser.add_argument("--model_path", type=str, default="weights/final_model",
                         help="Path to saved model directory")
-    parser.add_argument("--tokenizer_path", type=str, default="tokenizer_data",
+    parser.add_argument("--tokenizer_path", type=str, default="weights/tokenizer",
                         help="Path to saved tokenizer directory")
     parser.add_argument("--device", type=str, default="auto", help="Device: auto/cuda/cpu")
     args = parser.parse_args()
@@ -84,7 +109,8 @@ def main():
         model = NovaMind(config)
         model.to(config.device)
 
-    model.eval()
+    # Apply optimizations
+    model = optimize_model(model)
     print("\n[Nova is ready. Start chatting!]\n")
 
     history = []
@@ -108,12 +134,14 @@ def main():
 
         # Generate response
         try:
+            start_time = time.time()
             response = generate_text(
                 model, tokenizer, prompt,
                 max_new_tokens=200,
                 temperature=0.8, top_k=50, top_p=0.9,
                 repetition_penalty=1.15,
             )
+            elapsed = time.time() - start_time
 
             # Extract Nova's response
             nova_response = response
@@ -131,8 +159,12 @@ def main():
 
         except Exception as e:
             nova_response = f"[Error: {e}]"
+            elapsed = 0.0
 
         print(f"Nova: {nova_response}\n")
+        if elapsed > 0:
+            print(f"[Nova] Response generated in {elapsed:.1f} seconds\n")
+            
         history.append({"user": user_input, "nova": nova_response})
 
 

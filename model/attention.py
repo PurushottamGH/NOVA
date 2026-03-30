@@ -135,7 +135,9 @@ class MultiHeadCausalSelfAttention(nn.Module):
         # FIXED: Use bool mask with ~mask instead of float mask with mask == 0
         # ============================================================
         # Slice the pre-computed mask to match current and total sequence lengths
-        mask = self.causal_mask[:, :, :seq_len, :kv_seq_len]  # (1, 1, seq_len, kv_seq_len)
+        # When using KV cache, seq_len=1 but we need row 'kv_seq_len-1' of the mask
+        start_pos = kv_seq_len - seq_len
+        mask = self.causal_mask[:, :, start_pos:start_pos+seq_len, :kv_seq_len]  # (1, 1, seq_len, kv_seq_len)
         
         attention_scores = attention_scores.masked_fill(
             ~mask,                 # FIXED: was mask == 0 on float tensor, now ~mask on bool tensor

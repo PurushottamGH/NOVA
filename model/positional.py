@@ -88,12 +88,13 @@ class SinusoidalPositionalEncoding(nn.Module):
         # Dropout applied after adding positional encoding
         self.dropout = nn.Dropout(config.dropout)
     
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, start_pos: int = 0) -> torch.Tensor:
         """
         Add positional encoding to token embeddings.
         
         Args:
             x: Token embeddings of shape (batch, seq_len, embed_dim)
+            start_pos: the offset position for KV caching where seq_len might be 1 but pos > 0
         
         Returns:
             Embeddings with positional information added, same shape (batch, seq_len, embed_dim)
@@ -101,11 +102,11 @@ class SinusoidalPositionalEncoding(nn.Module):
         seq_len = x.size(1)  # Get the actual sequence length from input
         
         # Slice the PE table to match the sequence length and add to embeddings
-        # self.pe[:, :seq_len, :] has shape (1, seq_len, embed_dim)
+        # self.pe[:, start_pos:start_pos+seq_len, :] has shape (1, seq_len, embed_dim)
         # Broadcasting adds it to each item in the batch
         
         # x = x + PE: element-wise addition of positional signal to token embeddings
-        x = x + self.pe[:, :seq_len, :]  # (batch, seq_len, embed_dim) + (1, seq_len, embed_dim)
+        x = x + self.pe[:, start_pos:start_pos+seq_len, :]  # (batch, seq_len, embed_dim) + (1, seq_len, embed_dim)
         
         # Apply dropout for regularization (helps prevent overfitting to exact positions)
         x = self.dropout(x)  # (batch, seq_len, embed_dim)
@@ -140,21 +141,22 @@ class LearnedPositionalEncoding(nn.Module):
         # Dropout applied after adding positional encoding
         self.dropout = nn.Dropout(config.dropout)
     
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, start_pos: int = 0) -> torch.Tensor:
         """
         Add learned positional encoding to token embeddings.
         
         Args:
             x: Token embeddings of shape (batch, seq_len, embed_dim)
+            start_pos: the offset position for KV caching where seq_len might be 1 but pos > 0
         
         Returns:
             Embeddings with positional information added, same shape (batch, seq_len, embed_dim)
         """
         seq_len = x.size(1)  # Actual sequence length
         
-        # Create position indices: [0, 1, 2, ..., seq_len-1]
+        # Create position indices: [start_pos, start_pos+1, ..., start_pos+seq_len-1]
         # on the same device as x
-        positions = torch.arange(seq_len, device=x.device)  # (seq_len,)
+        positions = torch.arange(start_pos, start_pos + seq_len, device=x.device)  # (seq_len,)
         
         # Look up the learned positional embeddings
         pos_emb = self.position_embedding(positions)  # (seq_len, embed_dim)

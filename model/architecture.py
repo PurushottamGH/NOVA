@@ -69,13 +69,16 @@ class NovaMind(nn.Module):
             torch.nn.init.ones_(module.weight)
             torch.nn.init.zeros_(module.bias)
 
-    def forward(self, input_ids, targets=None):
+    def forward(self, input_ids, targets=None, past_key_values=None, use_cache=False):
         """
         Forward pass.
         Args:
             input_ids: (batch, seq_len) token IDs
             targets: (batch, seq_len) target IDs for loss computation, or None
+            past_key_values: list of (K, V) from previous passes for each block
+            use_cache: whether to return KV cache for future calls
         Returns:
+            (logits, loss) or (logits, past_key_values_out) if use_cache=True
             (logits, loss) where logits is (batch, seq_len, vocab_size)
         """
         batch_size, seq_len = input_ids.shape  # (batch, seq_len)
@@ -85,11 +88,16 @@ class NovaMind(nn.Module):
         token_emb = self.token_embedding(input_ids)  # (batch, seq_len, embed_dim)
 
         # Step 2: Add positional encoding
-        x = self.positional_encoding(token_emb)  # (batch, seq_len, embed_dim)
+        start_pos = past_key_values[0][0].shape[2] if past_key_values is not None else 0
+        x = self.positional_encoding(token_emb, start_pos=start_pos)  # (batch, seq_len, embed_dim)
 
         # Step 3: Pass through all transformer blocks
-        for block in self.blocks:
-            x, _ = block(x)  # FIXED: updated to handle (output, kv_cache) return from block
+        past_key_values_out = [] if use_cache else None
+        for i, block in enumerate(self.blocks):
+            past_kv = past_key_values[i] if past_key_values is not None else None
+            x, present_kv = block(x, past_kv=past_kv, use_cache=use_cache)
+            if use_cache:
+                past_key_values_out.append(present_kv)
 
         # Step 4: Final layer normalization
         x = self.final_norm(x)  # (batch, seq_len, embed_dim)
@@ -106,9 +114,12 @@ class NovaMind(nn.Module):
                 ignore_index=self.config.pad_token_id
             )
 
+        if use_cache:
+            return logits, past_key_values_out
+        
         return logits, loss
 
-    @torch.no_grad()
+    @torch.inference_mode()
     def generate(self, input_ids, max_new_tokens=100, temperature=0.8,
                  top_k=50, top_p=0.9, repetition_penalty=1.1):
         """
@@ -129,11 +140,16 @@ class NovaMind(nn.Module):
         # FIXED: temperature guard — clamp to safe range to prevent division by zero or garbage
         temperature = max(0.1, min(float(temperature), 2.0))  # FIXED: was unguarded, could be 0 or >2
 
-        for _ in range(max_new_tokens):
-            # Crop to context window
-            seq = generated[:, -self.config.context_length:]  # (batch, ≤context_length)
+        past_kv = None
 
-            logits, _ = self.forward(seq)  # (batch, seq_len, vocab_size)
+        for _ in range(max_new_tokens):
+            if past_kv is None:
+                # Crop to context window
+                seq = generated[:, -self.config.context_length:]  # (batch, ≤context_length)
+            else:
+                seq = generated[:, -1:]  # (batch, 1)
+
+            logits, past_kv = self.forward(seq, past_key_values=past_kv, use_cache=True)  # (batch, seq_len, vocab_size)
             next_logits = logits[:, -1, :]  # (batch, vocab_size)
 
             # Repetition penalty
@@ -203,10 +219,30 @@ class NovaMind(nn.Module):
         with open(load_dir / "config.json", "r", encoding="utf-8") as f:  # FIXED: added encoding='utf-8'
             config_dict = json.load(f)
         config = NovaMindConfig.from_dict(config_dict)
-        if device != "auto":
+        if device == "auto":
+            config.device = "cuda" if torch.cuda.is_available() else "cpu"
+        else:
             config.device = device
         model = cls(config)
-        state = torch.load(load_dir / "model.pt", map_location=config.device, weights_only=True)
+        state = torch.load(load_dir / "model.pt", map_location=config.device, weights_only=True, mmap=True)
+        
+        # Handle state_dict from old architecture (W_q, W_k, W_v separate)
+        keys_to_delete = []
+        new_state = {}
+        for key in list(state.keys()):
+            if key.endswith(".W_q.weight"):
+                prefix = key[:-len("W_q.weight")]
+                q_w = state[key]
+                k_w = state[prefix + "W_k.weight"]
+                v_w = state[prefix + "W_v.weight"]
+                new_state[prefix + "W_qkv.weight"] = torch.cat([q_w, k_w, v_w], dim=0)
+                keys_to_delete.extend([key, prefix + "W_k.weight", prefix + "W_v.weight"])
+                
+        for key in keys_to_delete:
+            if key in state:
+                del state[key]
+        state.update(new_state)
+
         model.load_state_dict(state)
         model.to(config.device)
         model.eval()
