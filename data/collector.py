@@ -36,7 +36,8 @@ def download_with_retry(url, max_retries=3, timeout=30):
     """
     for attempt in range(max_retries):
         try:
-            response = requests.get(url, timeout=timeout)
+            headers = {"User-Agent": "NovaMindDataBot/1.0 (https://github.com/PurushottamGH/NOVA)"}
+            response = requests.get(url, timeout=timeout, headers=headers)
             response.raise_for_status()
             return response.text
         except requests.RequestException as e:
@@ -134,7 +135,8 @@ def download_wikipedia_articles(output_dir, num_articles=100):
         }
 
         try:
-            resp = requests.get(base_url, params=params, timeout=15)
+            headers = {"User-Agent": "NovaMindDataBot/1.0 (https://github.com/PurushottamGH/NOVA)"}
+            resp = requests.get(base_url, params=params, timeout=15, headers=headers)
             resp.raise_for_status()
             data = resp.json()
             articles = data.get("query", {}).get("random", [])
@@ -155,7 +157,8 @@ def download_wikipedia_articles(output_dir, num_articles=100):
             }
 
             try:
-                resp = requests.get(base_url, params=params, timeout=15)
+                headers = {"User-Agent": "NovaMindDataBot/1.0 (https://github.com/PurushottamGH/NOVA)"}
+                resp = requests.get(base_url, params=params, timeout=15, headers=headers)
                 resp.raise_for_status()
                 data = resp.json()
                 pages = data.get("query", {}).get("pages", {})
@@ -205,7 +208,8 @@ def download_arxiv_abstracts(output_dir, max_results=200):
         }
 
         try:
-            resp = requests.get(url, params=params, timeout=30)
+            headers = {"User-Agent": "NovaMindDataBot/1.0 (https://github.com/PurushottamGH/NOVA)"}
+            resp = requests.get(url, params=params, timeout=30, headers=headers)
             resp.raise_for_status()
             content = resp.text
 

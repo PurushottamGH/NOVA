@@ -53,8 +53,8 @@ def save_checkpoint(
 
     checkpoint = {
         "model_state_dict": model.state_dict(),
-        "optimizer_state_dict": optimizer.state_dict(),
-        "scheduler_state_dict": scheduler.state_dict(),
+        "optimizer_state_dict": optimizer.state_dict() if optimizer is not None else None,
+        "scheduler_state_dict": scheduler.state_dict() if scheduler is not None else None,
         "step": step,
         "loss": loss,
         "best_val_loss": best_val_loss,
@@ -110,11 +110,11 @@ def load_checkpoint(
     model.load_state_dict(checkpoint["model_state_dict"])
 
     # Restore optimizer state
-    if optimizer is not None and "optimizer_state_dict" in checkpoint:
+    if optimizer is not None and checkpoint.get("optimizer_state_dict") is not None:
         optimizer.load_state_dict(checkpoint["optimizer_state_dict"])
 
     # Restore scheduler state
-    if scheduler is not None and "scheduler_state_dict" in checkpoint:
+    if scheduler is not None and checkpoint.get("scheduler_state_dict") is not None:
         scheduler.load_state_dict(checkpoint["scheduler_state_dict"])
 
     step = checkpoint.get("step", 0)
