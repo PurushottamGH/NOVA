@@ -53,16 +53,58 @@ def download_gutenberg_books(output_dir):
     
     Includes at least 5 well-known public domain texts.
     """
-    # Book ID → Title mapping (Project Gutenberg plain text URLs)
+    # Top 50 most popular books ID → Title mapping (Project Gutenberg)
     books = {
-        1342: "Pride and Prejudice - Jane Austen",
-        1661: "The Adventures of Sherlock Holmes - Arthur Conan Doyle",
-        11: "Alice's Adventures in Wonderland - Lewis Carroll",
-        84: "Frankenstein - Mary Shelley",
-        1232: "The Prince - Niccolo Machiavelli",
-        2701: "Moby Dick - Herman Melville",
-        98: "A Tale of Two Cities - Charles Dickens",
-        1952: "The Yellow Wallpaper - Charlotte Perkins Gilman",
+        "84": "Frankenstein; or, the modern prometheus by Mary Wollstonecraft Shelley",
+        "45304": "The City of God, Volume I by Saint of Hippo Augustine",
+        "33283": "Calculus Made Easy by Silvanus P. Thompson",
+        "2701": "Moby Dick; Or, The Whale by Herman Melville",
+        "1342": "Pride and Prejudice by Jane Austen",
+        "52106": "The origin and development of the moral ideas by Edward Westermarck",
+        "8492": "The King in Yellow by Robert W. Chambers",
+        "1513": "Romeo and Juliet by William Shakespeare",
+        "58031": "Report of the President's Commission on the Assassination of President John F. Kennedy",
+        "64317": "The Great Gatsby by F. Scott Fitzgerald",
+        "11": "Alice's Adventures in Wonderland by Lewis Carroll",
+        "43": "The strange case of Dr. Jekyll and Mr. Hyde by Robert Louis Stevenson",
+        "2641": "A Room with a View by E. M. Forster",
+        "768": "Wuthering Heights by Emily Brontë",
+        "100": "The Complete Works of William Shakespeare by William Shakespeare",
+        "2554": "Crime and Punishment by Fyodor Dostoyevsky",
+        "1260": "Jane Eyre: An Autobiography by Charlotte Brontë",
+        "844": "The Importance of Being Earnest: A Trivial Comedy for Serious People by Oscar Wilde",
+        "174": "The Picture of Dorian Gray by Oscar Wilde",
+        "145": "Middlemarch by George Eliot",
+        "1184": "The Count of Monte Cristo by Alexandre Dumas and Auguste Maquet",
+        "26471": "Spoon River Anthology by Edgar Lee Masters",
+        "67979": "The Blue Castle: a novel by L. M. Montgomery",
+        "68348": "England under the Angevin Kings, Volumes I and II by Kate Norgate",
+        "37106": "Little Women; Or, Meg, Jo, Beth, and Amy by Louisa May Alcott",
+        "345": "Dracula by Bram Stoker",
+        "98": "A Tale of Two Cities by Charles Dickens",
+        "2542": "A Doll's House : a play by Henrik Ibsen",
+        "28942": "The Junior Classics, Volume 1: Fairy and wonder tales by William Allan Neilson",
+        "5197": "My Life — Volume 1 by Richard Wagner",
+        "47715": "The Works of William Shakespeare [Cambridge Edition] [Vol. 7 of 9] by William Shakespeare",
+        "13188": "Putnam's Word Book by Louis A. Flemming",
+        "16389": "The Enchanted April by Elizabeth Von Arnim",
+        "1259": "Twenty years after by Alexandre Dumas and Auguste Maquet",
+        "1661": "The Adventures of Sherlock Holmes by Arthur Conan Doyle",
+        "1080": "A Modest Proposal by Jonathan Swift",
+        "6761": "The Adventures of Ferdinand Count Fathom — Complete by T. Smollett",
+        "76": "Adventures of Huckleberry Finn by Mark Twain",
+        "2160": "The Expedition of Humphry Clinker by T. Smollett",
+        "57336": "Ancient Britain and the Invasions of Julius Caesar by T. Rice Holmes",
+        "37683": "Chambers's Twentieth Century Dictionary (part 1 of 4: A-D)",
+        "6593": "History of Tom Jones, a Foundling by Henry Fielding",
+        "394": "Cranford by Elizabeth Cleghorn Gaskell",
+        "50559": "The Works of William Shakespeare [Cambridge Edition] [Vol. 3 of 9] by William Shakespeare",
+        "4085": "The Adventures of Roderick Random by T. Smollett",
+        "9701": "I. Beowulf: an Anglo-Saxon poem. II. The fight at Finnsburh: a fragment.",
+        "39647": "The Spanish American Reader by Ernesto Nelson",
+        "205": "Walden, and On The Duty Of Civil Disobedience by Henry David Thoreau",
+        "67792": "A History of Magic and Experimental Science, Volume 1 (of 2) by Lynn Thorndike",
+        "49008": "The Works of William Shakespeare [Cambridge Edition] [Vol. 8 of 9] by William Shakespeare"
     }
 
     total_chars = 0
@@ -111,7 +153,7 @@ def download_gutenberg_books(output_dir):
     return total_chars
 
 
-def download_wikipedia_articles(output_dir, num_articles=100):
+def download_wikipedia_articles(output_dir, num_articles=50000):
     """
     Download simple English Wikipedia articles via the MediaWiki API.
     
@@ -187,7 +229,7 @@ def download_wikipedia_articles(output_dir, num_articles=100):
     return total_chars
 
 
-def download_arxiv_abstracts(output_dir, max_results=200):
+def download_arxiv_abstracts(output_dir, max_results=10000):
     """
     Download paper abstracts from arXiv via their API.
     Categories: cs.AI (Artificial Intelligence) and astro-ph (Astrophysics)
@@ -267,8 +309,8 @@ def collect_all(output_dir=None):
 
     total = 0
     total += download_gutenberg_books(output_dir)
-    total += download_wikipedia_articles(output_dir, num_articles=100)
-    total += download_arxiv_abstracts(output_dir, max_results=200)
+    total += download_wikipedia_articles(output_dir, num_articles=50000)
+    total += download_arxiv_abstracts(output_dir, max_results=10000)
 
     # FIXED: Count files and estimate tokens
     file_count = len(list(output_dir.glob('*.txt')))
