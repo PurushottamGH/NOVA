@@ -30,7 +30,19 @@ from model.utils import model_summary, estimate_flops
 from tokenizer.tokenizer import NovaMindTokenizer
 from data.dataloader import create_dataloaders, get_text_files
 from training.trainer import Trainer
-from training.checkpoint import is_checkpoint_stable
+from training.checkpointing import is_checkpoint_stable, resume_training
+
+# Runtime monkey-patch to ensure Trainer (which imports from training.checkpoint)
+# uses our updated logic from checkpointing.py without modifying its source code.
+import training.checkpoint as ckpt
+ckpt.resume_training = resume_training
+ckpt.is_checkpoint_stable = is_checkpoint_stable
+ckpt.find_latest_checkpoint = ckpt.find_latest_checkpoint # ensure it uses the one in checkpoint.py if needed? 
+# actually we want it to use our NEW find_latest_checkpoint too.
+import training.checkpointing as ckpting
+ckpt.find_latest_checkpoint = ckpting.find_latest_checkpoint
+ckpt.load_checkpoint = ckpting.load_checkpoint
+ckpt.save_checkpoint = ckpting.save_checkpoint
 
 
 def main():
@@ -49,8 +61,12 @@ def main():
 
     # Automatic resume detection
     checkpoint_dir = Path(args.checkpoint_dir).resolve()
+    checkpoint_file = checkpoint_dir / "checkpoint"
     
-    if is_checkpoint_stable(str(checkpoint_dir)) and not args.new:
+    if checkpoint_file.exists() and not args.new:
+        args.resume = True
+        print(f"  [Resume] Found explicit checkpoint file: {checkpoint_file}")
+    elif is_checkpoint_stable(str(checkpoint_dir)) and not args.new:
         args.resume = True
         print(f"  [Auto-Resume] Found existing checkpoint in '{checkpoint_dir}'")
     elif args.new:
@@ -70,6 +86,8 @@ def main():
         vocab_size=args.vocab_size,
         device=args.device,
     )
+    config.save_every = 10000  # Save checkpoint every 10,000 steps
+    
     if args.max_steps:
         config.max_steps = args.max_steps
     if args.batch_size:

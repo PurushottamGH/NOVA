@@ -54,12 +54,12 @@ class NovaMindConfig:
     """
     
     # === Model Architecture ===
-    vocab_size: int = 8000
-    embed_dim: int = 256
+    vocab_size: int = 16000
+    embed_dim: int = 512
     num_heads: int = 8
-    num_layers: int = 6
-    context_length: int = 512
-    feedforward_dim: int = 1024
+    num_layers: int = 10
+    context_length: int = 1024
+    feedforward_dim: int = 2048
     dropout: float = 0.1
     activation: str = "gelu"
     weight_tying: bool = True

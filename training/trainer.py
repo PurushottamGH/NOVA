@@ -363,7 +363,8 @@ class Trainer:
             )
 
             generated_text = self.tokenizer.decode(output_ids[0].tolist())
-            print(f"{prefix}📝 \"{generated_text.replace('\n', ' ')[:150]}...\"")
+            cleaned = generated_text.replace('\n', ' ')[:150]
+            print(f"{prefix}📝 \"{cleaned}...\"")
         except Exception as e:
             print(f"{prefix}📝 Sample generation failed: {e}")
 

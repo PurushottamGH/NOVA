@@ -93,8 +93,8 @@ class NovaChatEngine:
 
     def __init__(
         self,
-        model_path: str,
-        tokenizer_path: str,
+        model_path: str = "weights/final_model",
+        tokenizer_path: str = "weights/tokenizer",
         device: str = "auto",
         max_response_tokens: int = 300,
     ):
@@ -114,6 +114,7 @@ class NovaChatEngine:
         print(f"[NovaChatEngine] Loading model from {model_path}...")
         self.model = NovaMind.load(model_path, device=device)
         self.model = optimize_model(self.model)
+        self.model.eval()  # Call model.eval() after loading and optimization
 
         # Load tokenizer
         print(f"[NovaChatEngine] Loading tokenizer from {tokenizer_path}...")
@@ -146,6 +147,10 @@ class NovaChatEngine:
         """
         if history is None:
             history = []
+        
+        # Limiting history to last 6 turns (3 pairs) for focused context
+        if len(history) > 6:
+            history = history[-6:]
 
         # FIXED: always keep system prompt first — this is the anchor
         parts = [f"<|system|>\n{NOVA_SYSTEM_PROMPT}\n"]
@@ -213,8 +218,8 @@ class NovaChatEngine:
         prompt = self._format_prompt(user_message, history)
 
         # FIXED: temperature guard — clamp to safe range
-        temperature = 0.8  # Base temperature
-        temperature = max(0.1, min(temperature, 2.0))  # FIXED: guard against bad values
+        temperature = 0.7  # Base temperature update
+        temperature = max(0.1, min(temperature, 2.0))  # Clamp to safe range
 
         # FIXED: empty response guard with retry — up to 3 attempts with increasing temperature
         nova_response = ""
@@ -225,9 +230,9 @@ class NovaChatEngine:
                 prompt=prompt,
                 max_new_tokens=self.max_response_tokens,
                 temperature=temperature,
-                top_k=50,
+                top_k=40,
                 top_p=0.9,
-                repetition_penalty=1.15,
+                repetition_penalty=1.3,
             )
 
             # Extract only Nova's response (after the last "<|assistant|>\n" in the output)
@@ -285,10 +290,10 @@ class NovaChatEngine:
             self.tokenizer,
             prompt=prompt,
             max_new_tokens=self.max_response_tokens,
-            temperature=max(0.1, min(0.8, 2.0)),  # FIXED: temperature guard
-            top_k=50,
+            temperature=max(0.1, min(0.7, 2.0)),  # Temperature update to 0.7
+            top_k=40,
             top_p=0.9,
-            repetition_penalty=1.15,
+            repetition_penalty=1.3,
         ):
             # Stop if the model starts generating "<|user|>" (end of response)
             full_so_far = "".join(full_response) + token_text

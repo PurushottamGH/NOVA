@@ -67,8 +67,8 @@ def save_checkpoint(
     torch.save(checkpoint, checkpoint_path)
     print(f"[Checkpoint] Saved: {checkpoint_path} (loss={loss:.4f})")
 
-    # Always save a 'latest' checkpoint for easy resume
-    latest_path = save_dir / "latest.pt"
+    # Always save a 'checkpoint' file for easy resume (Standard for NovaMind)
+    latest_path = save_dir / "checkpoint"
     torch.save(checkpoint, latest_path)
 
     # Save best model separately
@@ -193,10 +193,15 @@ def find_latest_checkpoint(checkpoint_dir: str) -> Optional[str]:
     """
     ckpt_dir = Path(checkpoint_dir)
 
-    # Check for 'latest.pt' first
-    latest = ckpt_dir / "latest.pt"
+    # Check for 'checkpoint' first (Standard)
+    latest = ckpt_dir / "checkpoint"
     if latest.exists():
         return str(latest)
+    
+    # Check for legacy 'latest.pt'
+    legacy_latest = ckpt_dir / "latest.pt"
+    if legacy_latest.exists():
+        return str(legacy_latest)
 
     # Fall back to highest step number
     checkpoints = list_checkpoints(checkpoint_dir)
@@ -204,3 +209,48 @@ def find_latest_checkpoint(checkpoint_dir: str) -> Optional[str]:
         return checkpoints[-1]["path"]
 
     return None
+
+
+def resume_training(
+    checkpoint_dir: str,
+    model,
+    optimizer=None,
+    scheduler=None,
+    device: str = "cpu"
+) -> Tuple[int, float, float]:
+    """
+    High-level helper to resume training from the latest checkpoint.
+    Handles finding, loading, and restoring RNG state.
+    
+    Args:
+        checkpoint_dir: Directory to search for checkpoints
+        model: NovaMind model
+        optimizer: Optimizer (optional)
+        scheduler: Scheduler (optional)
+        device: Device to map tensors to
+        
+    Returns:
+        Tuple of (step, loss, best_val_loss)
+    """
+    latest = find_latest_checkpoint(checkpoint_dir)
+    if not latest:
+        print(f"  [Checkpoint] No checkpoint found in '{checkpoint_dir}' — starting fresh")
+        return 0, 0.0, float('inf')
+
+    # Load states using the existing load_checkpoint helper
+    step, loss = load_checkpoint(latest, model, optimizer, scheduler)
+    
+    # Load extra metadata (best_val_loss and rng_state)
+    checkpoint = torch.load(latest, map_location=device, weights_only=False)
+    best_val_loss = checkpoint.get("best_val_loss", float('inf'))
+    
+    if "rng_state" in checkpoint:
+        torch.set_rng_state(checkpoint["rng_state"])
+        
+    print(f"  [Checkpoint] Resumed from step {step}, best_val_loss={best_val_loss:.4f}")
+    return step, loss, best_val_loss
+
+
+def is_checkpoint_stable(checkpoint_dir: str) -> bool:
+    """Check if a valid checkpoint file exists."""
+    return (Path(checkpoint_dir) / "checkpoint").exists() or (Path(checkpoint_dir) / "latest.pt").exists()

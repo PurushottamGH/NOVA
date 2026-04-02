@@ -168,10 +168,10 @@ def apply_repetition_penalty(
 
 def combined_sample(
     logits: torch.Tensor,
-    temperature: float = 0.8,
-    top_k: int = 50,
+    temperature: float = 0.7,
+    top_k: int = 40,
     top_p: float = 0.9,
-    repetition_penalty: float = 1.1,
+    repetition_penalty: float = 1.3,
     generated_ids: list = None,
 ) -> torch.Tensor:
     """
