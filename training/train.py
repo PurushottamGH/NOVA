@@ -145,6 +145,11 @@ def main():
     model_summary(model)
     estimate_flops(config)
 
+    # Optimization: Use torch.compile for 2.0+ performance boost
+    if torch.__version__ >= "2.0":
+        print("  [Optim] Compiling model with torch.compile()...")
+        model = torch.compile(model)
+
     # ==========================================
     # Step 6: Train!
     # ==========================================

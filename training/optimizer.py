@@ -16,7 +16,7 @@ Why separate groups?
 """
 
 import torch
-from torch.optim import AdamW
+import bitsandbytes as bnb
 
 
 def create_optimizer(model, config):
@@ -66,7 +66,7 @@ def create_optimizer(model, config):
     print(f"  Learning rate:     {config.learning_rate}")
     print(f"  Weight decay:      {config.weight_decay}")
 
-    optimizer = AdamW(
+    optimizer = bnb.optim.AdamW8bit(
         param_groups,
         lr=config.learning_rate,
         betas=(0.9, 0.95),    # Beta1=0.9, Beta2=0.95 (GPT-3 settings)

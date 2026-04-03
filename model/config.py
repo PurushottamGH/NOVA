@@ -54,12 +54,12 @@ class NovaMindConfig:
     """
     
     # === Model Architecture ===
-    vocab_size: int = 16000
-    embed_dim: int = 512
-    num_heads: int = 8
-    num_layers: int = 10
-    context_length: int = 1024
-    feedforward_dim: int = 2048
+    vocab_size: int = 32000
+    embed_dim: int = 1024
+    num_heads: int = 16
+    num_layers: int = 24
+    context_length: int = 256
+    feedforward_dim: int = 4096
     dropout: float = 0.1
     activation: str = "gelu"
     weight_tying: bool = True
@@ -72,13 +72,14 @@ class NovaMindConfig:
     eos_token_id: int = 2
     
     # === Training Hyperparameters ===
+    gradient_checkpointing: bool = False  # FIXED: added to reduce VRAM footprint
     learning_rate: float = 3e-4
     weight_decay: float = 0.01
     warmup_steps: int = 100
     max_steps: int = 5000
-    batch_size: int = 16
+    batch_size: int = 4
     grad_clip: float = 1.0
-    accumulation_steps: int = 4      # FIXED: added for gradient accumulation support
+    accumulation_steps: int = 16    # FIXED: added for gradient accumulation support
     save_every: int = 500
     eval_every: int = 100
     sample_every: int = 1000  # FIXED: added to track generation quality during training

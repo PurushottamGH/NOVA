@@ -62,6 +62,7 @@ from model.architecture import NovaMind
 from model.config import NovaMindConfig
 from tokenizer.tokenizer import NovaMindTokenizer
 from inference.generate import stream_generate, generate_text
+from nova_modules.math_engine import NovaMathEngine  # FIXED: added for symbolic math support
 
 
 # Nova's system prompt — defines the AI personality
@@ -122,6 +123,9 @@ class NovaChatEngine:
 
         # Conversation history
         self._history: List[Dict[str, str]] = []
+
+        # Specialized Engines
+        self.math_engine = NovaMathEngine()  # FIXED: added to handle exact math tasks
 
         print(f"[NovaChatEngine] Ready on {device}")
 
@@ -214,8 +218,19 @@ class NovaChatEngine:
         if history is None:
             history = self._history
 
+        # FIXED: Check math engine first — exact answers beat LLM guesses
+        math_result = self.math_engine.detect_and_solve(user_message)
+        processed_message = user_message
+        if math_result:
+            # Still pass through NovaMind for explanation/context
+            print(f"  [Chat] Math detected: {math_result}")
+            processed_message = (
+                f"{user_message}\n"
+                f"[Math Engine Result: {math_result}]"
+            )
+
         # Format the full prompt
-        prompt = self._format_prompt(user_message, history)
+        prompt = self._format_prompt(processed_message, history)
 
         # FIXED: temperature guard — clamp to safe range
         temperature = 0.7  # Base temperature update

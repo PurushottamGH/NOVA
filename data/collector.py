@@ -16,7 +16,14 @@ Usage:
 import os
 import time
 import requests
+import json
 from pathlib import Path
+
+try:
+    from datasets import load_dataset
+    HAS_DATASETS = True
+except ImportError:
+    HAS_DATASETS = False
 
 # Default output directory
 OUTPUT_DIR = Path("personal_data")
@@ -286,6 +293,84 @@ def download_arxiv_abstracts(output_dir, max_results=10000):
 
     print(f"  arXiv total: {total_chars:,} characters")
     return total_chars
+def download_gsm8k(output_dir):
+    """Math word problems — 8.5K train examples"""
+    if not HAS_DATASETS:
+        print("\n[Skip] GSM8K: 'datasets' library not installed.")
+        return 0
+    from datasets import load_dataset
+    print("\n=== Downloading GSM8K ===")
+    try:
+        ds = load_dataset("gsm8k", "main", split="train")
+        
+        texts = []
+        for item in ds:
+            texts.append(
+                f"<|user|>\n{item['question']}\n"
+                f"<|assistant|>\n{item['answer']}\n"
+            )
+        
+        out = Path(output_dir) / "gsm8k_math.txt"
+        out.write_text("\n".join(texts), encoding="utf-8")
+        print(f"  ✓ GSM8K: {len(texts)} math problems saved")
+        return len("\n".join(texts))
+    except Exception as e:
+        print(f"  ✗ GSM8K failed: {e}")
+        return 0
+
+
+def download_alpaca(output_dir):
+    """52K instruction-following pairs"""
+    if not HAS_DATASETS:
+        print("\n[Skip] Alpaca: 'datasets' library not installed.")
+        return 0
+    from datasets import load_dataset
+    print("\n=== Downloading Alpaca ===")
+    try:
+        ds = load_dataset("tatsu-lab/alpaca", split="train")
+        
+        texts = []
+        for item in ds:
+            instruction = item['instruction']
+            if item.get('input'):
+                instruction += f"\n{item['input']}"
+            texts.append(
+                f"<|user|>\n{instruction}\n"
+                f"<|assistant|>\n{item['output']}\n"
+            )
+        
+        out = Path(output_dir) / "alpaca_sft.txt"
+        out.write_text("\n".join(texts), encoding="utf-8")
+        print(f"  ✓ Alpaca: {len(texts)} instruction pairs saved")
+        return len("\n".join(texts))
+    except Exception as e:
+        print(f"  ✗ Alpaca failed: {e}")
+        return 0
+
+
+def download_openassistant(output_dir):
+    """High quality human conversations"""
+    if not HAS_DATASETS:
+        print("\n[Skip] OpenAssistant: 'datasets' library not installed.")
+        return 0
+    from datasets import load_dataset
+    print("\n=== Downloading OpenAssistant ===")
+    try:
+        ds = load_dataset("OpenAssistant/oasst1", split="train")
+        
+        # Filter to only assistant messages with high quality
+        texts = []
+        for item in ds:
+            if item['role'] == 'assistant' and item.get('rank', 1) == 0:
+                texts.append(item['text'])
+        
+        out = Path(output_dir) / "openassistant_sft.txt"
+        out.write_text("\n".join(texts), encoding="utf-8")
+        print(f"  ✓ OpenAssistant: {len(texts)} responses saved")
+        return len("\n".join(texts))
+    except Exception as e:
+        print(f"  ✗ OpenAssistant failed: {e}")
+        return 0
 
 
 def collect_all(output_dir=None):
@@ -311,6 +396,11 @@ def collect_all(output_dir=None):
     total += download_gutenberg_books(output_dir)
     total += download_wikipedia_articles(output_dir, num_articles=50000)
     total += download_arxiv_abstracts(output_dir, max_results=10000)
+    
+    # 200M Config Additions: Math, Code, SFT
+    total += download_gsm8k(output_dir)
+    total += download_alpaca(output_dir)
+    total += download_openassistant(output_dir)
 
     # FIXED: Count files and estimate tokens
     file_count = len(list(output_dir.glob('*.txt')))

@@ -14,6 +14,7 @@ import json
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.utils.checkpoint import checkpoint  # FIXED: added for VRAM efficiency
 from pathlib import Path
 
 from model.config import NovaMindConfig
@@ -94,8 +95,15 @@ class NovaMind(nn.Module):
         # Step 3: Pass through all transformer blocks
         past_key_values_out = [] if use_cache else None
         for i, block in enumerate(self.blocks):
-            past_kv = past_key_values[i] if past_key_values is not None else None
-            x, present_kv = block(x, past_kv=past_kv, use_cache=use_cache)
+            if self.training and self.config.gradient_checkpointing:
+                # Gradient checkpointing trades computation for memory:
+                # Blocks are re-computed during the backward pass instead of storing activations.
+                # Signature: block(x, past_kv=None, use_cache=False)
+                x, present_kv = checkpoint(block, x, None, False, use_reentrant=False)
+            else:
+                past_kv = past_key_values[i] if past_key_values is not None else None
+                x, present_kv = block(x, past_kv=past_kv, use_cache=use_cache)
+            
             if use_cache:
                 past_key_values_out.append(present_kv)
 
