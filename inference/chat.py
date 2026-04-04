@@ -127,6 +127,9 @@ class NovaChatEngine:
         # Specialized Engines
         self.math_engine = NovaMathEngine()  # FIXED: added to handle exact math tasks
 
+        from nova_modules.memory import NovaMemory
+        self.memory = NovaMemory()
+
         print(f"[NovaChatEngine] Ready on {device}")
 
     def _format_prompt(self, user_message: str, history: List[Dict[str, str]] = None) -> str:
@@ -229,6 +232,11 @@ class NovaChatEngine:
                 f"[Math Engine Result: {math_result}]"
             )
 
+        # Inject memory context
+        memory_ctx = self.memory.inject_memory(processed_message)
+        if memory_ctx:
+            processed_message = f"{memory_ctx}\n{processed_message}"
+
         # Format the full prompt
         prompt = self._format_prompt(processed_message, history)
 
@@ -272,6 +280,9 @@ class NovaChatEngine:
             # FIXED: all retries failed — return a fallback message
             nova_response = "I need more training data to answer that."
 
+        # Store in persistent memory
+        self.memory.remember(user_message, nova_response)
+
         # Update internal history
         self._history.append({"role": "user", "content": user_message})
         self._history.append({"role": "nova", "content": nova_response})
@@ -305,7 +316,7 @@ class NovaChatEngine:
             self.tokenizer,
             prompt=prompt,
             max_new_tokens=self.max_response_tokens,
-            temperature=max(0.1, min(0.7, 2.0)),  # Temperature update to 0.7
+            temperature=0.7,
             top_k=40,
             top_p=0.9,
             repetition_penalty=1.3,

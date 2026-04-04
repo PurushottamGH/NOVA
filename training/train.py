@@ -32,18 +32,6 @@ from data.dataloader import create_dataloaders, get_text_files
 from training.trainer import Trainer
 from training.checkpointing import is_checkpoint_stable, resume_training
 
-# Runtime monkey-patch to ensure Trainer (which imports from training.checkpoint)
-# uses our updated logic from checkpointing.py without modifying its source code.
-import training.checkpoint as ckpt
-ckpt.resume_training = resume_training
-ckpt.is_checkpoint_stable = is_checkpoint_stable
-ckpt.find_latest_checkpoint = ckpt.find_latest_checkpoint # ensure it uses the one in checkpoint.py if needed? 
-# actually we want it to use our NEW find_latest_checkpoint too.
-import training.checkpointing as ckpting
-ckpt.find_latest_checkpoint = ckpting.find_latest_checkpoint
-ckpt.load_checkpoint = ckpting.load_checkpoint
-ckpt.save_checkpoint = ckpting.save_checkpoint
-
 
 def main():
     """Main training entry point."""

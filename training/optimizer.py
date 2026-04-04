@@ -16,7 +16,12 @@ Why separate groups?
 """
 
 import torch
-import bitsandbytes as bnb
+
+try:
+    import bitsandbytes as bnb
+    HAS_BNB = True
+except ImportError:
+    HAS_BNB = False
 
 
 def create_optimizer(model, config):
@@ -60,17 +65,26 @@ def create_optimizer(model, config):
     # Print parameter group info
     num_decay = sum(p.numel() for p in decay_params)
     num_no_decay = sum(p.numel() for p in no_decay_params)
-    print(f"[Optimizer] AdamW created:")
-    print(f"  Decayed params:    {num_decay:,} ({num_decay/1e6:.2f}M)")
+    print(f"[Optimizer] Decayed params:    {num_decay:,} ({num_decay/1e6:.2f}M)")
     print(f"  Non-decayed params: {num_no_decay:,}")
     print(f"  Learning rate:     {config.learning_rate}")
     print(f"  Weight decay:      {config.weight_decay}")
 
-    optimizer = bnb.optim.AdamW8bit(
-        param_groups,
-        lr=config.learning_rate,
-        betas=(0.9, 0.95),    # Beta1=0.9, Beta2=0.95 (GPT-3 settings)
-        eps=1e-8,
-    )
+    if HAS_BNB:
+        print("[Optimizer] Using bitsandbytes AdamW8bit")
+        optimizer = bnb.optim.AdamW8bit(
+            param_groups,
+            lr=config.learning_rate,
+            betas=(0.9, 0.95),    # Beta1=0.9, Beta2=0.95 (GPT-3 settings)
+            eps=1e-8,
+        )
+    else:
+        print("[Optimizer] bitsandbytes not available, falling back to torch.optim.AdamW")
+        optimizer = torch.optim.AdamW(
+            param_groups,
+            lr=config.learning_rate,
+            betas=(0.9, 0.95),
+            eps=1e-8,
+        )
 
     return optimizer

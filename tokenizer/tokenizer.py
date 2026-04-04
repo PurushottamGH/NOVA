@@ -120,26 +120,24 @@ class NovaMindTokenizer:
         return ids
 
     def decode(self, ids: List[int]) -> str:
-        """
-        Decode token IDs back to text, skipping special tokens.
-        
-        Args:
-            ids: List of token IDs
-        
-        Returns:
-            Decoded text string
-        """
         tokens = []
         for id_ in ids:
             if id_ in SPECIAL_TOKEN_IDS:
-                continue  # Skip PAD, BOS, EOS, UNK
+                continue
             if id_ in self._inverse_vocab:
                 tokens.append(self._inverse_vocab[id_])
             else:
                 tokens.append('')
-        text = ''.join(tokens)
-        text = text.replace('</w>', ' ')
-        return text.strip()
+        
+        result = []
+        for token in tokens:
+            if token.endswith('</w>'):
+                result.append(token[:-4])
+                result.append(' ')
+            else:
+                result.append(token)
+        
+        return ''.join(result).strip()
 
     def encode_batch(self, texts: List[str]) -> List[List[int]]:
         """

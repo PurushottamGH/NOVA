@@ -126,6 +126,77 @@ class NovaMindConfig:
         valid_fields = {f.name for f in cls.__dataclass_fields__.values()}
         filtered = {k: v for k, v in d.items() if k in valid_fields}
         return cls(**filtered)
+
+    @classmethod
+    def small(cls) -> "NovaMindConfig":
+        """Small config (~50M params) for fast iteration on consumer GPUs."""
+        return cls(
+            vocab_size=8000,
+            embed_dim=256,
+            num_heads=8,
+            num_layers=6,
+            context_length=512,
+            feedforward_dim=1024,
+            batch_size=16,
+            accumulation_steps=4,
+            max_steps=5000,
+        )
+
+    @classmethod
+    def medium(cls) -> "NovaMindConfig":
+        """Medium config (~335M params) for serious training runs."""
+        return cls(
+            vocab_size=32000,
+            embed_dim=1024,
+            num_heads=16,
+            num_layers=24,
+            context_length=256,
+            feedforward_dim=4096,
+            batch_size=4,
+            accumulation_steps=16,
+            max_steps=50000,
+        )
+
+    @classmethod
+    def kaggle_config(cls) -> "NovaMindConfig":
+        # ~85M parameters, trains in ~8hrs on 2xT4
+        return cls(
+            vocab_size=16000,
+            embed_dim=768,
+            num_heads=12,
+            num_layers=12,
+            context_length=512,
+            feedforward_dim=3072,
+            dropout=0.1,
+            batch_size=4,
+            accumulation_steps=16,
+            max_steps=30000,
+            warmup_steps=1000,
+            learning_rate=2e-4,
+            gradient_checkpointing=True,
+            weight_tying=True,
+            device="cuda"
+        )
+
+    @classmethod
+    def local_config(cls) -> "NovaMindConfig":
+        # ~7M parameters, for local smoke testing only
+        return cls(
+            vocab_size=8000,
+            embed_dim=256,
+            num_heads=8,
+            num_layers=6,
+            context_length=256,
+            feedforward_dim=1024,
+            dropout=0.1,
+            batch_size=2,
+            accumulation_steps=8,
+            max_steps=5000,
+            warmup_steps=200,
+            learning_rate=3e-4,
+            gradient_checkpointing=False,
+            device="cuda"
+        )
     
     def __repr__(self) -> str:
         """Pretty-print the configuration as a readable summary."""

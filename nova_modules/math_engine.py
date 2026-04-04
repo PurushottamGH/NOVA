@@ -80,9 +80,11 @@ class NovaMathEngine:
                 return self.integrate_expr(expr.group(1).strip())
         
         elif '=' in text:
-            # Extract equation
-            eq = re.search(r'([^:]+=[^:]+)', text)
-            if eq:
-                return self.solve_equation(eq.group(1).strip())
+            # Strip instruction words before extracting equation
+            clean_text = re.sub(r'\b(solve|find|calculate|compute|what is)\b', '', text, flags=re.IGNORECASE).strip()
+            if '=' in clean_text:
+                eq = re.search(r'([a-zA-Z0-9\s\+\-\*/\^\.]+=[a-zA-Z0-9\s\+\-\*/\^\.]+)', clean_text)
+                if eq:
+                    return self.solve_equation(eq.group(1).strip())
         
         return None

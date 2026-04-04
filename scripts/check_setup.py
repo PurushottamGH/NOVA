@@ -41,17 +41,40 @@ def check_pytorch():
 
 
 def check_dependencies():
-    """Check all required packages."""
-    deps = ["numpy", "tqdm", "matplotlib", "requests", "colorama", "psutil"]
+    """Check all required and optional packages."""
+    # Core requirements
+    required = [
+        "numpy", "tqdm", "matplotlib", "requests", "colorama", "psutil",
+        "sentence_transformers", "faiss", "rich", "prompt_toolkit",
+        "bitsandbytes", "datasets", "huggingface_hub", "sympy", "chromadb"
+    ]
+    
+    # Optional dependencies for NovaFileParser
+    optional = {
+        "fitz": "PyMuPDF (required for PDF parsing)",
+        "docx": "python-docx (required for Word parsing)"
+    }
+    
     all_ok = True
-    for dep in deps:
+    print("\n  [Core Dependencies]")
+    for dep in required:
         try:
-            mod = importlib.import_module(dep)
-            ver = getattr(mod, "__version__", "unknown")
-            print(f"  [OK]   {dep}: {ver}")
+            # Special case for faiss
+            mod_name = "faiss" if dep == "faiss" else dep
+            importlib.import_module(mod_name)
+            print(f"  [OK]   {dep}")
         except ImportError:
-            print(f"  [FAIL] {dep} not installed — run: pip install {dep}")
+            print(f"  [FAIL] {dep} not installed")
             all_ok = False
+
+    print("\n  [Optional Features]")
+    for mod, desc in optional.items():
+        try:
+            importlib.import_module(mod)
+            print(f"  [OK]   {mod} ({desc.split('(')[0].strip()})")
+        except ImportError:
+            print(f"  [WARN] {mod} not found — {desc}")
+
     return all_ok
 
 
@@ -156,12 +179,12 @@ def main():
     all_ok = all(results.values())
 
     if all_ok:
-        print("  ✅ READY — NovaMind is fully set up!")
+        print("  [READY] NovaMind is fully set up!")
     elif critical_ok:
-        print("  ⚠️  MOSTLY READY — some optional items missing (see WARN above)")
-        print("     You can still train, but run data collection first.")
+        print("  [WARN]  MOSTLY READY — some optional items missing (see WARN above)")
+        print("          You can still train, but run data collection first.")
     else:
-        print("  ❌ NOT READY — fix the FAIL items above before training")
+        print("  [ERROR] NOT READY — fix the FAIL items above before training")
     print("=" * 55)
 
 

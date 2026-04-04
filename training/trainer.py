@@ -116,6 +116,8 @@ class Trainer:
         print(f"  Max steps: {self.config.max_steps}")
         print(f"  Starting from step: {self.global_step}")
         print(f"  Gradient accumulation steps: {self.config.accumulation_steps}")  # FIXED: show accum steps
+        if self.global_step == 0 and config.warmup_steps < 100:
+            print("[Trainer] Warning: warmup_steps < 100 may cause instability")
         print("=" * 60)
 
         self.model.train()
@@ -162,6 +164,9 @@ class Trainer:
                     target_ids.view(-1)
                 )
 
+            # Scale loss for gradient accumulation
+            loss = loss / self.config.accumulation_steps
+
             # ============================================================
             # FIXED: NaN/Inf detection — skip batch and zero grad (FIX 2)
             # Without this, NaN propagates silently and corrupts all weights
@@ -196,12 +201,11 @@ class Trainer:
             # FIXED: Gradient accumulation + Mixed Precision (FIX 1)
             # ============================================================
             accum_steps = self.config.accumulation_steps
-            scaled_loss = loss / accum_steps
-            
+
             if self.use_amp:
-                self.scaler.scale(scaled_loss).backward()
+                self.scaler.scale(loss).backward()
             else:
-                scaled_loss.backward()
+                loss.backward()
 
             if (step + 1) % accum_steps == 0:
                 if self.use_amp:
@@ -252,7 +256,7 @@ class Trainer:
             # FIXED: Memory cleanup after each batch (FIX 6)
             # ============================================================
             del logits  # FIXED: free logits tensor
-            del loss, scaled_loss  # FIXED: free loss tensors
+            del loss  # FIXED: free loss tensors
             if step % 100 == 0 and torch.cuda.is_available():
                 torch.cuda.empty_cache()  # FIXED: free GPU cache periodically
 
@@ -344,6 +348,8 @@ class Trainer:
             num_batches += 1
 
         avg_loss = total_loss / max(num_batches, 1)
+        ppl = math.exp(min(avg_loss, 20))
+        print(f"[Eval] Val Loss: {avg_loss:.4f} | Perplexity: {ppl:.2f}")
         return avg_loss
 
     @torch.no_grad()

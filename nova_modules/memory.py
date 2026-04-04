@@ -11,27 +11,37 @@ class NovaMemory:
     def __init__(self, persist_dir: str = "nova_memory"):
         """
         Initialize the memory engine.
-        
-        Args:
-            persist_dir: Directory to store the ChromaDB database.
         """
-        # Ensure the persistence directory exists
-        os.makedirs(persist_dir, exist_ok=True)
-        
-        self.client = chromadb.PersistentClient(path=persist_dir)
-        self.collection = self.client.get_or_create_collection(
-            name="nova_conversations",
-            metadata={"hnsw:space": "cosine"}
-        )
+        # Step 1: ChromaDB Cache Fix
+        # Prevent repetitive 79MB downloads by pinning the cache directory
+        import os
+        CHROMA_CACHE = os.path.expanduser("~/.cache/chroma")
+        os.makedirs(CHROMA_CACHE, exist_ok=True)
+        os.environ["CHROMA_CACHE_DIR"] = CHROMA_CACHE
+
+        # Step 2: Resilient Initialization
+        try:
+            # Ensure the persistence directory exists
+            os.makedirs(persist_dir, exist_ok=True)
+            self.client = chromadb.PersistentClient(path=persist_dir)
+            self.collection = self.client.get_or_create_collection(
+                name="nova_conversations",
+                metadata={"hnsw:space": "cosine"}
+            )
+            self._available = True
+            print(f"[NovaMemory] Persistent memory connected at {persist_dir}")
+        except Exception as e:
+            print(f"[NovaMemory] Warning: ChromaDB unavailable: {e}")
+            self._available = False
+            self.collection = None
     
     def remember(self, user_msg: str, nova_response: str):
         """
         Store a conversation turn in the vector database.
-        
-        Args:
-            user_msg: The message from the user.
-            nova_response: The response from Nova.
         """
+        if not self._available:
+            return
+            
         # Use timestamp as unique ID
         doc_id = f"conv_{datetime.now().timestamp()}"
         
@@ -47,15 +57,8 @@ class NovaMemory:
     def recall(self, query: str, n_results: int = 3) -> list:
         """
         Retrieve relevant past conversations based on a search query.
-        
-        Args:
-            query: The search text (usually the current user message).
-            n_results: Number of memories to retrieve.
-            
-        Returns:
-            List of relevant document strings.
         """
-        if self.collection.count() == 0:
+        if not self._available or self.collection.count() == 0:
             return []
         
         results = self.collection.query(
