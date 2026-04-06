@@ -101,9 +101,10 @@ def main():
     # Initialization Spinner
     with console.status("[bold magenta]Igniting NovaMind...[/]", spinner="dots"):
         try:
-            # Drop-in loading
-            model_path = "weights/final_model"
-            tokenizer_path = "weights/tokenizer"
+            # Resolve paths relative to this script's location
+            project_root = Path(__file__).parent.resolve()
+            model_path = str(project_root / "weights" / "final_model")
+            tokenizer_path = str(project_root / "weights" / "tokenizer")
             
             chat_engine = NovaChatEngine(model_path, tokenizer_path)
             # Re-use engine's model/tokenizer for the router

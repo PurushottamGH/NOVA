@@ -12,6 +12,12 @@ Supported intents:
     blender -> NovaBlenderAgent
     chat    -> passthrough to NovaMind
 
+Routing strategy:
+    1. Keyword scoring (weighted matches across multiple signals)
+    2. Regex pattern matching for inline expressions
+    3. Negation handling (e.g. "don't search" suppresses search intent)
+    4. Confidence threshold — below threshold falls back to "chat"
+
 Usage:
     router = NovaToolRouter(model, tokenizer, config)
     result = router.route("solve x^2 - 4 = 0")
@@ -19,9 +25,7 @@ Usage:
 """
 
 import re
-from typing import Dict, Optional
-
-
+from typing import Dict, Optional, List, Tuple
 from collections import Counter
 
 
@@ -31,30 +35,63 @@ class NovaToolRouter:
     appropriate Nova tool module.
     """
 
-    # Keyword -> intent mapping (checked in priority order)
+    # Keyword -> intent mapping with weights (higher = stronger signal)
     INTENT_KEYWORDS = {
         "code": [
-            "write code", "python", "script", "function",
-            "debug", "error", "fix", "run this", "execute",
-            "def ", "class ", "import ", "how to build", "how to make",
+            ("write code", 3), ("python", 1), ("script", 2), ("function", 1),
+            ("debug", 2), ("error", 1), ("fix", 1), ("run this", 3),
+            ("execute", 2), ("def ", 3), ("class ", 3), ("import ", 2),
+            ("how to build", 2), ("how to make", 2), ("code snippet", 2),
+            ("implement", 2), ("algorithm", 1), ("program", 1),
         ],
         "math": [
-            "solve", "calculate", "integrate", "derivative",
-            "equation", "differentiate", "factor", "simplify",
+            ("solve", 2), ("calculate", 3), ("integrate", 3), ("derivative", 3),
+            ("equation", 2), ("differentiate", 3), ("factor", 2), ("simplify", 2),
+            ("integral", 3), ("what is", 0),  # "what is" removed from math
         ],
         "search": [
-            "search", "find online", "latest", "what is",
-            "research", "look up", "google", "who is",
+            ("search for", 3), ("find online", 3), ("latest news", 2),
+            ("research", 2), ("look up", 3), ("google", 3), ("who is", 2),
+            ("current", 1), ("recent", 1), ("today", 1),
         ],
         "file": [
-            "read file", "edit file", "open file", "save file",
-            "directory", "folder", "list files", "write file",
+            ("read file", 3), ("edit file", 3), ("open file", 3),
+            ("save file", 3), ("directory", 2), ("folder", 2),
+            ("list files", 3), ("write file", 3), ("file path", 2),
         ],
         "blender": [
-            "blender", "3d", "render", "mesh", "material",
-            "animation", "bpy", "3d model",
+            ("blender", 3), ("3d", 2), ("render", 2), ("mesh", 2),
+            ("material", 1), ("animation", 2), ("bpy", 3), ("3d model", 3),
         ],
     }
+
+    # Negation patterns that suppress an intent
+    NEGATION_PATTERNS = {
+        "search": [
+            r"\b(?:don'?t|do not|no|never|not)\s+(search|find online|look up|google)\b",
+            r"\b(?:search|find|look up)\s+(?:my|the|this)\s+(?:files?|folder|directory)\b",
+        ],
+        "code": [
+            r"\b(?:don'?t|do not|no|never|not)\s+(run|execute|write code)\b",
+        ],
+    }
+
+    # Regex patterns that strongly indicate an intent (high confidence)
+    INTENT_PATTERNS = {
+        "math": [
+            r'[a-zA-Z]\s*\^?\d*\s*[+\-]\s*\d*\s*[a-zA-Z]',  # e.g. "x^2 + 3x"
+            r'[a-zA-Z]\s*=\s*[a-zA-Z0-9\.\+\-\*/\^]+',        # e.g. "y = x^2 + 1"
+            r'\d+\s*[+\-*/]\s*\d+\s*=\s*\?',                   # e.g. "5 + 3 = ?"
+        ],
+        "code": [
+            r'```[a-zA-Z]*\n',                                  # code blocks
+            r'\bdef\s+\w+\s*\(',                                # function definitions
+            r'\bclass\s+\w+',                                   # class definitions
+        ],
+    }
+
+    # Minimum confidence score to trigger a tool (below = "chat")
+    CONFIDENCE_THRESHOLD = 3
 
     def __init__(self, model, tokenizer, config):
         self.model = model
@@ -83,12 +120,17 @@ class NovaToolRouter:
         print("[ToolRouter] All tools initialised")
 
     # ------------------------------------------------------------------ #
-    #  Intent detection
+    #  Intent detection with scoring
     # ------------------------------------------------------------------ #
 
     def detect_intent(self, user_message: str) -> str:
         """
-        Classify user message into an intent category.
+        Classify user message into an intent category using weighted scoring.
+
+        Scoring:
+            1. Keyword matches (weighted)
+            2. Regex pattern matches (high confidence boost)
+            3. Negation suppression (removes false positives)
 
         Args:
             user_message: Raw user input string.
@@ -97,19 +139,39 @@ class NovaToolRouter:
             One of: "code", "math", "search", "file", "blender", "chat"
         """
         text_lower = user_message.lower()
+        scores: Dict[str, float] = {intent: 0.0 for intent in self.INTENT_KEYWORDS}
 
-        for intent, keywords in self.INTENT_KEYWORDS.items():
-            for kw in keywords:
-                if kw in text_lower:
-                    return intent
+        # 1. Keyword scoring
+        for intent, weighted_keywords in self.INTENT_KEYWORDS.items():
+            for keyword, weight in weighted_keywords:
+                if keyword in text_lower:
+                    scores[intent] += weight
 
-        # Check for inline code patterns (backticks or equals sign with variables)
-        if re.search(r'```', user_message):
-            return "code"
-        if re.search(r'[a-zA-Z]\s*\^?\d*\s*[+\-*/=]', user_message):
-            return "math"
+        # 2. Regex pattern scoring (strong signals)
+        for intent, patterns in self.INTENT_PATTERNS.items():
+            for pattern in patterns:
+                if re.search(pattern, user_message):
+                    scores[intent] += 5  # High confidence boost
 
-        return "chat"
+        # 3. Negation suppression
+        for intent, neg_patterns in self.NEGATION_PATTERNS.items():
+            for pattern in neg_patterns:
+                if re.search(pattern, text_lower):
+                    scores[intent] = 0  # Suppress this intent entirely
+
+        # 4. Math expression detection (specific to math engine)
+        if self.math_engine.detect_and_solve(user_message) is not None:
+            scores["math"] += 3
+
+        # Find the highest-scoring intent
+        best_intent = max(scores, key=scores.get)
+        best_score = scores[best_intent]
+
+        # If below confidence threshold, fall back to chat
+        if best_score < self.CONFIDENCE_THRESHOLD:
+            return "chat"
+
+        return best_intent
 
     # ------------------------------------------------------------------ #
     #  Garbage Detection & Fallbacks
@@ -124,7 +186,7 @@ class NovaToolRouter:
         words = text.split()
         if not words:
             return True
-        
+
         # 1. Merged words detection (tokenizer bug)
         avg_word_len = sum(len(w) for w in words) / len(words)
         if avg_word_len > 12:
@@ -151,24 +213,24 @@ class NovaToolRouter:
 def calculator():
     print("Nova Calculator")
     print("Operations: +, -, *, /")
-    
+
     while True:
         try:
             a = float(input("First number: "))
             op = input("Operation (+,-,*,/): ")
             b = float(input("Second number: "))
-            
+
             if op == "+": print(f"Result: {a + b}")
             elif op == "-": print(f"Result: {a - b}")
             elif op == "*": print(f"Result: {a * b}")
-            elif op == "/": 
+            elif op == "/":
                 if b != 0: print(f"Result: {a / b}")
                 else: print("Error: Division by zero")
             else:
                 print("Unknown operation")
         except ValueError:
             print("Invalid input")
-        
+
         if input("Continue? (y/n): ").lower() != "y":
             break
 

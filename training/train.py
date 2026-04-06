@@ -30,7 +30,7 @@ from model.utils import model_summary, estimate_flops
 from tokenizer.tokenizer import NovaMindTokenizer
 from data.dataloader import create_dataloaders, get_text_files
 from training.trainer import Trainer
-from training.checkpointing import is_checkpoint_stable, resume_training
+from training.checkpoint import is_checkpoint_stable, resume_training
 
 
 def main():

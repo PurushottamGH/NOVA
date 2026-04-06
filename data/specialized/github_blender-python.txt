@@ -1,0 +1,1168 @@
+
+--- REPOSITORY: ranjian0/building_tools ---
+README:
+# [Building Tools](https://ranjian0.github.io/building_tools/)
+
+> ⚡️ Crazy fast way to model buildings in Blender!
+
+Artists should redirect to: https://ranjian0.github.io/building_tools/
+
+## Table of contents
+
+* [Background](#background)
+* [Usage](#usage)
+* [Installation](#installation)
+* [Features](#features)
+* [Status](#status)
+* [Inspiration](#inspiration)
+* [Contributing](#contributing)
+* [Authors](#authors)
+
+## Background
+
+This addon started out as a collection of scripts used to create 3d models for games.
+
+After a couple of months of development, I noticed that most of the scripts were geared
+towards creating buildings and environments. I decided to create a proper addon for them
+and `Building Tools` was born.
+
+## Usage
+
+[![Tutorial Videos](http://img.youtube.com/vi/rB1fm4I_bW4/0.jpg)](http://www.youtube.com/watch?v=rB1fm4I_bW4)
+
+## Installation
+
+1. Download add-on (zipped) from this [link](https://github.com/ranjian0/building_tools/releases/download/v1.0.13/building_tools_v1.0.13.zip).
+2. In blender, go to : Edit -> Preferences -> Add-ons -> Install.
+3. Select the downloaded file and you're good to go.
+
+
+## Features
+
+* [Floorplans](https://github.com/ranjian0/building_tools/wiki/Floorplan)
+* [Floors](https://github.com/ranjian0/building_tools/wiki/Floor)
+* [Doors](https://github.com/ranjian0/building_tools/wiki/Door)
+* [Windows](https://github.com/ranjian0/building_tools/wiki/Window)
+* [Multigroup](https://github.com/ranjian0/building_tools/wiki/Multigroup) (door-window combinations)
+* [Roof](https://github.com/ranjian0/building_tools/wiki/Roof)
+* [Stairs](https://github.com/ranjian0/building_tools/wiki/Stairs)
+* [Balcony](https://github.com/ranjian0/building_tools/wiki/Balcony)
+
+## Status
+
+`Version` : `v1.0.13`
+
+**Blender 4.0 Compatible** 
+
+## Inspiration
+
+Project inspired by `Ghost Town` addon for `3DS MAX`.
+
+## Contributing
+
+  * Feel free to fork and submit pull requests.
+
+  * Incase of bugs, create an issue that describes the problem
+    and attach any relevant info/logs.
+
+  * For feature requests, create an issue and add **Enhancement** label.
+
+  You can chat with other contributors over at our [discord server](https://discord.gg/hK4UaGu).
+
+## Authors
+
+Created by [ranjian0](https://github.com/ranjian0), [luckykadam](https://github.com/luckykadam) and [MCrafterzz](https://github.com/MCrafterzz). Feel free to contact.
+
+## Support
+
+If you would like to support our work you can do so through Paypal,
+
+[![](https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif)](https://www.paypal.com/donate?hosted_button_id=EX6AB8P8M9VZG)
+
+
+--- REPOSITORY: aachman98/Sorcar ---
+README:
+# Sorcar
+
+Procedural modeling in Blender using Node Editor
+
+![sc_cover](https://github.com/aachman98/sc-img-data/raw/master/sc_cover.png "Sorcar v3")
+<!-- [![sc_](http://img.youtube.com/vi/VIDEO_ID/0.jpg)](http://www.youtube.com/watch?v=VIDEO_ID "Sorcar v3") -->
+</br>BlenderArtist Thread: <https://blenderartists.org/t/sorcar-procedural-modeling-in-blender-using-node-editor/1156769>
+</br>Intro & Tutorials: <https://www.youtube.com/playlist?list=PLZiIC3gdS_O7nCm1-xpWbZmTQWeL5c6KV>
+</br>Trello (Project Tracker): <https://trello.com/b/aKIFRoTh/sorcar>
+</br>Documentation: https://github.com/aachman98/Sorcar/wiki
+
+## About
+
+Sorcar is a **procedural modeling node-based system** which utilises Blender and its Python API to create a visual programming environment for artists and developers. Heavily inspired by Side-FX Houdini, it presents a node editor with a variety of **modular nodes** to make the modelling workflow easier and fast. Most of the nodes are blender internal operations (bpy.ops.mesh/object) which also makes it easier for frequent blender users to manipulate geometry. It helps the users to quickly create 3D models and **control node parameters** to generate limitless variations in a **non-destructive** manner. It also provides the users to view and edit mesh on any stage of the node network independently, with **realtime updates**.
+
+## Release & Instructions
+
+[Latest Release (v3.2.1)](https://github.com/aachman98/Sorcar/releases/latest)
+</br>*Requirement: Blender 2.81 or later*
+
+1. Download the zip file and install it as a Blender addon (Edit -> Preferences... -> Add-ons -> Install...)
+2. Open Sorcar Node Editor (**Do not** remove the 3D viewport as it is required by some operations like extrude, transform, ...)
+3. Click on the + button to create a new tree
+4. Press Shift+A to open the nodes menu. Alternatively, navigate through tabs on the Right panel in the node editor
+5. Select the desired node and press "Set Preview"
+
+*Open blender using a command prompt to view logs and errors, if encountered.*
+
+## Features
+
+| | |
+| --- | --- |
+| ![sc_visual_programming](https://github.com/aachman98/sc-img-data/raw/master/sc_visual_programming.gif "Visual Programming") | <p style="text-align: left; padding-left: 16px;"><strong>VISUAL PROGRAMMING</strong><br /><em>Don't like programming?</em></p> <hr style="padding-left: 16px;" /> <p style="text-align: left; padding-left: 16px;">Construct geometries using custom algorithms, maths or generate patterns without writing a single line of code!</p> |
+| <p style="text-align: right; padding-right: 16px;"><strong>NON-DESTRUCTIVE WORKFLOW</strong><br /><em>Want to change cylinder vertices after bevel?</em></p> <hr style="padding-right: 16px;" /> <p style="text-align: right; padding-right: 16px;">Edit node parameters at any point without the fear of losing mesh data. Also apply same procedural operations to different objects easily.</p> | ![sc_non_destructive](https://github.com/aachman98/sc-img-data/raw/master/sc_non_destructive.gif "Non-Destructive Workflow") |
+| ![sc_realtime_updates](https://github.com/aachman98/sc-img-data/raw/master/sc_realtime_updates.gif "Realtime Updates") | <p style="text-align: left; padding-left: 16px;"><strong>REAL-TIME UPDATES</strong><br /><em>Quick as the wind...</em></p> <hr style="padding-left: 16px;" /> <p style="text-align: left; padding-left: 16px;">Drive a parameter using current frame value (or manually change it) and see the mesh update in viewport.</p> |
+| <p style="text-align: right; padding-right: 16px;"><strong>ITERATE & RANDOMIZE</strong><br /><em>Need multiple extrusions of random amount?</em></p> <hr style="padding-right: 16px;" /> <p style="text-align: right; padding-right: 16px;">Generate variations in mesh by using seed-controlled pseudorandom numbers. Use loops to handle repeatitive operations with same level of randomness.</p> | ![sc_iterate_randomize](https://github.com/aachman98/sc-img-data/raw/master/sc_iterate_randomize.gif "Iterate & Randomize") |
+| ![sc_automation](https://github.com/aachman98/sc-img-data/raw/master/sc_automation.gif "Automation") | <p style="text-align: left; padding-left: 16px;"><strong>AUTOMATION</strong><br /><em>Modify, Save, Repeat...</em></p> <hr style="padding-left: 16px;" /> <p style="text-align: left; padding-left: 16px;">Use frame number to drive seed value and batch export the meshes in different files.</p> |
+| <p style="text-align: right; padding-right: 16px;"><strong>250+ NODES</strong><br /><em>At your service!</em></p> <hr style="padding-right: 16px;" /> <p style="text-align: right; padding-right: 16px;">A growing list of functions available as nodes (operators & scene settings) including custom inputs, curve/mesh conversion, selection & transform tools, modifiers and component level operators.</p> | ![sc_nodes](https://github.com/aachman98/sc-img-data/raw/master/sc_nodes.gif "250+ Nodes") |
+
+- Node-Groups to collapse big node networks into a single node with custom inputs & outputs
+- 
+
+--- REPOSITORY: ptrvilya/blendify ---
+README:
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./docs/_static/logo/blendify_logo_dark_bg.png">
+  <img alt="blendify logo" src="./docs/_static/logo/blendify_logo_light_bg.png">
+</picture>
+
+<p align="center">
+    <a href="https://arxiv.org/abs/2410.17858">
+        <img src="https://img.shields.io/badge/arXiv-2410.17858-b31b1b" alt="Paper PDF">
+    </a>
+    &emsp;
+    <a href="https://colab.research.google.com/github/ptrvilya/blendify/blob/main/examples/ipynb/blendify_colab_demo.ipynb">
+        <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Google Colab">
+    </a>
+    &emsp;  
+    <a href="https://virtualhumans.mpi-inf.mpg.de/blendify/index.html">
+        <img src="https://img.shields.io/badge/Project%20page-0e80c0" alt="Project page"/>
+    </a>
+    &emsp;  
+    <a href="https://pypi.org/project/blendify/">
+        <img src="https://img.shields.io/badge/pypi%20package-2.1-0e80c0" alt="pypi package"/>
+    </a>   
+    &emsp;
+    <a href="https://www.gnu.org/licenses/gpl-3.0.html">
+        <img src="https://img.shields.io/badge/License-GPL%20v3-yellow.svg" alt="The GPL v3 License"/>
+    </a>
+</p>
+
+## Introduction
+Blendify is a lightweight Python framework that provides a high-level API for creating and rendering scenes with Blender. Developed with a focus on 3D computer vision visualization, Blendify simplifies access to selected Blender functions and objects.
+
+Key features of Blendify:
+
+1. **Simple interface:** Blendify provides a user-friendly interface for performing common visualization tasks without having to dive into the complicated Blender API.
+
+2. **Easy integration:** Blendify seamlessly integrates with development scripts, implementing
+commonly used routines and functions:
+    * native support of point clouds, meshes, and primitives;
+    * support of per-vertex colors and textures;
+    * advanced shadows with shadow catcher objects;
+    * video rendering with smooth camera trajectories;
+    * support for common camera models;
+    * import and export of .blend files for deeper integration with Blender;
+    * per-face definition of materials for meshes;
+    * support for common rotation representations and look-at utility to automatically setup orientation.
+3. **Quick start:** Blendify is easy to get started with and does not require a standalone Blender installation. All you need to do is run `pip install blendify`.
+
+4. **Blendify works in Colab:** check out [our Google Colab demo](https://colab.research.google.com/github/ptrvilya/blendify/blob/main/examples/ipynb/blendify_colab_demo.ipynb)!
+
+## Installation instructions
+Please note: **Blendify requires Python 3.11** and **Blender 4.5 LTS**.
+To install older versions of blendify (with Blender < 4.0) add `--find-links https://download.blender.org/pypi/bpy/`.
+### Install from pip (minimal package, no extra dependencies)
+```bash
+pip install blendify
+```
+### Install the full package with optional requirements
+```bash
+pip install blendify[all]
+```
+The full package includes extra dependencies for utilities, examples and documentation.
+
+
+## Quick Start
+```python
+# Script to render cube
+from blendify import scene
+from blendify.materials import PrincipledBSDFMaterial
+from blendify.colors import UniformColors
+# Add light
+scene.lights.add_point(strength=1000, translation=(4, -2, 4))
+# Add camera
+scene.set_perspective_camera((512, 512), fov_x=0.7, rotation=(0.82, 0.42, 0.18, 0.34), translation=(5, -5, 5))
+# Create material
+material = PrincipledBSDFMaterial()
+# Create color
+color = UniformColors((0.0, 1.0, 0.0))
+# Add cube mesh
+scene.renderables.add_cube_mesh(1.0, material, color)
+# Render scene
+scene.render(filepath="cube.png")
+```
+
+
+## Examples
+**Note:** Examples require extra dependencies, make sure to install them with `pip install blendify[examples]`
+
+Running examples 4 and 5 requires [PyTorch](https://pytorch.org/), running example 5 also requires SMPL model files, please refer to the installation instructions in 
+SMPL-X [README](https://github.com/vchoutas/smplx#downloading-the-model).
+
+<table>
+  <tr align="center">
+    <td><a href="examples/01_cornell_box.py"><b>Cornell Box</b></a></td>
+    <td><a href="examples/02_color_albedo_depth.py"><b>Color, albedo and depth</b></a></td>
+  </tr>
+  <tr align="center">
+    <td><img src="./docs/_static/examples/01_cornell_box.jpg" width="310px"/></td>
+    <td><img src="./docs/_static/examples/02_color_albedo_depth.jpg" width="310px"/></td>
+  </tr>
+  <tr align="center">
+    <td><a href="examples/03_mesh_with_texture.py"><b>Mesh with texture</b></a></td>
+    <td><a href="examples/04_camera_colored_point_cloud.py"><b>Camera colored point cloud</b></a></td>
+  </tr>
+  <tr align="center">
+    <td><img src="./docs/_static/examples/03_mesh_with_texture.jpg" width="310px"/></td>
+    <td><img src="./docs/_static/examples/04_camera_colored_point_cloud.gif" width="310px"/></td>
+  </tr>
+  <tr align="center">
+    <td><a href="examples/05_smpl_movement.py"><b>SMPL movement</b></a></td>
+    <td
+
+--- REPOSITORY: DIYer22/bpycv ---
+README:
+# `bpycv`: Computer Vision and Deep Learning Utils for Blender
+
+### Contents: [Features](#-features) | [Install](#-install) | [Demo](#-demo) | [Tips](#-tips) 
+
+![0](https://user-images.githubusercontent.com/10448025/115022704-55937980-9ef0-11eb-952e-c85eb5fad4b8.jpg)      
+*Figure.1 Render instance annoatation, RGB image and depth*
+
+## ▮ Features
+ - [x] Render annotations for semantic segmentation, instance segmentation and panoptic segmentation 
+ - [x] Generate 6DoF pose ground truth
+ - [x] Render depth ground truth
+ - [x] Pre-defined domain randomization: 
+    - [Light and background](https://github.com/DIYer22/bpycv_example_data/tree/main/background_and_light), automatic download from [HDRI Haven](https://hdrihaven.com/hdris/)
+    - [Distractors](https://arxiv.org/pdf/1804.06516) from [ShapeNet](https://shapenet.org/) (e.g. vase, painting, pallet in Figure.1)
+    - Textures from [Texture Haven](https://texturehaven.com/textures/)
+ - [x] Easy installation and demo running
+ - [x] Docker support: `docker run -v /tmp:/tmp diyer22/bpycv` (see [Dockerfile](Dockerfile))
+ - [x] A Python Codebase for building synthetic datasets (see [example/ycb_demo.py](example/ycb_demo.py))
+ - [x] Conversion to [Cityscapes annotation format](https://github.com/DIYer22/bpycv/issues/38)
+ - [x] Easy development and debugging due to:
+    - No complicated packaging
+    - Use of Blender's native API and calling methods
+
+**Our Projects that rely on `bpycv`:** 
+- 🔬 Research: [Building Five Irregular Shape Instance Segmentation Datasets](https://github.com/iShape/build_synthetic_ishape)
+- 🎮 Demo: [3D Reconstruction + Blender Data Synthesis + AutoML == Free  Detection and Segmentation Model](https://www.youtube.com/watch?v=qTKNQu30rhM)
+- 🥈 Achievement: [We win 2nd place in IROS 2020 Open Cloud Robot Table Organization Challenge (OCRTOC)](https://github.com/DIYer22/bpycv/issues/15)
+
+## ▮ Install
+`bpycv` support Blender 2.9, 3.x, 4.x
+
+1. Download and install Blender [here](https://www.blender.org/download/).
+
+2. Open Blender dir in terminal and run install script:
+
+```bash
+# For Windows user: ensure powershell has administrator permission
+# For MacOS user: replace ./blender to /Applications/Blender.app/Contents/MacOS/Blender
+
+# Ensure pip: equl to /blender-path/3.xx/python/bin/python3.10 -m ensurepip
+./blender -b --python-expr "from subprocess import sys,call;call([sys.executable,'-m','ensurepip'])"
+# Update pip toolchain
+./blender -b --python-expr "from subprocess import sys,call;call([sys.executable]+'-m pip install -U pip setuptools wheel'.split())"
+# pip install bpycv
+./blender -b --python-expr "from subprocess import sys,call;call([sys.executable]+'-m pip install -U bpycv'.split())"
+# Check bpycv ready
+./blender -b -E CYCLES --python-expr "import bpycv,cv2;d=bpycv.render_data();bpycv.tree(d);cv2.imwrite('/tmp/try_bpycv_vis(inst-rgb-depth).jpg', d.vis()[...,::-1])"
+```
+
+## ▮ Demo
+#### 1. Fast Instance Segmentation and Depth Demo
+Copy-paste this code to `Scripting/Text Editor` and click `Run Script` button(or `Alt+P`)
+```python
+import cv2
+import bpy
+import bpycv
+import random
+import numpy as np
+
+# remove all MESH objects
+[bpy.data.objects.remove(obj) for obj in bpy.data.objects if obj.type == "MESH"]
+
+for index in range(1, 20):
+    # create cube and sphere as instance at random location
+    location = [random.uniform(-2, 2) for _ in range(3)]
+    if index % 2:
+        bpy.ops.mesh.primitive_cube_add(size=0.5, location=location)
+        categories_id = 1
+    else:
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.5, location=location)
+        categories_id = 2
+    obj = bpy.context.active_object
+    # set each instance a unique inst_id, which is used to generate instance annotation.
+    obj["inst_id"] = categories_id * 1000 + index
+
+# render image, instance annoatation and depth in one line code
+result = bpycv.render_data()
+# result["ycb_meta"] is 6d pose GT
+
+# save result
+cv2.imwrite(
+    "demo-rgb.jpg", result["image"][..., ::-1]
+)  # transfer RGB image to opencv's BGR
+
+# save instance map as 16 bit png
+cv2.imwrite("demo-inst.png", np.uint16(result["inst"]))
+# the value of each pixel represents the inst_id of the object
+
+# convert depth units from meters to millimeters
+depth_in_mm = result["depth"] * 1000
+cv2.imwrite("demo-depth.png", np.uint16(depth_in_mm))  # save as 16bit png
+
+# visualization instance mask, RGB, depth for human
+cv2.imwrite("demo-vis(inst_rgb_depth).jpg", result.vis()[..., ::-1])
+print(f"Saving vis image to: 'demo-vis(inst_rgb_depth).jpg'")
+```
+Open `./demo-vis(inst_rgb_depth).jpg`:   
+
+![demo-vis(inst_rgb_depth)](https://user-images.githubusercontent.com/10448025/115022679-4ad8e480-9ef0-11eb-9a42-cdfbf7e9d2ae.jpg)
+
+#### 2. YCB Demo
+
+```shell
+mkdir ycb_demo
+cd ycb_demo/
+
+# prepare code and example data
+git clone https://github.com/DIYer22/bpycv
+git clone https://github.com/DIYer22/bpycv_example_data
+
+cd bpycv/example/
+
+blender -b -P ycb_demo.py
+
+cd dataset/vis/
+ls .  # visualize result here
+# 0.jpg
+```
+Open visua
+
+--- REPOSITORY: Mustard2/MustardUI ---
+README:
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/c10812e2-f136-4da9-bd70-d475eb906c9a" width="200" />
+</p>
+
+
+# MustardUI
+
+MustardUI is a Blender Extension that provides an intuitive and easy-to-use user interface for human models.
+
+**Note: do not download the file from the Code button, download it from the [Blender Extension official website](https://extensions.blender.org/add-ons/mustardui/) or use the .zip file on the [latest release](https://github.com/Mustard2/MustardUI/releases/latest) instead.**
+
+## Features
+
+The main features are:
+
+* Configuration panel to create your UI without writing a single line of Python code
+* Automatic Outfit and Hair recognition, with possible manual additions
+* Full outfit support: possibility to combine parts from different outfits, automatic mask/armature layers switcher for the body and the hair on outfit selection, and many other functionalities
+* Settings like Subsurface Scattering and Normals Auto Smooth can be toggled on/off for all model parts in one click
+* Any Blender property can be added with a simple right-click to Body, Outfit and Hair panels
+* Simplify button to quickly turn off modifiers and settings that can decrease Viewport performance
+* Creator tools to quickly add physics effects (Cages, Bone Physics) and useful rigs (Spline IK). Plus many others.
+* Diffeomorphic Daz Morphs support for Daz based models
+* Various other user tools for animators (physics panel, and many others)
+
+![](https://i.ibb.co/2v8m743/Immagine-2022-11-26-011024.png)
+![](https://i.ibb.co/z7gbkC9/Immagine-2022-11-26-011007.png)
+
+## How to install
+
+There are two supported ways to install the add-on:
+
+- (Recommended) Install the add-on as a Blender extension, either from the [website](https://extensions.blender.org/add-ons/mustardui/) or in the Get Extensions panel of Blender settings. **This is the recommended method for installing the add-on, as it ensures automatic updates.**
+- Download the [latest version](https://github.com/Mustard2/MustardUI/releases/latest) from the Releases page, and install it as a Blender Extension or a Legacy Blender add-on. **Do not download the code from the repository! Only use the .zip files in the Release page.**
+
+## Configuration and Tutorial
+
+- For creators of models, be sure to follow the [Developer Guide](https://github.com/Mustard2/MustardUI/wiki/Developer-Guide)!
+- For users, check the [tutorial](https://mustard3d.eu/documentation/#mustardui-and-tools) (MustardUI section).
+
+## Note for Developers/Users
+
+Feel free to open new Issues, both for bugs and new features proposals. Also, all comments are very welcome!
+
+## Credits
+
+- [Diffeomorphic and MHX developers](https://diffeomorphic.blogspot.com/)
+
+
+--- REPOSITORY: BrendanParmer/NodeToPython ---
+
+--- REPOSITORY: JoshRBogart/unreal_tools ---
+README:
+# Unreal Tools
+
+##### Blender 4.0.1
+
+## Description
+A series of tools used to store vertex data in various ways. The data can then used in a game engine to animate meshes via a vertex shader.
+
+### Mesh Morpher
+Used to store vertex offsets between a meshes shape keys in it's UV layers. Optionally vertex normals from it's second shape key can be stored in it's vertex colors.
+
+### Vertex Animation
+Used to store vertex offsets and normals of selected mesh objects per frame into image textures.
+
+## Getting Started
+These tools can be installed as add-ons or ran as scripts. Each tool has a panel located in the 3D View's sidebar under the Unreal Tools tab.
+
+### Installing as an Add-on
+First download and unzip files into desired directory.
+
+While in Blender open the user preferences window.
+
+**Edit > Preferences**
+
+Navigate the the **add-ons** tab.
+
+Click the option to **install**.
+
+A file browser will open.
+
+Navigate to directory containing the tools.
+    
+Select the tool you want install.
+
+Then click **install add-on**.
+
+### Running as a Script
+First download and unzip files into desired directory.
+
+While in Blender use the text editor to open the tool you want to use.
+
+Then either click the run script operator (the **arrow** icon in header) or use **alt+p** shortcut.
+
+## Authors
+
+* **Joshua Bogart**
+
+## Acknowledgments
+* Adapted for Blender from 3ds Max scripts created by **Jonathan Lindquist** at **Epic Games**.
+
+
+--- REPOSITORY: SpectralVectors/RightMouseNavigation ---
+README:
+# RightMouseNavigation
+### Addon now a Blender Extension, one-click install from within Blender!
+![RightMouseNavigation Logo](/RightMouseNavigationLogoV2.png)
+Enables Unreal Engine-style Right Mouse Viewport Navigation and Blueprint-like Node workflow.
+
+Maps Blender's Walk/Fly Navigation to the Right Mouse Button in addition to the standard context menus in the 3D Viewport.
+
+It also (optionally) maps the Node Editor's Pan View and Add/Search Node Menu to the Right Mouse Button.
+
+It also (optionally) can remap the Middle Mouse Button 3D View controls to Right Mouse Button to match other 3D software.
+
+[![Install and Use](https://img.youtube.com/vi/wIEsuaaS-Hw/0.jpg)](https://www.youtube.com/watch?v=wIEsuaaS-Hw)
+
+## How to Install
+### Blender 4.2
+- Open **Blender**
+- click **Edit > Preferences > Extensions**
+- scroll or search for **Right Mouse Navigation**
+- click **Install**
+### Blender 4.1 and earlier
+Download __RightMouseNavigation.zip__ from the __Releases__ section on the right, then install by:
+- opening __Blender__
+- selecting __Edit__ > __Preferences__ > __Addons__ > __Install__ 
+- select __RightMouseNavigation.zip__
+- click __Install Addon__
+
+## How to Use
+### 3D Viewport
+- Right Mouse Hold + WASD to Navigate 3D Viewport
+- Right Mouse Click to open Context Menus
+- Mouse Wheel to adjust Viewport Move Speed (while Right Mouse is held)
+
+### Node Editor (when enabled)
+- Right Mouse Hold + Drag to Pan the Node Editor
+- Right Mouse Click to open Add/Search Menu
+
+### Right Click Select vs Left Click Select
+The addon was designed with Left Click Select users in mind, to remap navigation and context menus to the Right Mouse button.
+
+To broaden the functionality of the addon, Right Click Select support has been added:
+- clicking Right Mouse will select
+- holding Right Mouse allows you to navigate
+- the W key opens context menus, as before
+
+### Preferences
+You can adjust the threshold for when you navigate/open menus by adjusting the time the mouse button is held in __Edit__ > __Preferences__ > __Addons__ > __View 3D: Right Mouse Navigation__ by clicking the dropdown arrow and tweaking the values there.
+
+Additionally, in the settings, you can change the cursor resetting behavior. By default, the cursor will snap back to the location where you initally clicked Right Mouse Button, after navigation exits. If you would rather the cursor stay in the center (where the navigation crosshair is) after navigation, you can disable the setting. 
+
+You can enable/disable Node Editor mode in the Preferences.
+
+#### Switching default Middle Mouse 3D View Controls to Right Mouse
+To match other 3D software, the Middle Mouse 3D View camera controls can also be switched to use the Right Mouse instead:
+- Shift + Drag RMB to Pan 3D View
+- Ctrl + Drag RMB to Zoom 3D View
+- Ctrl + Shift + Drag RMB to Dolly Zoom 3D View
+- Alt + Drag RMB to Rotate 3D View
+
+Other controls that were switched to Middle Mouse:
+- Shift + Click MMB to Set 3D Cursor
+- Shift + Drag MMB to Transform Translate
+- Ctrl + Drag MMB to Lasso Selection
+- Shift + Ctrl + Drag MMB to Lasso Deselection
+
+There is also a setting to switch the activation of Right Mouse Navigation mode and the 3D View Rotate keymapping:
+- Drag + RMB will now Rotate 3D View
+- Alt + RMB then WASD for Navigation Mode
+
+## Acknowledgements and Thanks
+
+Big thanks to __Biaru__ and __NathanC__ for their contributions to the code!
+
+## Code Walkthrough
+(old)
+[![Code Walkthrough](https://img.youtube.com/vi/pSrqSz2PcY8/0.jpg)](https://www.youtube.com/watch?v=pSrqSz2PcY8)
+
+
+--- REPOSITORY: varkenvarken/blenderaddons ---
+README:
+blenderaddons
+=============
+
+A collection of small addons for Blender, mostly documented on [my blog](blenderthings.blogspot.com)
+
+If you are interested in developing add-ons yourself, check out [this repo, blenderaddons-ng](https://github.com/varkenvarken/blenderaddons-ng) which is configured to provide easy testing, benchmarking, profiling and automated testing in Vscode & GitHub actions.
+New add-ons and fixes for existing add-ons will most likely appear in this new repo. The first add-on that was moved is [select_colinear_edges.py](/select_colinear_edges.py), which you can now find [here](https://github.com/varkenvarken/blenderaddons-ng/blob/main/add_ons/select_colinear_edges.py).
+
+status
+======
+
+sometimes the add-ons are updated or tested against the latest version of Blender. Information on this can be found in the file [STATUS.md](STATUS.md).
+
+note
+====
+Of interest to users of planks.py (the floorboard generator): Karl Andreas Groß has created a wood shader collection that includes settings for use with the add-on. His shaders are available on https://cgcookiemarkets.com/all-products/prowood-procedural-wood-shader-pack/
+
+
+--- REPOSITORY: huanngzh/bpy-renderer ---
+README:
+# bpy-renderer
+
+A go-to library for rendering 3D scenes and animations. Whether you're looking for a simple rendering script for making demos or producing multi-view image dataset for training, bpy-renderer is a modular toolbox that supports both.
+
+Bpy-renderer offers two core components:
+
+* Core package for setting engines, cameras, environments, models, scenes, rendering outputs.
+* [Example scripts](./examples/) for various functions.
+
+## Demos
+
+**3D Object**
+
+https://github.com/user-attachments/assets/6e5a5767-0323-40aa-95a7-f1ab465976d6
+
+**3D Scene**
+
+https://github.com/user-attachments/assets/d68cf607-3769-487d-9cc7-9c8da311abb6
+
+**3D Animation**
+
+https://github.com/user-attachments/assets/2c7e356c-be30-4d73-bce8-2d9a9965a482
+
+https://github.com/user-attachments/assets/bda030ee-9144-4cb4-bab0-0fb2082180b8
+
+## Installation
+
+### Common Usage
+
+We recommend installing bpy-renderer in **Python-3.10**.
+
+```Bash
+git clone https://github.com/huanngzh/bpy-renderer.git
+pip install -e ./bpy-renderer
+```
+
+### Docker
+
+If you have [EGL issues](https://github.com/huanngzh/bpy-renderer/issues/2) in your environment, please use our provided docker image to build a easy-to-use environment.
+
+```Bash
+docker pull ccr.ccs.tencentyun.com/huanngzh/bpyrenderer:v1.0.0
+docker run -itd --gpus all -v /path:/path -name bpyrenderer ccr.ccs.tencentyun.com/huanngzh/bpyrenderer:v1.0.0
+docker exec -it bpyrenderer bash
+```
+
+Then you can use [the above command](#common-usage) to install `bpyrenderer`.
+
+## Quick Start
+
+Coming soon! For now, please check our example script in [render_360video.py](./examples/object/render_360video.py), which renders 360 degree video of a 3D model.
+
+## Example Scripts
+
+| Scripts | Task |
+| - | - |
+| [object/render_6ortho.py](examples/object/render_6ortho.py) | Render 6 ortho views with rgb, depth, normals |
+| [object/render_360video.py](examples/object/render_360video.py) | Render 360 degree video |
+| [scene/render_360video.py](examples/scene/render_360video.py) | Render 360 degree video from a scene |
+| [scene/render_360video_decomp.py](examples/scene/render_360video_decomp.py) | Render 360 degree "semantic-field-like" video from a scene |
+| [animation/render_animation_video.py](examples/animation/render_animation_video.py) | Render a single-view video from an animation |
+| [animation/render_animation_union.py](examples/animation/render_animation_union.py) | Render single-view rgb, depth, normal video from an animation |
+
+
+--- REPOSITORY: xzhuah/BlenderAddonPackageTool ---
+README:
+# Blender Add-on Development Framework and Packaging Tool
+
+### Demo 1: Auto-update while developing 开发过程支持自动更新
+
+![Demo1](https://github.com/xzhuah/demo_resource/blob/main/blender_addon_tool_demo1.gif)
+
+### Demo 2: Built-in I18n solution 内置字典翻译方案
+
+![Demo2](https://github.com/xzhuah/demo_resource/blob/main/blender_addon_tool_demo2.gif)
+
+### Demo 3: Load Blender Component class like Operation, Panel etc automatically 自动加载Blender组件类(Operation, Panel等)
+
+![Demo2](https://github.com/xzhuah/demo_resource/blob/main/blender_addon_tool_demo3.gif)
+
+The project has been updated to use MIT open source license since 2024.12.02.
+
+This project provides a lightweight, easy-to-use framework for developing and packaging Blender addons. The main
+features include:
+
+1. A single command to create a template add-on, facilitating quick development.
+1. Support developing multiple addons in one project, which allows you to reuse functions across
+   different addons, and helps you package only necessary modules into the zip file.
+1. Allows you to run and test your add-on in Blender with a single command. Support hot swap
+   for code updates. You can see the updates in Blender immediately after saving the code.
+1. A single command to package the add-on into an installable addon package, making it easier for users to install. The
+   packaging tool automatically detects and includes dependencies needed for the add-on within your project. (Not
+   including 3rd party libraries)
+1. Provide utility functions for basic development, like an auto-load utility for automatic class loading and an
+   internationalization (i18n)
+   tool, to help new developers creating high-quality addons.
+1. Support extension development in Blender 4.2 and later versions. You can choose to package your addon
+   as a legacy addon or as an extension by setting the IS_EXTENSION configuration
+
+You can check out an overview about this framework on YouTube:
+
+- https://www.youtube.com/watch?v=eRSXO_WkY0s
+- https://youtu.be/udPBrXJZT1g
+
+The following external library will be installed automatically when you run the framework code, you can also install
+them
+manually:
+
+- https://github.com/nutti/fake-bpy-module
+- https://github.com/gorakhargosh/watchdog
+
+## Basic Framework
+
+- [main.py](main.py): Configures the Blender path, add-on installation path, default add-on, package ignore files, and
+  add-on release path, among other settings.
+- [test.py](test.py): A testing tool to run and test add-ons.
+- [create.py](create.py): A tool to create add-ons, allowing you to quickly create an add-on based on the `sample_addon`
+  template.
+- [release.py](release.py): A packaging tool that packages add-ons into an installable package.
+- [framework.py](framework.py): The core business logic of the framework, which automates the development process.
+- [addons](addons): A directory to store add-ons, with each add-on in its own sub-directory. Use `create.py` to quickly
+  create a new add-on.
+- [common](common): A directory to store shared utilities.
+
+## Framework Development Guidelines
+
+Blender Version >= 2.93
+Platform Supported: Windows, MacOs, Linux
+
+Each add-on, while adhering to the basic structure of a Blender add-on, should include a `config.py` file to configure
+the add-on's package name, ensuring it doesn't conflict with other add-ons.
+
+This project depends on the `addons` folder; do not rename this folder.
+
+When packaging an add-on, the framework will generate a __init__.py file in the add-on directory. By copying bl_info,
+and importing the register and unregister method from your target addon's __init__.py. Usually this won't cause any
+issue, but if you notice anything that might be related to this, please let us know.
+
+### Notice for extension developers
+
+To meet the standard
+at https://docs.blender.org/manual/en/latest/advanced/extensions/addons.html#user-preferences-and-package
+You need to follow the following instruction when using preferences in your extension addon. These instructions are also
+applicable to the legacy addon, but not enforced.
+
+Since addons developed by this framework usually have submodules. To access preferences, you must use the
+__addon_name__ defined in the config.py file as the bl_idname of the preferences.
+
+Define:
+
+```python
+class ExampleAddonPreferences(AddonPreferences):
+    bl_idname = __addon_name__
+```
+
+Access
+
+```python
+from ..config import __addon_name__
+
+addon_prefs = bpy.context.preferences.addons[__addon_name__].preferences
+# use addon_prefs
+addon_prefs.some_property
+```
+
+## Usage
+
+1. Clone this repository.
+1. Open this project in your IDE. Optional: Configure the IDE to use the same python interpreter as Blender.
+1. Note: For PyCharm users, change the value idea.max.intellisense.filesize in idea.properties file ( Help | Edit Custom
+   Properties.) to more than 2600 because some modules have the issue of being too big for intelliSense to work. You
+   might also need to associate the __init__.pyi file as the python File Types
+   in ![setting](http
+
+--- REPOSITORY: sketchy-squirrel/smart-bones ---
+README:
+![Smart-Bones for Blender, subtitle: Action Constraints Made Easy](assets/smart-bones-banner.png)
+
+Smart-Bones is an add-on for Blender that automates the process of adding action constraints to keyed bones within a selected action.
+
+## Included Files
+__Python script / addon :__ [blender-smart-bones.py](/blender-smart-bones.py)
+
+__Character demonstration 01:__ [Character-blue.blend](/assets/01-character-blue.blend)
+
+__Character demonstration 02:__ [Character-orange.blend](/assets/02-character-orange.blend)
+
+To see how to use this addon see [this video](https://youtu.be/tz4GShhTuh8).
+
+## Installation
+1. Download the SmartBones.py file from the [Github repository](https://github.com/sketchy-squirrel/smart-bones).
+2. Open Blender and go to __'Edit > Preferences > Add-ons'__.
+3. Click on __'Install...'__ and select the downloaded [blender-smart-bones.py](/blender-smart-bones.py) file.
+4. Make sure that the checkmark next to the add-on is enabled.
+5. Click on __'Save Preferences'__.
+
+## Usage
+1. Select the armature you want to add constraints to.
+2. In the __'3D View'__, go to the __'Smart Bones'__ tab.
+3. In the __'Smart Bone panel'__, select the __'target armature'__, __'control bone'__, and the __'transform channel'__ for the constraint.
+4. Choose the __'transform space'__ from the drop-down list.
+5. If you select __'CUSTOM'__ in the space option, specify the name of the object you want to take local space from. And if this object is an armature, then choose the __'custom subtarget'__.
+6. Set the __'minimum'__ and __'maximum'__ values for the transform range.
+7. Specify the name of the affected action, as well as the start and end frames for the action.
+8. Click on the __'Add Smart Bone'__ button to add the action constraint to all bones in the action.
+
+## Properties
+* Target: the name of the control armature.
+* Control: the name of the control bone.
+* Channel: the control axis.
+* Space: the transform space, either __'WORLD, CUSTOM,__ or __LOCAL'__.
+* Space Object (__'CUSTOM'__ space only): takes local space from another object, to apply to constraint.
+* Space Subtarget (Only if __'Space Object'__ is an armature): custom space bone.
+* Min Transform Range: the minimum transform value, corresponding to __'Min Frame'__ of the selected action.
+* Max Transform Range: the maximum transform value, corresponding to __'Max Frame'__ of the selected action.
+* Action: the name of the affected action.
+* Min Frame: the start frame of the action.
+* Max Frame: the end frame of the action.
+
+## Operators
+* __Add Smart Bone__: adds action constraints to all bones in the selected action.
+* __Delete Smart Bone__: deletes action constraints with matching action name and control target.
+
+## Compatibility
+The add-on is compatible with Blender 2.80 and newer versions.
+
+## Credits
+[Sketchy Squirrel](https://sketchysquirrel.com) - Joel Graham
+
+
+--- REPOSITORY: senthurayyappan/anton ---
+README:
+# anton
+[![Blender](https://img.shields.io/badge/Blender-2.80%2B-orange)](https://www.blender.org/)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/e0da62cdb7bc499b95bf70c18e8013cd)](https://www.codacy.com?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=blender-for-science/anton&amp;utm_campaign=Badge_Grade)
+[![Documentation Status](https://readthedocs.org/projects/anton/badge/?version=latest)](https://anton.readthedocs.io/en/latest/?badge=latest)
+[![Release](https://img.shields.io/github/v/release/blender-for-science/anton)](https://github.com/blender-for-science/anton/releases)
+[![License](https://img.shields.io/github/license/blender-for-science/blendmsh)](https://github.com/blender-for-science/anton/blob/master/LICENSE.md)
+[![Discord](https://img.shields.io/discord/750488363571740747?color=738ADB&label=Discord&style=flat-square)](https://discord.gg/tpq7Yuv)
+
+![anton](./GE.gif)
+
+``anton`` is an open-source generative design framework built on Blender, the open-source 3D creation suite. At its current stage of development, anton uses a narrow-band topology optimization methodology as a design generator and uses implicit surfaces for mesh generation.
+
+## Dependencies
+* ``taichi-build`` requires [spgrid_topo_opt](https://github.com/imsenthur/spgrid_topo_opt), a Narrow-Band Topology Optimization framework developed by [Haixiang Liu (University of Wisconsin-Madison)](http://pages.cs.wisc.edu/~cslhxac/), [Yuanming Hu (MIT CSAIL)](http://taichi.graphics/me/), [Bo Zhu (Dartmouth College)](http://www.dartmouth.edu/~boolzhu/), [Wojciech Matusik (MIT CSAIL)](https://cdfg.csail.mit.edu/wojciech), [Eftychios Sifakis (University of Wisconsin-Madison)](http://pages.cs.wisc.edu/~sifakis/).
+* The following python modules are also required:
+    * ``Numpy``
+    * ``Scipy``
+    * ``Scikit-learn``
+    * ``gmsh-api``
+
+## Installation
+* For a minimal installation, download a ``native-build`` release.
+* For more advanced and reliable results, download a ``taichi-build`` release.
+* Open Blender and head over to ``Edit`` -> ``Preferences`` -> ``Add-ons`` -> ``Install``
+* Navigate to the downloaded **.zip** file and click ``Install Add-on``
+
+## Documentation
+Read more about anton: https://anton.readthedocs.io/en/latest/
+
+
+--- REPOSITORY: matgarate/Blender_ParadoxToolkit ---
+README:
+
+# Paradox Toolkit
+The Paradox Toolkit is an addon to create 3D optical illusions of impossible geometry in Blender 2.8+. 
+The addon includes a library of impossible geometry figures, tools to align an ortographic camera with the optical illusions, and tools to manipulate your 3D objects around the impossible geometry scenes.
+
+In the [Addon Wiki](https://github.com/matgarate/Blender_ParadoxToolkit/wiki/) you can find how to install the addon, the quickstart guide, and a description for the addon tools.
+
+The fundamental equations to construct the impossible figures are based on the paper by Tiffany C. Inglis [(2014, Proceedings of Bridges)](https://archive.bridgesmathart.org/2014/bridges2014-159.html#gsc.tab=0).
+
+## Learning
+You can check the quickstart tutorial [here.](https://youtu.be/tf6iKm49Eyk)
+
+To see more tutorials, experiments, and artworks using this addon you can also follow me on Instagram [@matiasgarate.art](https://www.instagram.com/matiasgarate.art/), or suscribe to my [Youtube Channel](https://www.youtube.com/channel/UCctucQL4rpmhF3HywLiPzMA).
+
+
+
+I hope you enjoy this addon!
+
+![](https://raw.githubusercontent.com/wiki/matgarate/Blender_ParadoxToolkit/img_sample/Library.png)
+
+
+
+
+--- REPOSITORY: lukas-blecher/AutoMask ---
+README:
+# AutoMask - a Blender Add-on for automatic rotoscoping
+This repository contains a Blender 2.8x Add-on that can mask an object in the `Movie Clip Editor` with the help of Machine Learning.
+AutoMask is the communication between Blender and SiamMask.
+
+Here is an example for the usage of AutoMask.
+![Example](https://github.com/lukas-blecher/AutoMask/blob/master/figures/showcase.gif?raw=true)
+
+## Usage
+First select a bounding box of the object. Then hit one of the track buttons. 
+The masks for every frame will be saved in a separate and new Mask Layer. If you are using the single step masking as a starting point for your mask you can also 
+### Parameters
+* **Max. Length** is the roughly the maximum amount of pixels a mask segment can trace. The lower this value is the closer the final mask will be to the network output. Bear in mind that the network output is by no means a perfect mask. But it can be a great starting point. 
+* **Directions** is the amount of directions (of 8 possible) one mask segment can cover. 2 will produce more controll points but a closer match in the mask, but the [S-Curves ](https://docs.blender.org/manual/en/latest/movie_clip/masking/scurve.html) can also handle 3 different directions.
+* **Threshold** is the amount of pixels that can go in another direction than the rest of a given segment.
+
+
+## Installation
+1. Download the repository:
+Download the repository as `.zip` file and extract it or clone it to your computer.
+2. Python:
+To use this Add-on, several 3rd party libraries are required (see `requirements.txt`). You can either install the dependencies to
+the Blender python or if python is already installed on the system and the python version is compatible with the Blender python version you can also install the dependencies on your system.
+3. Adding the Project to the Python path:
+Open `automask.py` in your favorite text editor and replace `PYTHON_PATH` with the path to you python site-packages if needed and `PROJECT_DIR` with the path to the directory you downloaded this repository to.
+4. Install Dependencies:
+* PyTorch 
+The neural network that does the heavy lifting is written for [PyTorch](https://pytorch.org/).
+A Nvidia GPU is recommended but not necessarily required. However, it does speed up the process significantly. If you have a supported GPU install pytorch with GPU support.
+* Other Requirements
+Most of the required libraries are standard and easy to install. 
+```pip install -r requirements.txt```
+5. Model:
+The model weights for SiamMask can be downloaded from [http://www.robots.ox.ac.uk/~qwang/SiamMask_VOT.pth](http://www.robots.ox.ac.uk/~qwang/SiamMask_VOT.pth). Save the file to the subfolder `trackers/SiamMask` under the name `model.pth`. 
+6. Add to Blender:
+![Installation](https://github.com/lukas-blecher/AutoMask/blob/master/figures/install.gif?raw=true)
+## Acknowledgements
+[SiamMask](https://github.com/foolwood/SiamMask), [THOR](https://github.com/xl-sr/THOR)
+
+
+--- REPOSITORY: joeVenner/control-3d-character-using-python ---
+README:
+
+
+
+<p align=center>
+  <img src="https://i.ibb.co/MMDL3rM/Corporate-Work-Blog-Banner.png" >
+</p>
+<p align="center">
+  <a href="https://www.youtube.com/channel/UCKvgGs-ALhvOq9u95PHXHNw">
+      <img src="https://img.shields.io/badge/YB-Python%20with%20Joe-red" alt="Youtube Channel"/>
+  </a>
+  <a href="https://github.com/joeVenner/">
+      <img src="https://badgen.net/badge/Developer/joeVenner/blue?icon=github" alt="Developer"/>
+  </a>
+  <a href="https://github.com/joeVenner//blob/master/LICENSE">
+    <img alt="License: MIT" src="https://img.shields.io/badge/License-MIT-yellow.svg" target="_blank" />
+  </a>
+</p>
+
+## - Demo 
+
+<p align=left>
+  <img src="https://media.giphy.com/media/eNpZCgxuSDzgCbRHCX/giphy.gif" >
+</p>
+
+
+## - About :
+<p>it's a python script to control a 3d character's face movements by capturing user's face landmarks </p>
+
+## - Install prerequisites :
+
+ 1. Download Blender 2.82 [HERE](https://download.blender.org/release/Blender2.82/blender-2.82-windows64.msi)
+ 2. Install Requirement Modules <br>
+       Windows : Open Command Prompt as Administrator 
+       <br>` cd "C:\Program Files\Blender Foundation\Blender 2.82\2.82\python\bin"`
+         <br> `python -m pip install --upgrade pip  `
+         <br> `python -m pip install opencv-contrib-python numpy ` 
+ 3. Download Character file [HERE](https://cloud.blender.org/p/characters/5718a967c379cf04929a4247)
+ 4. Download Project Repo [HERE](https://github.com/joeVenner/control-3d-character-using-python/archive/master.zip)
+ 5. Download Face Landmarks Model [HERE](https://github.com/kurnianggoro/GSOC2017/archive/master.zip)
+ 
+ 
+ ## - Youtube Video : 
+ in this tuto i explained how the script works and i will walk you through the Installation process
+ Check it Out  <br>Link : https://youtu.be/tEmdLULBUTQ
+ 
+
+## - License :
+Please see the **[LICENSE](LICENSE)** included in this repository for a full copy of the MIT license, which this project is licensed under.
+
+
+
+
+
+
+
+
+
+
+
+
+
+--- REPOSITORY: jasonicarter/create-isocam ---
+README:
+# Create IsoCam
+
+“Creates a true isometric camera or a isometric camera for game needs”
+
+![07 05 2023_15 37 49_REC](https://user-images.githubusercontent.com/69900896/236664596-6b5a5e19-4553-4d13-993c-2853ed891e6f.gif)
+
+Create Isocam creates an orthographic camera with which you can render isometric views.
+
+- A camera setup for true mathematical isometric
+- A camera setup with a view that is needed to render traditional isometric graphics for a 2D game with a ratio of 2 to 1
+- A camera setup to render a special game iso format with a ratio of 4 to 3
+
+### ****TrueIsocam****
+
+![image](https://user-images.githubusercontent.com/69900896/236663779-c5ecbac0-6b73-4782-a98e-b22de6c1f013.png)
+
+The button with the label TrueIsocam creates a mathematical correct isoview with a flank angle of 30 degrees. This is for example wanted for architectural graphics.
+
+The camera has a rotation of 35.264 degrees. Or 54.736 degrees in Blender.
+
+### ****GameIsocam****
+
+![image](https://user-images.githubusercontent.com/69900896/236663784-bef9d839-0ca7-4224-8c58-dbe87f3ee037.png)
+
+The button with the label GameIsocam creates a camera with a special view that is needed to render isometric graphics for a 2D game. The setup differs a bit from the true iso. The camera for a mathematical correct isometric view doesn’t work for games As you can see at the next shot.
+
+The stairs effect does simply not match together. There are either gaps or overlappings.
+
+The teeth of the borders doesn't sync. So we need a different angle for game needs. And that’s what the GameIsocam is for.
+
+What’s the reason? The first isometric games were pixeled, not rendered. One pixel up, two pixel sidewards. It was also important to have power of two graphics. And this simply leads to another flank angle compared to the true isometric with its 30 degrees.
+
+This is of course then not longer a true isometric view. But a special parallel projection, also called dimetric. But the game world calls it isometric since eons. Maybe because it is pretty close to the real isometric view.
+
+The camera rotation is 30 degrees here, or 60 degrees in Blender. You can render the result as a base tile of 64×32 pixels then.
+
+![image](https://user-images.githubusercontent.com/69900896/236663801-80e5d4a4-9a6c-4b1e-9698-78ac644e25b3.png)
+
+Here the stairs effect fits perfectly together. The teeth goes into each other, without gaps or overlappings. And we have a power of 2 ratio.
+
+### ****GameIso4to3cam****
+
+![image](https://user-images.githubusercontent.com/69900896/236663807-753eda68-24fc-42f4-a4ec-31c5c3b41af1.png)
+
+There is another special view that fits together like the one with the 2:1 ratio . Here we don’t have a basetile of 64×32 and a ratio of 2:1, but one with 64×48 and a ratio of 4:3. It is of course not a power of two graphics anymore. And far away from the true isometric view. But the old graphics card limits are long gone. And when you need a more topdown view, then this is perfect.
+
+For that the camera has a rotation 48.5 Grad, or in Blender a rotation of 41.5 Grad.
+
+### ****Groundplane****
+
+The button Groundplane creates a plane with a size of 10 x 10 Blender units. All three cameras are set up to fit to that groundplane.
+
+### ****Credits****
+Initial creator, 2.8 update and bitbucket thread can be found [Blender Artist](https://blenderartists.org/t/create-isocam/603183) and [@jasonicarter](https://github.com/jasonicarter)
+
+
+****Note: This addon includes an updater, which you can use to keep it up to date within Blender.****
+
+
+--- REPOSITORY: torrinworx/Cozy-Auto-Texture ---
+README:
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/82110564/184055444-481a472e-b8c0-4866-8a82-a038110aec8f.svg" align="center" />
+  <h1 align="center">Cozy Auto Texture</h1>
+</p>
+<p align="center">
+<a href="https://twitter.com/LeonardTorrin" rel="nofollow"><img src="https://img.shields.io/badge/created%20by-@LeonardTorrin-4BBAAB.svg" alt="Created by Torrin Leonard"></a>
+<a href="https://www.gnu.org/licenses/gpl-3.0.en.html" rel="nofollow"><img src="https://img.shields.io/badge/license-GPL%20v3.0-brightgreen" alt="License"></a>
+<a href="https://www.paypal.com/paypalme/TorrinLeonard" rel="nofollow"><img src="https://img.shields.io/badge/donate-PayPal-blue" alt="Donate"></a>
+<a href="" rel="nofollow"><img src="https://img.shields.io/github/stars/torrinworx/Cozy-Auto-Texture" alt="stars"></a>
+<a href="" rel="nofollow"><img src="https://visitor-badge.glitch.me/badge?page_id=torrinworx.Cozy-Auto-Texture" alt=""></a>
+</p>
+
+## Description
+This addon bridges the complexity of the Stable Diffusion AI with the simple GUI of Blender. It is the simplest and most straight forward way to start creating AI textures in Blender.
+
+
+## Features
+- Easy setup, no need for admin privileges, no need to even glance at code
+- Open source
+- Simple download process, weights hosted for free by This Cozy Studio Inc.
+- Weights are independent of Blender version, meaning you can update Blender without needing to reinstall your weights!
+- Simple and intuitive user interface
+- Responsible and ethical use of Stable Diffusion weights
+
+The Cozy Auto Texture Blender add-on can automatically generate textures withing Blender for whatever project you are working on. All dependencies are automatically downloaded, including the Stable Diffusion weights which This Cozy Studio Inc. hosts free of charge.
+
+## Instillation Guide
+1. Download the add-on zip file by clicking the above button:
+
+![image](https://user-images.githubusercontent.com/82110564/190940553-5d4bc4a0-561d-4658-9b2a-8ba9bca2500c.png)
+
+2. Open Blender and navigate to `Edit --> Preferences --> Add-Ons`:
+
+![image](https://user-images.githubusercontent.com/82110564/190940707-13733033-b627-4a85-99fd-30ea404209f6.png)
+
+3. Click `Install` and select the zip file downloaded in step #1:
+
+![image](https://user-images.githubusercontent.com/82110564/190940856-d20a31f5-73bb-4cca-aafa-4cde6399e9d7.png)
+
+4. Search for `Cozy Auto Texture` in the Add-Ons tab and check the checkbox to enable it:
+
+![image](https://user-images.githubusercontent.com/82110564/190941008-ded49c0b-f0f7-47af-b6c7-f2488e3b1436.png)
+
+5. Set the Environment Path on a drive with more that 10GB of free storage:
+
+![image](https://user-images.githubusercontent.com/82110564/190941768-8bc8e047-7f58-470a-8df8-7d6f58780767.png)
+
+6. Read and accept the Stable Diffusion and Cozy Auto Texture license agreements, then click `Install Dependencies`:
+
+**Note: Blender will go into "Not Responding Mode" while the dependency and weights install, in order to visualize progress you can enable the Blender System Console by going to `Window --> Toggle System Console` before you click `Install Dependencies` in step #5. This window will display installation progress. Do not shutdown Blender until you see `"Dependencies installed successfully"` appear. This process will download approximetely 10GB of data.**
+
+![image](https://user-images.githubusercontent.com/82110564/190941199-99906441-a573-43fb-bd5b-2d70a3eb9791.png)
+
+
+
+--- REPOSITORY: SpectralVectors/MindMapper ---
+README:
+# MindMapper v1.6.0
+![A Node-based Text and Image Flowchart for Blender](/images/MindmapperLogo.png)
+
+_(clockwise from top left: Geometry Node Editor, Mindmap Node Editor, Compositor Node Editor, Shader Node Editor)_
+![screenshot](/images/MindMapper1Update.png)
+## What It Is
+This addon gives you an 'Extra' category in the Shader, Geometry and Compositor Node Editors __Add Menu__, as well as a custom Node Editor.
+
+Just click __Add > Extra > Mindmap__ or __Note__ to use the nodes in any node tree.
+
+To create a Mindmapper Node Tree, open the Mindmapper Node Editor, click 'New' to create a new node tree, then, click __Add > Mindmap__. 
+
+You can change the text and the background color of the node, as well as connect it to one or more other nodes to create a flowchart.
+
+## How It Works
+It works by displaying a String Property as multiple Label strings, separated by number of characters.
+
+The complete text will display on the node, but in order to edit it, you must unhide the panel at the bottom of the node, then you can type or paste any text you like. 
+
+The top row holds the __node label__, and the __node color__.
+
+The next row allows you to select the __node image__.
+
+The next allows you to select the __node image folder__.
+
+The next holds the main __node body text__ as a field you can edit directly.
+
+The next holds a file selector to let you populate the node body text from the Text Editor workspace.
+
+And, finally you can dynamically change the number of __node inputs__ and __node outputs__, however doing so will break the links, so set up your i/o before making connections!
+
+There is not currently support for renaming sockets, importing/exporting text etc.
+
+Image support comes through both 3dn-bip's Image Preview Generation, and Blender's auto-generated thumbnail previews.
+
+## Acknowledgments and Thanks
+Inspired by a request from __Tobias__ on RightClickSelect.
+
+Multi-line strings c/o [Nikita of B3D Interplanety](https://b3d.interplanety.org/en/multiline-text-in-blender-interface-panels/)
+
+__tin2tin__ contributed to the code, and also integrated it into the [Blender Screenwriter addon](https://github.com/tin2tin/Blender_Screenwriter)
+
+__iceythe (Kaio)__ contributed a scaling fix for the BigText and BigPic nodes.
+
+__Bazza__ and __cannibalox__ contributed to the code.
+
+__bonjorno7__ contributed the [3dn-bip library](https://github.com/bonjorno7/3dn-bip) which supports Hi-res images!
+
+__BUGProtectionAssociation__ suggested loading internal text data, and offered examples by __ly29__ and __Dejhon Huang__ which helped implement it!
+
+__A massive thanks to everyone who has downloaded, used, and especially contributed to this addon!__
+
+
+--- REPOSITORY: cobanov/depth2normal ---
+README:
+# Depth to Normal Map Converter
+
+This script converts a depth map image to a normal map image.
+
+</img><img src='assets/depth.png' width=200> </img><img src='assets/normal.png' width=200></img>
+
+## Requirements
+
+- Python 3.x
+- OpenCV (`pip install opencv-python`)
+- Numpy
+
+## Usage
+
+To run the script, use the following command:
+
+```bash
+python depth_to_normal_map.py --input /path/to/input_image --output /path/to/output_image --max_depth 255
+```
+
+The following arguments are available:
+
+- `--input` (`-i`): Path to the input depth map image.
+- `--output` (`-o`): Path to save the output normal map image.
+- `--max_depth` (`-m`): Maximum depth value of the input depth map image (default: 255).
+
+## Example
+
+```bash
+python depth_to_normal_map.py --input assets/depth.png --output normal_map.png --max_depth 255
+```
+
+## License
+
+This script is licensed under the [MIT License](https://opensource.org/licenses/MIT).
+

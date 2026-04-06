@@ -2,10 +2,10 @@
 NovaMind Test Suite
 =====================
 Comprehensive tests for all major components.
-Each test prints PASS/FAIL with clear error messages.
 
 Usage:
-    python test_all.py
+    pytest test_all.py -v
+    python test_all.py  (also works standalone)
 """
 
 import sys
@@ -17,6 +17,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import torch
+
+try:
+    import pytest
+    HAS_PYTEST = True
+except ImportError:
+    HAS_PYTEST = False
+    HAS_PYTEST = True
+except ImportError:
+    HAS_PYTEST = False
 
 
 def test_config():
@@ -33,7 +42,6 @@ def test_config():
     assert isinstance(config.accumulation_steps, int), "accumulation_steps should be int"
     assert config.embed_dim % config.num_heads == 0, "embed_dim must be divisible by num_heads"
     assert config.head_dim == config.embed_dim // config.num_heads, "head_dim computation wrong"
-    print("PASS: test_config")
 
 
 def test_tokenizer():
@@ -74,8 +82,6 @@ def test_tokenizer():
     import shutil
     shutil.rmtree(temp_dir, ignore_errors=True)
 
-    print("PASS: test_tokenizer")
-
 
 def test_attention():
     """Test attention forward pass, check shape and no NaN."""
@@ -96,8 +102,6 @@ def test_attention():
     assert kv is not None, "KV cache should not be None when use_cache=True"
     assert len(kv) == 2, "KV cache should be a tuple of (K, V)"
 
-    print("PASS: test_attention")
-
 
 def test_model():
     """Test full model forward pass with targets."""
@@ -117,8 +121,6 @@ def test_model():
     assert not torch.isnan(loss), f"NaN loss: {loss}"
     assert loss.item() > 0, f"Loss should be positive, got {loss.item()}"
 
-    print("PASS: test_model")
-
 
 def test_generate():
     """Test autoregressive generation produces tokens."""
@@ -137,8 +139,6 @@ def test_generate():
     assert out.shape[0] == 1, "Batch size should be 1"
     assert out.shape[1] > 8, f"Should have generated tokens, got shape {out.shape}"
     assert out.shape[1] <= 8 + 20, f"Generated too many tokens: {out.shape[1]}"
-
-    print("PASS: test_generate")
 
 
 def test_loss_fn():
@@ -161,14 +161,12 @@ def test_loss_fn():
     assert ppl > 0, "Perplexity should be positive"
     assert ppl < 1e10, f"Perplexity too large: {ppl}"
 
-    print("PASS: test_loss_fn")
-
 
 def test_checkpointing():
     """Test save/load checkpoint round-trip."""
     from model.config import NovaMindConfig
     from model.architecture import NovaMind
-    from training.checkpointing import save_checkpoint, load_checkpoint
+    from training.checkpoint import save_checkpoint, load_checkpoint
 
     config = NovaMindConfig(vocab_size=100, embed_dim=64, num_heads=4,
                             num_layers=2, context_length=32)
@@ -192,8 +190,6 @@ def test_checkpointing():
         assert step == 42, f"Step mismatch: expected 42, got {step}"
         assert abs(loss - 1.23) < 0.01, f"Loss mismatch: expected 1.23, got {loss}"
 
-    print("PASS: test_checkpointing")
-
 
 def test_sampler():
     """Test sampling strategies."""
@@ -207,8 +203,6 @@ def test_sampler():
     from inference.sampler import greedy_sample
     greedy_token = greedy_sample(logits)
     assert greedy_token.item() == logits.argmax().item(), "Greedy sample should pick argmax"
-
-    print("PASS: test_sampler")
 
 
 if __name__ == "__main__":
@@ -235,6 +229,7 @@ if __name__ == "__main__":
         try:
             test_fn()
             passed += 1
+            print(f"PASS: {test_fn.__name__}")
         except Exception as e:
             print(f"FAIL: {test_fn.__name__} — {e}")
             failed += 1
@@ -242,7 +237,39 @@ if __name__ == "__main__":
     print()
     print("=" * 50)
     if failed == 0:
-        print(f"  ✅ All {passed} tests passed — NovaMind is healthy!")
+        print(f"  All {passed} tests passed — NovaMind is healthy!")
     else:
-        print(f"  ❌ {failed} test(s) FAILED, {passed} passed")
+        print(f"  {failed} test(s) FAILED, {passed} passed")
+    print("=" * 50)
+    print()
+
+    tests = [
+        test_config,
+        test_tokenizer,
+        test_attention,
+        test_model,
+        test_generate,
+        test_loss_fn,
+        test_checkpointing,
+        test_sampler,
+    ]
+
+    passed = 0
+    failed = 0
+
+    for test_fn in tests:
+        try:
+            test_fn()
+            passed += 1
+            print(f"PASS: {test_fn.__name__}")
+        except Exception as e:
+            print(f"FAIL: {test_fn.__name__} — {e}")
+            failed += 1
+
+    print()
+    print("=" * 50)
+    if failed == 0:
+        print(f"  All {passed} tests passed — NovaMind is healthy!")
+    else:
+        print(f"  {failed} test(s) FAILED, {passed} passed")
     print("=" * 50)

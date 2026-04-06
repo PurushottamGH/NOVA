@@ -60,3 +60,9 @@ venv.bak/
 .idea/
 *.swp
 *.swo
+
+# Local cache and data
+.hf_cache/
+.nova_history
+nova_memory/
+tmp_chroma/

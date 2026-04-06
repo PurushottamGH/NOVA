@@ -1,0 +1,1630 @@
+
+--- REPOSITORY: scikit-learn/scikit-learn ---
+
+--- REPOSITORY: keras-team/keras ---
+README:
+# Keras 3: Deep Learning for Humans
+
+Keras 3 is a multi-backend deep learning framework, with support for JAX, TensorFlow, PyTorch, and OpenVINO (for inference-only).
+Effortlessly build and train models for computer vision, natural language processing, audio processing,
+timeseries forecasting, recommender systems, etc.
+
+- **Accelerated model development**: Ship deep learning solutions faster thanks to the high-level UX of Keras
+and the availability of easy-to-debug runtimes like PyTorch or JAX eager execution.
+- **State-of-the-art performance**: By picking the backend that is the fastest for your model architecture (often JAX!),
+leverage speedups ranging from 20% to 350% compared to other frameworks. [Benchmark here](https://keras.io/getting_started/benchmarks/).
+- **Datacenter-scale training**: Scale confidently from your laptop to large clusters of GPUs or TPUs.
+
+Join nearly three million developers, from burgeoning startups to global enterprises, in harnessing the power of Keras 3.
+
+
+## Installation
+
+### Install with pip
+
+Keras 3 is available on PyPI as `keras`. Note that Keras 2 remains available as the `tf-keras` package.
+
+1. Install `keras`:
+
+```
+pip install keras --upgrade
+```
+
+2. Install backend package(s).
+
+To use `keras`, you should also install the backend of choice: `tensorflow`, `jax`, or `torch`. Additionally,
+The `openvino` backend is available with support for model inference only.
+
+### Local installation
+
+#### Minimal installation
+
+Keras 3 is compatible with Linux and macOS systems. For Windows users, we recommend using WSL2 to run Keras.
+To install a local development version:
+
+1. Install dependencies:
+
+```
+pip install -r requirements.txt
+```
+
+2. Run installation command from the root directory.
+
+```
+python pip_build.py --install
+```
+
+3. Run API generation script when creating PRs that update `keras_export` public APIs:
+
+```
+./shell/api_gen.sh
+```
+
+## Backend Compatibility Table
+
+The following table lists the minimum supported versions of each backend for the latest stable release of Keras (v3.x):
+
+| Backend    | Minimum Supported Version |
+|------------|---------------------------|
+| TensorFlow | 2.16.1                    |
+| JAX        | 0.4.20                    |
+| PyTorch    | 2.1.0                     |
+| OpenVINO   | 2025.3.0                  |
+
+#### Adding GPU support
+
+The `requirements.txt` file will install a CPU-only version of TensorFlow, JAX, and PyTorch. For GPU support, we also
+provide a separate `requirements-{backend}-cuda.txt` for TensorFlow, JAX, and PyTorch. These install all CUDA
+dependencies via `pip` and expect a NVIDIA driver to be pre-installed. We recommend a clean Python environment for each
+backend to avoid CUDA version mismatches. As an example, here is how to create a JAX GPU environment with `conda`:
+
+```shell
+conda create -y -n keras-jax python=3.10
+conda activate keras-jax
+pip install -r requirements-jax-cuda.txt
+python pip_build.py --install
+```
+
+## Configuring your backend
+
+You can export the environment variable `KERAS_BACKEND` or you can edit your local config file at `~/.keras/keras.json`
+to configure your backend. Available backend options are: `"tensorflow"`, `"jax"`, `"torch"`, `"openvino"`. Example:
+
+```
+export KERAS_BACKEND="jax"
+```
+
+In Colab, you can do:
+
+```python
+import os
+os.environ["KERAS_BACKEND"] = "jax"
+
+import keras
+```
+
+**Note:** The backend must be configured before importing `keras`, and the backend cannot be changed after
+the package has been imported.
+
+**Note:** The OpenVINO backend is an inference-only backend, meaning it is designed only for running model
+predictions using `model.predict()` method.
+
+## Backwards compatibility
+
+Keras 3 is intended to work as a drop-in replacement for `tf.keras` (when using the TensorFlow backend). Just take your
+existing `tf.keras` code, make sure that your calls to `model.save()` are using the up-to-date `.keras` format, and you're
+done.
+
+If your `tf.keras` model does not include custom components, you can start running it on top of JAX or PyTorch immediately.
+
+If it does include custom components (e.g. custom layers or a custom `train_step()`), it is usually possible to convert it
+to a backend-agnostic implementation in just a few minutes.
+
+In addition, Keras models can consume datasets in any format, regardless of the backend you're using:
+you can train your models with your existing `tf.data.Dataset` pipelines or PyTorch `DataLoaders`.
+
+## Why use Keras 3?
+
+- Run your high-level Keras workflows on top of any framework -- benefiting at will from the advantages of each framework,
+e.g. the scalability and performance of JAX or the production ecosystem options of TensorFlow.
+- Write custom components (e.g. layers, models, metrics) that you can use in low-level workflows in any framework.
+    - You can take a Keras model and train it in a training loop written from scratch in native TF, JAX, or PyTorch.
+    - You can take a Keras model and use it as part of a PyTorch-native `Module` or as part of a 
+
+--- REPOSITORY: Asabeneh/30-Days-Of-Python ---
+
+--- REPOSITORY: pandas-dev/pandas ---
+README:
+<picture align="center">
+  <source media="(prefers-color-scheme: dark)" srcset="https://pandas.pydata.org/static/img/pandas_white.svg">
+  <img alt="Pandas Logo" src="https://pandas.pydata.org/static/img/pandas.svg">
+</picture>
+
+-----------------
+
+# pandas: A Powerful Python Data Analysis Toolkit
+
+| | |
+| --- | --- |
+| Testing | [![CI - Test](https://github.com/pandas-dev/pandas/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/pandas-dev/pandas/actions/workflows/unit-tests.yml) [![Coverage](https://codecov.io/github/pandas-dev/pandas/coverage.svg?branch=main)](https://codecov.io/gh/pandas-dev/pandas) |
+| Package | [![PyPI Latest Release](https://img.shields.io/pypi/v/pandas.svg)](https://pypi.org/project/pandas/) [![PyPI Downloads](https://img.shields.io/pypi/dm/pandas.svg?label=PyPI%20downloads)](https://pypi.org/project/pandas/) [![Conda Latest Release](https://anaconda.org/conda-forge/pandas/badges/version.svg)](https://anaconda.org/conda-forge/pandas) [![Conda Downloads](https://img.shields.io/conda/dn/conda-forge/pandas.svg?label=Conda%20downloads)](https://anaconda.org/conda-forge/pandas) |
+| Meta | [![Powered by NumFOCUS](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](https://numfocus.org) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3509134.svg)](https://doi.org/10.5281/zenodo.3509134) [![License - BSD 3-Clause](https://img.shields.io/pypi/l/pandas.svg)](https://github.com/pandas-dev/pandas/blob/main/LICENSE) [![Slack](https://img.shields.io/badge/join_Slack-information-brightgreen.svg?logo=slack)](https://pandas.pydata.org/docs/dev/development/community.html?highlight=slack#community-slack) [![LFX Health Score](https://insights.linuxfoundation.org/api/badge/health-score?project=pandas-dev-pandas)](https://insights.linuxfoundation.org/project/pandas-dev-pandas) |
+
+
+## What is it?
+
+**pandas** is a Python package that provides fast, flexible, and expressive data
+structures designed to make working with "relational" or "labeled" data both
+easy and intuitive. It aims to be the fundamental high-level building block for
+doing practical, **real-world** data analysis in Python. Additionally, it has
+the broader goal of becoming **the most powerful and flexible open-source data
+analysis/manipulation tool available in any language**. It is already well on
+its way towards this goal.
+
+## Table of Contents
+
+- [Main Features](#main-features)
+- [Where to get it](#where-to-get-it)
+- [Dependencies](#dependencies)
+- [Installation from sources](#installation-from-sources)
+- [License](#license)
+- [Documentation](#documentation)
+- [Background](#background)
+- [Getting Help](#getting-help)
+- [Discussion and Development](#discussion-and-development)
+- [Contributing to pandas](#contributing-to-pandas)
+
+## Main Features
+Here are just a few of the things that pandas does well:
+
+  - Easy handling of [**missing data**][missing-data] (represented as
+    `NaN`, `NA`, or `NaT`) in floating point as well as non-floating point data
+  - Size mutability: columns can be [**inserted and
+    deleted**][insertion-deletion] from DataFrame and higher dimensional
+    objects
+  - Automatic and explicit [**data alignment**][alignment]: objects can
+    be explicitly aligned to a set of labels, or the user can simply
+    ignore the labels and let `Series`, `DataFrame`, etc. automatically
+    align the data for you in computations
+  - Powerful, flexible [**group by**][groupby] functionality to perform
+    split-apply-combine operations on data sets, for both aggregating
+    and transforming data
+  - Make it [**easy to convert**][conversion] ragged,
+    differently-indexed data in other Python and NumPy data structures
+    into DataFrame objects
+  - Intelligent label-based [**slicing**][slicing], [**fancy
+    indexing**][fancy-indexing], and [**subsetting**][subsetting] of
+    large data sets
+  - Intuitive [**merging**][merging] and [**joining**][joining] data
+    sets
+  - Flexible [**reshaping**][reshape] and [**pivoting**][pivot-table] of
+    data sets
+  - [**Hierarchical**][mi] labeling of axes (possible to have multiple
+    labels per tick)
+  - Robust I/O tools for loading data from [**flat files**][flat-files]
+    (CSV and delimited), [**Excel files**][excel], [**databases**][db],
+    and saving/loading data from the ultrafast [**HDF5 format**][hdfstore]
+  - [**Time series**][timeseries]-specific functionality: date range
+    generation and frequency conversion, moving window statistics,
+    date shifting and lagging
+
+
+   [missing-data]: https://pandas.pydata.org/pandas-docs/stable/user_guide/missing_data.html
+   [insertion-deletion]: https://pandas.pydata.org/pandas-docs/stable/user_guide/dsintro.html#column-selection-addition-deletion
+   [alignment]: https://pandas.pydata.org/pandas-docs/stable/user_guide/dsintro.html?highlight=alignment#intro-to-data-structures
+   [groupby]: https://pandas.pydata.org/pandas-docs/stable/user_guide/groupby.html#group-by-split-apply-c
+
+--- REPOSITORY: apache/airflow ---
+README:
+<!--
+ Licensed to the Apache Software Foundation (ASF) under one
+ or more contributor license agreements.  See the NOTICE file
+ distributed with this work for additional information
+ regarding copyright ownership.  The ASF licenses this file
+ to you under the Apache License, Version 2.0 (the
+ "License"); you may not use this file except in compliance
+ with the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing,
+ software distributed under the License is distributed on an
+ "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ KIND, either express or implied.  See the License for the
+ specific language governing permissions and limitations
+ under the License.
+-->
+
+<!-- START Apache Airflow, please keep comment here to allow auto update of PyPI readme.md -->
+# Apache Airflow
+
+| Category   | Badges                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+|------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| License    | [![License](https://img.shields.io/:license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0.txt)                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| PyPI       | [![PyPI version](https://badge.fury.io/py/apache-airflow.svg)](https://badge.fury.io/py/apache-airflow) [![PyPI - Python Version](https://img.shields.io/pypi/pyversions/apache-airflow.svg)](https://pypi.org/project/apache-airflow/) [![PyPI - Downloads](https://img.shields.io/pypi/dm/apache-airflow)](https://pypi.org/project/apache-airflow/)                                                                                                                                                                               |
+| Containers | [![Docker Pulls](https://img.shields.io/docker/pulls/apache/airflow.svg)](https://hub.docker.com/r/apache/airflow) [![Docker Stars](https://img.shields.io/docker/stars/apache/airflow.svg)](https://hub.docker.com/r/apache/airflow) [![Artifact HUB](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/apache-airflow)](https://artifacthub.io/packages/search?repo=apache-airflow)                                                                                                                      |
+| Community  | [![Contributors](https://img.shields.io/github/contributors/apache/airflow)](https://github.com/apache/airflow/graphs/contributors) [![Slack Status](https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social)](https://s.apache.org/airflow-slack) ![Commit Activity](https://img.shields.io/github/commit-activity/m/apache/airflow) [![LFX Health Score](https://insights.linuxfoundation.org/api/badge/health-score?project=apache-airflow)](https://insights.linuxfoundation.org/project/apache-airflow)  |
+| Dev tools  | [![prek](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/j178/prek/master/docs/assets/badge-v0.json)](https://github.com/j178/prek)                                                                                                                                                                                                                                                                                                                                                                            |
+
+| Version | Build Status                                                                                                                                                    |
+|---------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Main    | [![GitHub
+
+--- REPOSITORY: streamlit/streamlit ---
+README:
+# Welcome to Streamlit :wave:
+
+**The fastest way to build and share data apps.**
+
+Streamlit lets you turn data scripts into shareable web apps in minutes, not weeks. It’s all Python, open-source, and free! And once you’ve created an app you can use our [Community Cloud platform](https://streamlit.io/cloud) to deploy, manage, and share your app!
+
+![Example of live coding an app in Streamlit|635x380](https://raw.githubusercontent.com/streamlit/docs/main/public/images/Streamlit_overview.gif)
+
+## Installation
+
+```bash
+pip install streamlit
+streamlit hello
+```
+
+Streamlit can also be installed in a virtual environment on [Windows](https://github.com/streamlit/streamlit/wiki/Installing-in-a-virtual-environment#on-windows), [Mac](https://github.com/streamlit/streamlit/wiki/Installing-in-a-virtual-environment#on-mac--linux), and [Linux](https://github.com/streamlit/streamlit/wiki/Installing-in-a-virtual-environment#on-mac--linux).
+
+## A little example
+
+Streamlit makes it incredibly easy to build interactive apps:
+
+```python
+import streamlit as st
+
+x = st.slider('Select a value')
+st.write(x, 'squared is', x * x)
+```
+
+<img src="https://raw.githubusercontent.com/streamlit/docs/main/public/images/simple_example.png"/>
+
+## A bigger example
+
+Streamlit's simple and focused API lets you build incredibly rich and powerful tools.  [This demo project](https://github.com/streamlit/demo-self-driving) lets you browse the entire [Udacity self-driving-car dataset](https://github.com/udacity/self-driving-car) and run inference in real-time using the [YOLO object detection net](https://pjreddie.com/darknet/yolo).
+
+![Final App Animation](https://raw.githubusercontent.com/streamlit/docs/main/public/images/complex_app_example.gif)
+
+The complete demo is implemented in less than 300 lines of Python. In fact, the app contains [only 23 Streamlit calls](https://github.com/streamlit/demo-self-driving/blob/master/streamlit_app.py) which illustrates all the major building blocks of Streamlit. You can try it right now at [share.streamlit.io/streamlit/demo-self-driving](https://share.streamlit.io/streamlit/demo-self-driving).
+
+## The Streamlit GitHub badge
+
+Streamlit's GitHub badge helps others find and play with your Streamlit app.
+
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/streamlit/demo-face-gan)
+
+Once you deploy your app, you can embed this badge right into your GitHub readme.md as follows:
+
+```markdown
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/yourGitHubName/yourRepo/yourApp/)
+```
+
+## More Information
+
+- Our [launch post](https://towardsdatascience.com/coding-ml-tools-like-you-code-ml-models-ddba3357eace?source=friends_link&sk=f7774c54571148b33cde3ba6c6310086) explaining why we created Streamlit
+- Our [Community Cloud platform announcement](https://blog.streamlit.io/introducing-streamlit-cloud)
+- Our amazing [community](https://discuss.streamlit.io/) where Streamlit users share apps, ask questions, and help each other out
+- Streamlit [documentation](https://docs.streamlit.io/) and [blog](https://blog.streamlit.io) for the latest Streamlit info
+- More [demo projects](https://github.com/streamlit/) to inspire you
+- And if you would like to contribute, see [instructions here](https://github.com/streamlit/streamlit/wiki/Contributing)
+
+## Community Cloud
+
+With [Community Cloud](https://streamlit.io/cloud) you can deploy, manage, and share your apps with the world, directly from Streamlit — all for free. Sign-up [here](https://share.streamlit.io/signup).
+
+## License
+
+Streamlit is completely free and open-source and licensed under the [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0) license.
+
+
+--- REPOSITORY: gradio-app/gradio ---
+README:
+<!-- DO NOT EDIT THIS FILE DIRECTLY. INSTEAD EDIT THE `readme_template.md` OR `guides/1)getting_started/1)quickstart.md` TEMPLATES AND THEN RUN `render_readme.py` SCRIPT. -->
+
+<div align="center">
+
+  [<img src="readme_files/gradio.svg" alt="gradio" width=300>](https://gradio.app)<br>
+  <em>Build & share delightful machine learning apps easily</em>
+
+  [<img src="https://circleci.com/gh/gradio-app/gradio.svg?style=svg" alt="circleci">](https://circleci.com/gh/gradio-app/gradio)
+  [<img src="https://codecov.io/gh/gradio-app/gradio/branch/master/graph/badge.svg" alt="codecov">](https://app.codecov.io/gh/gradio-app/gradio)
+  [![PyPI](https://img.shields.io/pypi/v/gradio)](https://pypi.org/project/gradio/)
+  [![PyPI downloads](https://img.shields.io/pypi/dm/gradio)](https://pypi.org/project/gradio/)
+  ![Python version](https://img.shields.io/badge/python-3.7+-important)
+  [![Twitter follow](https://img.shields.io/twitter/follow/gradio?style=social&label=follow)](https://twitter.com/gradio)
+
+  [Website](https://gradio.app)
+  | [Documentation](https://gradio.app/docs/)
+  | [Guides](https://gradio.app/guides/)
+  | [Getting Started](https://gradio.app/getting_started/)
+  | [Examples](demo/)
+</div>
+
+# Gradio: Build Machine Learning Web Apps — in Python
+
+Gradio is an open-source Python library that is used to build machine learning and data science demos and web applications.
+
+With Gradio, you can quickly create a beautiful user interface around your machine learning models or data science workflow and let people "try it out" by dragging-and-dropping in their own images,
+pasting text, recording their own voice, and interacting with your demo, all through the browser.
+
+![Interface montage](readme_files/header-image.jpg)
+
+Gradio is useful for:
+
+- **Demoing** your machine learning models for clients/collaborators/users/students.
+
+- **Deploying** your models quickly with automatic shareable links and getting feedback on model performance.
+
+- **Debugging** your model interactively during development using built-in manipulation and interpretation tools.
+
+## Quickstart
+
+**Prerequisite**: Gradio requires Python 3.7 or higher, that's all!
+
+### What Does Gradio Do?
+
+One of the *best ways to share* your machine learning model, API, or data science workflow with others is to create an **interactive app** that allows your users or colleagues to try out the demo in their browsers.
+
+Gradio allows you to **build demos and share them, all in Python.** And usually in just a few lines of code! So let's get started.
+
+### Hello, World
+
+To get Gradio running with a simple "Hello, World" example, follow these three steps:
+
+1\. Install Gradio using pip:
+
+```bash
+pip install gradio
+```
+
+2\. Run the code below as a Python script or in a Jupyter Notebook (or [Google Colab](https://colab.research.google.com/drive/18ODkJvyxHutTN0P5APWyGFO_xwNcgHDZ?usp=sharing)):
+
+```python
+import gradio as gr
+
+def greet(name):
+    return "Hello " + name + "!"
+
+demo = gr.Interface(fn=greet, inputs="text", outputs="text")
+demo.launch()
+```
+
+
+3\. The demo below will appear automatically within the Jupyter Notebook, or pop in a browser on [http://localhost:7860](http://localhost:7860) if running from a script:
+
+![`hello_world` demo](demo/hello_world/screenshot.gif)
+
+### The `Interface` Class
+
+You'll notice that in order to make the demo, we created a `gradio.Interface`. This `Interface` class can wrap any Python function with a user interface. In the example above, we saw a simple text-based function, but the function could be anything from music generator to a tax calculator to the prediction function of a pretrained machine learning model.
+
+The core `Interface` class is initialized with three required parameters:
+
+- `fn`: the function to wrap a UI around
+- `inputs`: which component(s) to use for the input (e.g. `"text"`, `"image"` or `"audio"`)
+- `outputs`: which component(s) to use for the output (e.g. `"text"`, `"image"` or `"label"`)
+
+Let's take a closer look at these components used to provide input and output.
+
+### Components Attributes
+
+We saw some simple `Textbox` components in the previous examples, but what if you want to change how the UI components look or behave?
+
+Let's say you want to customize the input text field — for example, you wanted it to be larger and have a text placeholder. If we use the actual class for `Textbox` instead of using the string shortcut, you have access to much more customizability through component attributes.
+
+```python
+import gradio as gr
+
+def greet(name):
+    return "Hello " + name + "!"
+
+demo = gr.Interface(
+    fn=greet,
+    inputs=gr.Textbox(lines=2, placeholder="Name Here..."),
+    outputs="text",
+)
+demo.launch()
+```
+
+![`hello_world_2` demo](demo/hello_world_2/screenshot.gif)
+
+### Multiple Input and Output Components
+
+Suppose you had a more complex function, with multiple inputs and outputs. In the example below, we define a function that takes a string, boolean, and number, and returns a string and number. Take a look h
+
+--- REPOSITORY: ray-project/ray ---
+
+--- REPOSITORY: explosion/spaCy ---
+README:
+<a href="https://explosion.ai"><img src="https://explosion.ai/assets/img/logo.svg" width="125" height="125" align="right" /></a>
+
+# spaCy: Industrial-strength NLP
+
+spaCy is a library for **advanced Natural Language Processing** in Python and
+Cython. It's built on the very latest research, and was designed from day one to
+be used in real products.
+
+spaCy comes with [pretrained pipelines](https://spacy.io/models) and currently
+supports tokenization and training for **70+ languages**. It features
+state-of-the-art speed and **neural network models** for tagging, parsing,
+**named entity recognition**, **text classification** and more, multi-task
+learning with pretrained **transformers** like BERT, as well as a
+production-ready [**training system**](https://spacy.io/usage/training) and easy
+model packaging, deployment and workflow management. spaCy is commercial
+open-source software, released under the
+[MIT license](https://github.com/explosion/spaCy/blob/master/LICENSE).
+
+💫 **Version 3.8 out now!**
+[Check out the release notes here.](https://github.com/explosion/spaCy/releases)
+
+[![tests](https://github.com/explosion/spaCy/actions/workflows/tests.yml/badge.svg)](https://github.com/explosion/spaCy/actions/workflows/tests.yml)
+[![Current Release Version](https://img.shields.io/github/release/explosion/spacy.svg?style=flat-square&logo=github)](https://github.com/explosion/spaCy/releases)
+[![pypi Version](https://img.shields.io/pypi/v/spacy.svg?style=flat-square&logo=pypi&logoColor=white)](https://pypi.org/project/spacy/)
+[![conda Version](https://img.shields.io/conda/vn/conda-forge/spacy.svg?style=flat-square&logo=conda-forge&logoColor=white)](https://anaconda.org/conda-forge/spacy)
+[![Python wheels](https://img.shields.io/badge/wheels-%E2%9C%93-4c1.svg?longCache=true&style=flat-square&logo=python&logoColor=white)](https://github.com/explosion/wheelwright/releases)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg?style=flat-square)](https://github.com/ambv/black)
+<br />
+[![PyPi downloads](https://static.pepy.tech/personalized-badge/spacy?period=total&units=international_system&left_color=grey&right_color=orange&left_text=pip%20downloads)](https://pypi.org/project/spacy/)
+[![Conda downloads](https://img.shields.io/conda/dn/conda-forge/spacy?label=conda%20downloads)](https://anaconda.org/conda-forge/spacy)
+
+## 📖 Documentation
+
+| Documentation                                                                                                                                                                                                             |                                                                                                                                                                                                                                                                                                                                              |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ⭐️ **[spaCy 101]**                                                                                                                                                                                                       | New to spaCy? Here's everything you need to know!                                                                                                                                                                                                                                                                                            |
+| 📚 **[Usage Guides]**                                                                                                                                                                                                     | How to use spaCy and its features.                                                                                                                                                                                                                                                                                                           |
+| 🚀 **[New in v3.0]**                                                                                                                                                                                                      | New features, backwards incompatibilities and migration guide.                                                                                                    
+
+--- REPOSITORY: eriklindernoren/ML-From-Scratch ---
+README:
+# Machine Learning From Scratch
+
+## About
+Python implementations of some of the fundamental Machine Learning models and algorithms from scratch.
+
+The purpose of this project is not to produce as optimized and computationally efficient algorithms as possible
+but rather to present the inner workings of them in a transparent and accessible way.
+
+## Table of Contents
+- [Machine Learning From Scratch](#machine-learning-from-scratch)
+  * [About](#about)
+  * [Table of Contents](#table-of-contents)
+  * [Installation](#installation)
+  * [Examples](#examples)
+    + [Polynomial Regression](#polynomial-regression)
+    + [Classification With CNN](#classification-with-cnn)
+    + [Density-Based Clustering](#density-based-clustering)
+    + [Generating Handwritten Digits](#generating-handwritten-digits)
+    + [Deep Reinforcement Learning](#deep-reinforcement-learning)
+    + [Image Reconstruction With RBM](#image-reconstruction-with-rbm)
+    + [Evolutionary Evolved Neural Network](#evolutionary-evolved-neural-network)
+    + [Genetic Algorithm](#genetic-algorithm)
+    + [Association Analysis](#association-analysis)
+  * [Implementations](#implementations)
+    + [Supervised Learning](#supervised-learning)
+    + [Unsupervised Learning](#unsupervised-learning)
+    + [Reinforcement Learning](#reinforcement-learning)
+    + [Deep Learning](#deep-learning)
+  * [Contact](#contact)
+
+## Installation
+    $ git clone https://github.com/eriklindernoren/ML-From-Scratch
+    $ cd ML-From-Scratch
+    $ python setup.py install
+
+## Examples
+### Polynomial Regression
+    $ python mlfromscratch/examples/polynomial_regression.py
+
+<p align="center">
+    <img src="http://eriklindernoren.se/images/p_reg.gif" width="640"\>
+</p>
+<p align="center">
+    Figure: Training progress of a regularized polynomial regression model fitting <br>
+    temperature data measured in Linköping, Sweden 2016.
+</p>
+
+### Classification With CNN
+    $ python mlfromscratch/examples/convolutional_neural_network.py
+
+    +---------+
+    | ConvNet |
+    +---------+
+    Input Shape: (1, 8, 8)
+    +----------------------+------------+--------------+
+    | Layer Type           | Parameters | Output Shape |
+    +----------------------+------------+--------------+
+    | Conv2D               | 160        | (16, 8, 8)   |
+    | Activation (ReLU)    | 0          | (16, 8, 8)   |
+    | Dropout              | 0          | (16, 8, 8)   |
+    | BatchNormalization   | 2048       | (16, 8, 8)   |
+    | Conv2D               | 4640       | (32, 8, 8)   |
+    | Activation (ReLU)    | 0          | (32, 8, 8)   |
+    | Dropout              | 0          | (32, 8, 8)   |
+    | BatchNormalization   | 4096       | (32, 8, 8)   |
+    | Flatten              | 0          | (2048,)      |
+    | Dense                | 524544     | (256,)       |
+    | Activation (ReLU)    | 0          | (256,)       |
+    | Dropout              | 0          | (256,)       |
+    | BatchNormalization   | 512        | (256,)       |
+    | Dense                | 2570       | (10,)        |
+    | Activation (Softmax) | 0          | (10,)        |
+    +----------------------+------------+--------------+
+    Total Parameters: 538570
+
+    Training: 100% [------------------------------------------------------------------------] Time: 0:01:55
+    Accuracy: 0.987465181058
+
+<p align="center">
+    <img src="http://eriklindernoren.se/images/mlfs_cnn1.png" width="640">
+</p>
+<p align="center">
+    Figure: Classification of the digit dataset using CNN.
+</p>
+
+### Density-Based Clustering
+    $ python mlfromscratch/examples/dbscan.py
+
+<p align="center">
+    <img src="http://eriklindernoren.se/images/mlfs_dbscan.png" width="640">
+</p>
+<p align="center">
+    Figure: Clustering of the moons dataset using DBSCAN.
+</p>
+
+### Generating Handwritten Digits
+    $ python mlfromscratch/unsupervised_learning/generative_adversarial_network.py
+
+    +-----------+
+    | Generator |
+    +-----------+
+    Input Shape: (100,)
+    +------------------------+------------+--------------+
+    | Layer Type             | Parameters | Output Shape |
+    +------------------------+------------+--------------+
+    | Dense                  | 25856      | (256,)       |
+    | Activation (LeakyReLU) | 0          | (256,)       |
+    | BatchNormalization     | 512        | (256,)       |
+    | Dense                  | 131584     | (512,)       |
+    | Activation (LeakyReLU) | 0          | (512,)       |
+    | BatchNormalization     | 1024       | (512,)       |
+    | Dense                  | 525312     | (1024,)      |
+    | Activation (LeakyReLU) | 0          | (1024,)      |
+    | BatchNormalization     | 2048       | (1024,)      |
+    | Dense                  | 803600     | (784,)       |
+    | Activation (TanH)      | 0          | (784,)       |
+    +------------------------+------------+--------------+
+    Total Parameters: 1489936
+
+    +---------------+
+    | Discriminator |
+    +---------------+
+    Input Shape: (784,)
+    +------------------------+------------+-------
+
+--- REPOSITORY: Lightning-AI/pytorch-lightning ---
+README:
+<div align="center">
+
+<img alt="Lightning" src="https://pl-bolts-doc-images.s3.us-east-2.amazonaws.com/app-2/ptl_banner.png" width="800px" style="max-width: 100%;">
+
+<br/>
+<br/>
+
+**The deep learning framework to pretrain and finetune AI models.**
+
+**Serving models?** Use [LitServe](https://github.com/Lightning-AI/litserve?utm_source=ptl_readme&utm_medium=referral&utm_campaign=ptl_readme) to build custom inference servers in pure Python.
+
+______________________________________________________________________
+
+<p align="center">
+    <a href="#quick-start" style="margin: 0 10px;">Quick start</a> •
+  <a href="#examples">Examples</a> •
+  <a href="#why-pytorch-lightning">PyTorch Lightning</a> •
+  <a href="#lightning-fabric-expert-control">Fabric</a> •
+  <a href="https://lightning.ai/?utm_source=ptl_readme&utm_medium=referral&utm_campaign=ptl_readme">Lightning Cloud</a> •   
+  <a href="#community">Community</a> •
+  <a href="https://pytorch-lightning.readthedocs.io/en/stable/">Docs</a>
+</p>
+
+<!-- DO NOT ADD CONDA DOWNLOADS... README CHANGES MUST BE APPROVED BY EDEN OR WILL -->
+
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pytorch-lightning)](https://pypi.org/project/pytorch-lightning/)
+[![PyPI Status](https://badge.fury.io/py/pytorch-lightning.svg)](https://badge.fury.io/py/pytorch-lightning)
+[![PyPI - Downloads](https://img.shields.io/pypi/dm/pytorch-lightning)](https://pepy.tech/project/pytorch-lightning)
+[![Conda](https://img.shields.io/conda/v/conda-forge/lightning?label=conda&color=success)](https://anaconda.org/conda-forge/lightning)
+[![codecov](https://codecov.io/gh/Lightning-AI/pytorch-lightning/graph/badge.svg?token=SmzX8mnKlA)](https://codecov.io/gh/Lightning-AI/pytorch-lightning)
+
+[![Discord](https://img.shields.io/discord/1077906959069626439?style=plastic)](https://discord.gg/VptPCZkGNa)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/w/lightning-ai/lightning)
+[![license](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/Lightning-AI/pytorch-lightning/blob/master/LICENSE)
+
+<!--
+[![CodeFactor](https://www.codefactor.io/repository/github/Lightning-AI/lightning/badge)](https://www.codefactor.io/repository/github/Lightning-AI/lightning)
+-->
+
+</div>
+
+<div align="center">
+  
+<p align="center">
+
+&nbsp;
+
+<a target="_blank" href="https://lightning.ai/docs/pytorch/latest/starter/introduction.html?utm_source=ptl_readme&utm_medium=referral&utm_campaign=ptl_readme#define-a-lightningmodule">
+  <img src="https://pl-bolts-doc-images.s3.us-east-2.amazonaws.com/app-2/get-started-badge.svg" height="36px" alt="Get started"/>
+</a>
+
+</p>
+
+</div>
+
+&nbsp;
+
+<a id="why-pytorch-lightning"></a>
+# Why PyTorch Lightning?   
+Training models in plain PyTorch requires writing and maintaining a lot of repetitive engineering code. Handling backpropagation, mixed precision, multi-GPU, and distributed training is error-prone and often reimplemented for every project. PyTorch Lightning organizes PyTorch code to automate this infrastructure while keeping full control over your model logic. You write the science. Lightning handles the engineering, and scales from CPU to multi-node GPUs without changing your core code. PyTorch experts can still opt into [expert-level control](#lightning-fabric-expert-control).   
+
+Fun analogy: If PyTorch is Javascript, PyTorch Lightning is ReactJS or NextJS.
+
+# Looking for GPUs?
+[Lightning Cloud](https://lightning.ai/?utm_source=ptl_readme&utm_medium=referral&utm_campaign=ptl_readme) is the easiest way to run PyTorch Lightning without managing infrastructure. Start training with one command and get GPUs, autoscaling, monitoring, and a free tier. No cloud setup required.
+
+You can also run PyTorch Lightning on your own hardware or cloud.
+
+# Lightning has 2 core packages
+
+[PyTorch Lightning: Train and deploy PyTorch at scale](#why-pytorch-lightning).
+<br/>
+[Lightning Fabric: Expert control](#lightning-fabric-expert-control).
+
+Lightning gives you granular control over how much abstraction you want to add over PyTorch.
+
+<div align="center">
+    <img src="https://pl-public-data.s3.amazonaws.com/assets_lightning/continuum.png" width="80%">
+</div>
+
+&nbsp;
+
+# Quick start
+Install Lightning:
+
+```bash
+pip install lightning
+```
+
+<!-- following section will be skipped from PyPI description -->
+
+<details>
+  <summary>Advanced install options</summary>
+    <!-- following section will be skipped from PyPI description -->
+
+#### Install with optional dependencies
+
+```bash
+pip install lightning['extra']
+```
+
+#### Conda
+
+```bash
+conda install lightning -c conda-forge
+```
+
+#### Install stable version
+
+Install future release from the source
+
+```bash
+pip install https://github.com/Lightning-AI/lightning/archive/refs/heads/release/stable.zip -U
+```
+
+#### Install bleeding-edge
+
+Install nightly from the source (no guarantees)
+
+```bash
+pip install https://github.com/Lightning-AI/lightning/archive/refs/heads/master.zip -U
+```
+
+or from testing PyPI
+
+```bash
+pip instal
+
+--- REPOSITORY: donnemartin/data-science-ipython-notebooks ---
+README:
+<br/>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/donnemartin/data-science-ipython-notebooks/master/images/README_1200x800.gif">
+</p>
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/donnemartin/data-science-ipython-notebooks/master/images/coversmall_alt.png">
+  <br/>
+</p>
+
+# data-science-ipython-notebooks
+
+## Index
+
+* [deep-learning](#deep-learning)
+    * [tensorflow](#tensor-flow-tutorials)
+    * [theano](#theano-tutorials)
+    * [keras](#keras-tutorials)
+    * [caffe](#deep-learning-misc)
+* [scikit-learn](#scikit-learn)
+* [statistical-inference-scipy](#statistical-inference-scipy)
+* [pandas](#pandas)
+* [matplotlib](#matplotlib)
+* [numpy](#numpy)
+* [python-data](#python-data)
+* [kaggle-and-business-analyses](#kaggle-and-business-analyses)
+* [spark](#spark)
+* [mapreduce-python](#mapreduce-python)
+* [amazon web services](#aws)
+* [command lines](#commands)
+* [misc](#misc)
+* [notebook-installation](#notebook-installation)
+* [credits](#credits)
+* [contributing](#contributing)
+* [contact-info](#contact-info)
+* [license](#license)
+
+<br/>
+<p align="center">
+  <img src="http://i.imgur.com/ZhKXrKZ.png">
+</p>
+
+## deep-learning
+
+IPython Notebook(s) demonstrating deep learning functionality.
+
+<br/>
+<p align="center">
+  <img src="https://avatars0.githubusercontent.com/u/15658638?v=3&s=100">
+</p>
+
+### tensor-flow-tutorials
+
+Additional TensorFlow tutorials:
+
+* [pkmital/tensorflow_tutorials](https://github.com/pkmital/tensorflow_tutorials)
+* [nlintz/TensorFlow-Tutorials](https://github.com/nlintz/TensorFlow-Tutorials)
+* [alrojo/tensorflow-tutorial](https://github.com/alrojo/tensorflow-tutorial)
+* [BinRoot/TensorFlow-Book](https://github.com/BinRoot/TensorFlow-Book)
+* [tuanavu/tensorflow-basic-tutorials](https://github.com/tuanavu/tensorflow-basic-tutorials)
+
+| Notebook | Description |
+|--------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [tsf-basics](http://nbviewer.ipython.org/github/donnemartin/data-science-ipython-notebooks/blob/master/deep-learning/tensor-flow-examples/notebooks/1_intro/basic_operations.ipynb) | Learn basic operations in TensorFlow, a library for various kinds of perceptual and language understanding tasks from Google. |
+| [tsf-linear](http://nbviewer.ipython.org/github/donnemartin/data-science-ipython-notebooks/blob/master/deep-learning/tensor-flow-examples/notebooks/2_basic_classifiers/linear_regression.ipynb) | Implement linear regression in TensorFlow. |
+| [tsf-logistic](http://nbviewer.ipython.org/github/donnemartin/data-science-ipython-notebooks/blob/master/deep-learning/tensor-flow-examples/notebooks/2_basic_classifiers/logistic_regression.ipynb) | Implement logistic regression in TensorFlow. |
+| [tsf-nn](http://nbviewer.ipython.org/github/donnemartin/data-science-ipython-notebooks/blob/master/deep-learning/tensor-flow-examples/notebooks/2_basic_classifiers/nearest_neighbor.ipynb) | Implement nearest neighboars in TensorFlow. |
+| [tsf-alex](http://nbviewer.ipython.org/github/donnemartin/data-science-ipython-notebooks/blob/master/deep-learning/tensor-flow-examples/notebooks/3_neural_networks/alexnet.ipynb) | Implement AlexNet in TensorFlow. |
+| [tsf-cnn](http://nbviewer.ipython.org/github/donnemartin/data-science-ipython-notebooks/blob/master/deep-learning/tensor-flow-examples/notebooks/3_neural_networks/convolutional_network.ipynb) | Implement convolutional neural networks in TensorFlow. |
+| [tsf-mlp](http://nbviewer.ipython.org/github/donnemartin/data-science-ipython-notebooks/blob/master/deep-learning/tensor-flow-examples/notebooks/3_neural_networks/multilayer_perceptron.ipynb) | Implement multilayer perceptrons in TensorFlow. |
+| [tsf-rnn](http://nbviewer.ipython.org/github/donnemartin/data-science-ipython-notebooks/blob/master/deep-learning/tensor-flow-examples/notebooks/3_neural_networks/recurrent_network.ipynb) | Implement recurrent neural networks in TensorFlow. |
+| [tsf-gpu](http://nbviewer.ipython.org/github/donnemartin/data-science-ipython-notebooks/blob/master/deep-learning/tensor-flow-examples/notebooks/4_multi_gpu/multigpu_basics.ipynb) | Learn about basic multi-GPU computation in TensorFlow. |
+| [tsf-gviz](http://nbviewer.ipython.org/github/donnemartin/data-science-ipython-notebooks/blob/master/deep-learning/tensor-flow-examples/notebooks/5_ui/graph_visualization.ipynb) | Learn about graph visualization in TensorFlow. |
+| [tsf-lviz](http://nbviewer.ipython.org/github/donnemartin/data-science-ipython-notebooks/blob/master/deep-learning/tensor-flow-examples/notebooks/5_ui/loss_visualization.ipynb) | Learn about loss visualization in TensorFlow. |
+
+### tensor-flow-exercises
+
+| Notebook | Description |
+|--------------------------------------------------------------------------------------------------------------|--------------
+
+--- REPOSITORY: d2l-ai/d2l-en ---
+README:
+<div align="left">
+  <img src="https://raw.githubusercontent.com/d2l-ai/d2l-en/master/static/logo-with-text.png" width="350">
+</div>
+
+# D2L.ai: Interactive Deep Learning Book with Multi-Framework Code, Math, and Discussions
+
+[![Continuous Integration](https://github.com/d2l-ai/d2l-en/actions/workflows/ci.yml/badge.svg)](https://github.com/d2l-ai/d2l-en/actions/workflows/ci.yml)
+
+[Book website](https://d2l.ai/) | [STAT 157 Course at UC Berkeley](http://courses.d2l.ai/berkeley-stat-157/index.html)
+
+<h5 align="center"><i>The best way to understand deep learning is learning by doing.</i></h5>
+
+<p align="center">
+  <img width="200"  src="static/frontpage/_images/eq.jpg">
+  <img width="200"  src="static/frontpage/_images/figure.jpg">
+  <img width="200"  src="static/frontpage/_images/code.jpg">
+  <img width="200"  src="static/frontpage/_images/notebook.gif">
+</p>
+
+This open-source book represents our attempt to make deep learning approachable, teaching you the concepts, the context, and the code. The entire book is drafted in Jupyter notebooks, seamlessly integrating exposition figures, math, and interactive examples with self-contained code.
+
+Our goal is to offer a resource that could
+1. be freely available for everyone;
+1. offer sufficient technical depth to provide a starting point on the path to actually becoming an applied machine learning scientist;
+1. include runnable code, showing readers how to solve problems in practice;
+1. allow for rapid updates, both by us and also by the community at large;
+1. be complemented by a forum for interactive discussion of technical details and to answer questions.
+
+## Universities Using D2L
+<p align="center">
+  <img width="600"  src="static/frontpage/_images/map.png">
+</p>
+
+
+
+If you find this book useful, please star (★) this repository or cite this book using the following bibtex entry:
+
+```
+@book{zhang2023dive,
+    title={Dive into Deep Learning},
+    author={Zhang, Aston and Lipton, Zachary C. and Li, Mu and Smola, Alexander J.},
+    publisher={Cambridge University Press},
+    note={\url{https://D2L.ai}},
+    year={2023}
+}
+```
+
+
+## Endorsements
+
+> <p>"In less than a decade, the AI revolution has swept from research labs to broad industries to every corner of our daily life.  Dive into Deep Learning is an excellent text on deep learning and deserves attention from anyone who wants to learn why deep learning has ignited the AI revolution: the most powerful technology force of our time."</p>
+> <b>&mdash; Jensen Huang, Founder and CEO, NVIDIA</b>
+
+> <p>"This is a timely, fascinating book, providing with not only a comprehensive overview of deep learning principles but also detailed algorithms with hands-on programming code, and moreover, a state-of-the-art introduction to deep learning in computer vision and natural language processing. Dive into this book if you want to dive into deep learning!"</p>
+> <b>&mdash; Jiawei Han, Michael Aiken Chair Professor, University of Illinois at Urbana-Champaign</b>
+
+> <p>"This is a highly welcome addition to the machine learning literature, with a focus on hands-on experience implemented via the integration of Jupyter notebooks. Students of deep learning should find this invaluable to become proficient in this field."</p>
+> <b>&mdash; Bernhard Schölkopf, Director, Max Planck Institute for Intelligent Systems</b>
+
+> <p>"Dive into Deep Learning strikes an excellent balance between hands-on learning and in-depth explanation. I've used it in my deep learning course and recommend it to anyone who wants to develop a thorough and practical understanding of deep learning."</p>
+> <b>&mdash; Colin Raffel, Assistant Professor, University of North Carolina, Chapel Hill</b>
+
+## Contributing ([Learn How](https://d2l.ai/chapter_appendix-tools-for-deep-learning/contributing.html))
+
+This open source book has benefited from pedagogical suggestions, typo corrections, and other improvements from community contributors. Your help is valuable for making the book better for everyone.
+
+**Dear [D2L contributors](https://github.com/d2l-ai/d2l-en/graphs/contributors), please email your GitHub ID and name to d2lbook.en AT gmail DOT com so your name will appear on the [acknowledgments](https://d2l.ai/chapter_preface/index.html#acknowledgments). Thanks.**
+
+
+## License Summary
+
+This open source book is made available under the Creative Commons Attribution-ShareAlike 4.0 International License. See [LICENSE](LICENSE) file.
+
+The sample and reference code within this open source book is made available under a modified MIT license. See the [LICENSE-SAMPLECODE](LICENSE-SAMPLECODE) file.
+
+[Chinese version](https://github.com/d2l-ai/d2l-zh) | [Discuss and report issues](https://discuss.d2l.ai/) | [Code of conduct](CODE_OF_CONDUCT.md)
+
+
+--- REPOSITORY: plotly/dash ---
+README:
+# Dash
+
+[![CircleCI](https://img.shields.io/circleci/project/github/plotly/dash/master.svg)](https://circleci.com/gh/plotly/dash)
+[![GitHub](https://img.shields.io/github/license/plotly/dash.svg?color=dark-green)](https://github.com/plotly/dash/blob/master/LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/dash.svg?color=dark-green)](https://pypi.org/project/dash/)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/dash.svg?color=dark-green)](https://pypi.org/project/dash/)
+[![GitHub commit activity](https://img.shields.io/github/commit-activity/y/plotly/dash.svg?color=dark-green)](https://github.com/plotly/dash/graphs/contributors)
+
+#### *Dash is the most downloaded, trusted Python framework for building ML & data science web apps*.
+
+Built on top of [Plotly.js](https://github.com/plotly/plotly.js), [React](https://reactjs.org/) and [Flask](https://palletsprojects.com/p/flask/), Dash ties modern UI elements like dropdowns, sliders, and graphs directly to your analytical Python code. Read [our tutorial](https://dash.plotly.com/getting-started) (proudly crafted ❤️ with Dash itself).
+
+- [Docs](https://dash.plotly.com/getting-started): Create your first Dash app in under 5 minutes
+
+- [dash.gallery](https://dash.gallery): Dash app gallery with Python & R code
+
+<div align="center">
+  <a href="https://dash.plotly.com/project-maintenance">
+    <img src="https://dash.plotly.com/assets/images/maintained-by-plotly.png" width="400px" alt="Maintained by Plotly">
+  </a>
+</div>
+
+
+### Dash App Examples
+
+| Dash App | Description |
+|--- | :---: |
+|![Sample Dash App](https://user-images.githubusercontent.com/1280389/30086128-9bb4a28e-9267-11e7-8fe4-bbac7d53f2b0.gif) | Here’s a simple example of a Dash App that ties a Dropdown to a Plotly Graph. As the user selects a value in the Dropdown, the application code dynamically exports data from Google Finance into a Pandas DataFrame. This app was written in just **43** lines of code ([view the source](https://gist.github.com/chriddyp/3d2454905d8f01886d651f207e2419f0)). |
+|![Crossfiltering Dash App](https://user-images.githubusercontent.com/1280389/30086123-97c58bde-9267-11e7-98a0-7f626de5199a.gif)|Dash app code is declarative and reactive, which makes it easy to build complex apps that contain many interactive elements. Here’s an example with 5 inputs, 3 outputs, and cross filtering. This app was composed in just 160 lines of code, all of which were Python.|
+|![Dash App with Mapbox map showing walmart store openings](https://user-images.githubusercontent.com/1280389/30086299-768509d0-9268-11e7-8e6b-626ac9ca512c.gif)| Dash uses [Plotly.js](https://github.com/plotly/plotly.js) for charting. About 50 chart types are supported, including maps. |
+|![Financial report](https://user-images.githubusercontent.com/2678795/161153710-57952401-6e07-42d5-ba3e-bab6419998c7.gif)| Dash isn't just for dashboards. You have full control over the look and feel of your applications. Here's a Dash App that's styled to look like a PDF report. |
+
+To learn more about Dash, read the [extensive announcement letter](https://medium.com/@plotlygraphs/introducing-dash-5ecf7191b503) or [jump in with the user guide](https://plotly.com/dash).
+
+### Dash OSS & Dash Enterprise
+
+With Dash Open Source, Dash apps run on your local laptop or workstation, but cannot be easily accessed by others in your organization.
+
+Scale up with Dash Enterprise when your Dash app is ready for department or company-wide consumption. Or, launch your initiative with Dash Enterprise from the start to unlock developer productivity gains and hands-on acceleration from Plotly's team.
+
+ML Ops Features: A one-stop shop for ML Ops: Horizontally scalable hosting, deployment, and authentication for your Dash apps. No IT or DevOps required.
+- [**App manager**](https://plotly.com/dash/app-manager/) Deploy & manage Dash apps without needing IT or a DevOps team. App Manager gives you point & click control over all aspects of your Dash deployments.
+- [**Kubernetes scaling**](https://plotly.com/dash/kubernetes/) Ensure high availability of Dash apps and scale horizontally with Dash Enterprise’s Kubernetes architecture. No IT or Helm required.
+- [**No code auth**](https://plotly.com/dash/authentication/) Control Dash app access in a few clicks. Dash Enterprise supports LDAP, AD, PKI, Okta, SAML, OpenID Connect, OAuth, SSO, and simple email authentication.
+- [**Job Queue**](https://plotly.com/dash/job-queue/) The Job Queue is the key to building scalable Dash apps. Move heavy computation from synchronous Dash callbacks to the Job Queue for asynchronous background processing.
+
+Low-Code Features: Low-code Dash app capabilities that supercharge developer productivity.
+- [**Design Kit**](https://plotly.com/dash/design-kit/) Design like a pro without writing a line of CSS. Easily arrange, style, brand, and customize your Dash apps.
+- [**Snapshot Engine**](https://plotly.com/dash/snapshot-engine/) Save & share Dash app views as links or PDFs. Or, run a P
+
+--- REPOSITORY: sinaptik-ai/pandas-ai ---
+README:
+# ![PandasAI](assets/logo.png)
+
+[![Release](https://img.shields.io/pypi/v/pandasai?label=Release&style=flat-square)](https://pypi.org/project/pandasai/)
+[![CI](https://github.com/sinaptik-ai/pandas-ai/actions/workflows/ci-core.yml/badge.svg)](https://github.com/sinaptik-ai/pandas-ai/actions/workflows/ci-core.yml/badge.svg)
+[![CD](https://github.com/sinaptik-ai/pandas-ai/actions/workflows/cd.yml/badge.svg)](https://github.com/sinaptik-ai/pandas-ai/actions/workflows/cd.yml/badge.svg)
+[![Coverage](https://codecov.io/gh/sinaptik-ai/pandas-ai/branch/main/graph/badge.svg)](https://codecov.io/gh/sinaptik-ai/pandas-ai)
+[![Discord](https://dcbadge.vercel.app/api/server/kF7FqH2FwS?style=flat&compact=true)](https://discord.gg/KYKj9F2FRH)
+[![Downloads](https://static.pepy.tech/badge/pandasai)](https://pepy.tech/project/pandasai) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1ZnO-njhL7TBOYPZaqvMvGtsjckZKrv2E?usp=sharing)
+
+PandasAI is a Python library that makes it easy to ask questions to your data in natural language. It helps non-technical users to interact with their data in a more natural way, and it helps technical users to save time, and effort when working with data.
+
+# 🔧 Getting started
+
+You can find the full documentation for PandasAI [here](https://docs.pandas-ai.com/).
+
+
+## 📚 Using the library
+
+### Python Requirements
+
+Python version `3.8+ <=3.11`
+
+### 📦 Installation
+
+You can install the PandasAI library using pip or poetry.
+
+With pip:
+
+```bash
+pip install pandasai
+pip install pandasai-litellm
+```
+
+With poetry:
+
+```bash
+poetry add pandasai
+poetry add pandasai-litellm
+```
+
+### 💻 Usage
+
+#### Ask questions
+
+```python
+import pandasai as pai
+from pandasai_litellm.litellm import LiteLLM
+
+# Initialize LiteLLM with your OpenAI model
+llm = LiteLLM(model="gpt-4.1-mini", api_key="YOUR_OPENAI_API_KEY")
+
+# Configure PandasAI to use this LLM
+pai.config.set({
+    "llm": llm
+})
+
+# Load your data
+df = pai.read_csv("data/companies.csv")
+
+response = df.chat("What is the average revenue by region?")
+print(response)
+```
+
+---
+
+Or you can ask more complex questions:
+
+```python
+df.chat(
+    "What is the total sales for the top 3 countries by sales?"
+)
+```
+
+```
+The total sales for the top 3 countries by sales is 16500.
+```
+
+#### Visualize charts
+
+You can also ask PandasAI to generate charts for you:
+
+```python
+df.chat(
+    "Plot the histogram of countries showing for each one the gdp. Use different colors for each bar",
+)
+```
+
+![Chart](assets/histogram-chart.png?raw=true)
+
+#### Multiple DataFrames
+
+You can also pass in multiple dataframes to PandasAI and ask questions relating them.
+
+```python
+import pandasai as pai
+from pandasai_litellm.litellm import LiteLLM
+
+# Initialize LiteLLM with your OpenAI model
+llm = LiteLLM(model="gpt-4.1-mini", api_key="YOUR_OPENAI_API_KEY")
+
+# Configure PandasAI to use this LLM
+pai.config.set({
+    "llm": llm
+})
+
+employees_data = {
+    'EmployeeID': [1, 2, 3, 4, 5],
+    'Name': ['John', 'Emma', 'Liam', 'Olivia', 'William'],
+    'Department': ['HR', 'Sales', 'IT', 'Marketing', 'Finance']
+}
+
+salaries_data = {
+    'EmployeeID': [1, 2, 3, 4, 5],
+    'Salary': [5000, 6000, 4500, 7000, 5500]
+}
+
+employees_df = pai.DataFrame(employees_data)
+salaries_df = pai.DataFrame(salaries_data)
+
+
+pai.chat("Who gets paid the most?", employees_df, salaries_df)
+```
+
+```
+Olivia gets paid the most.
+```
+
+#### Docker Sandbox
+
+You can run PandasAI in a Docker sandbox, providing a secure, isolated environment to execute code safely and mitigate the risk of malicious attacks.
+
+##### Python Requirements
+
+```bash
+pip install "pandasai-docker"
+```
+
+##### Usage
+
+```python
+import pandasai as pai
+from pandasai_docker import DockerSandbox
+from pandasai_litellm.litellm import LiteLLM
+
+# Initialize LiteLLM with your OpenAI model
+llm = LiteLLM(model="gpt-4.1-mini", api_key="YOUR_OPENAI_API_KEY")
+
+# Configure PandasAI to use this LLM
+pai.config.set({
+    "llm": llm
+})
+
+# Initialize the sandbox
+sandbox = DockerSandbox()
+sandbox.start()
+
+employees_data = {
+    'EmployeeID': [1, 2, 3, 4, 5],
+    'Name': ['John', 'Emma', 'Liam', 'Olivia', 'William'],
+    'Department': ['HR', 'Sales', 'IT', 'Marketing', 'Finance']
+}
+
+salaries_data = {
+    'EmployeeID': [1, 2, 3, 4, 5],
+    'Salary': [5000, 6000, 4500, 7000, 5500]
+}
+
+employees_df = pai.DataFrame(employees_data)
+salaries_df = pai.DataFrame(salaries_data)
+
+pai.chat("Who gets paid the most?", employees_df, salaries_df, sandbox=sandbox)
+
+# Don't forget to stop the sandbox when done
+sandbox.stop()
+```
+
+```
+Olivia gets paid the most.
+```
+
+You can find more examples in the [examples](examples) directory.
+
+## 📜 License
+
+PandasAI is available under the MIT expat license, except for the `pandasai/ee` directory of this repository, which has its [license here](https://github.com/sinaptik-ai/pandas-ai/blob/main/ee/LICENSE).
+
+If you are i
+
+--- REPOSITORY: matplotlib/matplotlib ---
+README:
+[![PyPi](https://img.shields.io/pypi/v/matplotlib)](https://pypi.org/project/matplotlib/)
+[![Conda](https://img.shields.io/conda/vn/conda-forge/matplotlib)](https://anaconda.org/conda-forge/matplotlib)
+[![Downloads](https://img.shields.io/pypi/dm/matplotlib)](https://pypi.org/project/matplotlib)
+[![NUMFocus](https://img.shields.io/badge/powered%20by-NumFOCUS-orange.svg?style=flat&colorA=E1523D&colorB=007D8A)](https://numfocus.org)
+[![LFX Health Score](https://insights.linuxfoundation.org/api/badge/health-score?project=matplotlib)](https://insights.linuxfoundation.org/project/matplotlib)
+
+[![Discourse help forum](https://img.shields.io/badge/help_forum-discourse-blue.svg)](https://discourse.matplotlib.org)
+[![Gitter](https://badges.gitter.im/matplotlib/matplotlib.svg)](https://gitter.im/matplotlib/matplotlib)
+[![GitHub issues](https://img.shields.io/badge/issue_tracking-github-blue.svg)](https://github.com/matplotlib/matplotlib/issues)
+[![Contributing](https://img.shields.io/badge/PR-Welcome-%23FF8300.svg?)](https://matplotlib.org/stable/devel/index.html)
+
+[![GitHub actions status](https://github.com/matplotlib/matplotlib/workflows/Tests/badge.svg)](https://github.com/matplotlib/matplotlib/actions?query=workflow%3ATests)
+[![Azure pipelines status](https://dev.azure.com/matplotlib/matplotlib/_apis/build/status/matplotlib.matplotlib?branchName=main)](https://dev.azure.com/matplotlib/matplotlib/_build/latest?definitionId=1&branchName=main)
+[![AppVeyor status](https://ci.appveyor.com/api/projects/status/github/matplotlib/matplotlib?branch=main&svg=true)](https://ci.appveyor.com/project/matplotlib/matplotlib)
+[![Codecov status](https://codecov.io/github/matplotlib/matplotlib/badge.svg?branch=main&service=github)](https://app.codecov.io/gh/matplotlib/matplotlib)
+[![EffVer Versioning](https://img.shields.io/badge/version_scheme-EffVer-0097a7)](https://jacobtomlinson.dev/effver)
+
+![Matplotlib logotype](https://matplotlib.org/stable/_static/logo2.svg)
+
+Matplotlib is a comprehensive library for creating static, animated, and
+interactive visualizations in Python.
+
+Check out our [home page](https://matplotlib.org/) for more information.
+
+![image](https://matplotlib.org/stable/_static/readme_preview.png)
+
+Matplotlib produces publication-quality figures in a variety of hardcopy
+formats and interactive environments across platforms. Matplotlib can be
+used in Python scripts, Python/IPython shells, web application servers,
+and various graphical user interface toolkits.
+
+## Install
+
+See the [install
+documentation](https://matplotlib.org/stable/users/installing/index.html),
+which is generated from `/doc/install/index.rst`
+
+## Contribute
+
+You've discovered a bug or something else you want to change — excellent!
+
+You've worked out a way to fix it — even better!
+
+You want to tell us about it — best of all!
+
+Start at the [contributing
+guide](https://matplotlib.org/devdocs/devel/contribute.html)!
+
+## Contact
+
+[Discourse](https://discourse.matplotlib.org/) is the discussion forum
+for general questions and discussions and our recommended starting
+point.
+
+Our active mailing lists (which are mirrored on Discourse) are:
+
+-   [Users](https://mail.python.org/mailman/listinfo/matplotlib-users)
+    mailing list: <matplotlib-users@python.org>
+-   [Announcement](https://mail.python.org/mailman/listinfo/matplotlib-announce)
+    mailing list: <matplotlib-announce@python.org>
+-   [Development](https://mail.python.org/mailman/listinfo/matplotlib-devel)
+    mailing list: <matplotlib-devel@python.org>
+
+[Gitter](https://gitter.im/matplotlib/matplotlib) is for coordinating
+development and asking questions directly related to contributing to
+matplotlib.
+
+## Citing Matplotlib
+
+If Matplotlib contributes to a project that leads to publication, please
+acknowledge this by citing Matplotlib.
+
+[A ready-made citation
+entry](https://matplotlib.org/stable/users/project/citing.html) is
+available.
+
+
+--- REPOSITORY: PrefectHQ/prefect ---
+README:
+<p align="center">
+   <img src="https://www.prefect.io/assets/img/prefect-logo-gradient-navy.0cb04f87.svg" width="500" style="max-width: 500px;">
+</p>
+
+<p align="center">
+<a href="https://pypi.org/project/prefect/">
+    <img src="https://static.pepy.tech/badge/prefect/month">
+</a>
+
+<a href="https://hub.docker.com/r/prefecthq/prefect">
+    <img src="https://img.shields.io/docker/pulls/prefecthq/prefect.svg?color=%2327B1FF&logoColor=%234D606E">
+</a>
+
+<a href="https://www.prefect.io/slack/">
+    <img src="https://img.shields.io/static/v1.svg?label=chat&message=on%20slack&color=27b1ff&style=flat">
+</a>
+
+<a href="https://discourse.prefect.io/">
+    <img src="https://img.shields.io/static/v1.svg?label=chat&message=on%20discourse&color=27b1ff&style=flat">
+</a>
+</p>
+
+
+<p style="border: 2px solid #27b1ff; border-radius: 10px; padding: 1em;">
+Looking for the latest <a href="https://docs.prefect.io/">Prefect 2</a> release? Prefect 2 and <a href="https://app.prefect.cloud">Prefect Cloud 2</a> have been released for General Availability. See <a href="https://docs.prefect.io/">https://docs.prefect.io/</a> for details.
+</p>
+
+Prefect 1 Core, Server, and Cloud are our first-generation workflow and orchestration tools. You can continue to use them and we'll continue to support them while users migrate to Prefect 2.
+
+If you're ready to start migrating your workflows to Prefect 2, see our [migration guide](https://docs.prefect.io/migration-guide/).
+
+## Hello, world! 👋
+
+We've rebuilt data engineering for the data science era.
+
+Prefect is a new workflow management system, designed for modern infrastructure and powered by the open-source Prefect Core workflow engine. Users organize `Tasks` into `Flows`, and Prefect takes care of the rest.
+
+Read the [docs](https://docs-v1.prefect.io); get the [code](#installation); ask us [anything](https://www.prefect.io/slack); chat with the community via [Prefect Discourse](https://discourse.prefect.io/)!
+
+### Welcome to Workflows
+
+Prefect's Pythonic API should feel familiar for newcomers. Mark functions as tasks and call them on each other to build up a flow.
+
+```python
+from prefect import task, Flow, Parameter
+
+
+@task(log_stdout=True)
+def say_hello(name):
+    print("Hello, {}!".format(name))
+
+
+with Flow("My First Flow") as flow:
+    name = Parameter('name')
+    say_hello(name)
+
+
+flow.run(name='world') # "Hello, world!"
+flow.run(name='Marvin') # "Hello, Marvin!"
+```
+
+For more detail, please see the [Core docs](https://docs-v1.prefect.io/core/)
+
+### UI and Server
+
+<p align="center" style="margin-bottom:40px;">
+<img src="https://raw.githubusercontent.com/PrefectHQ/prefect/master/docs/.vuepress/public/orchestration/ui/dashboard-overview2.png"  height=440 style="max-height: 440px;">
+</p>
+
+In addition to the [Prefect Cloud](https://www.prefect.io/cloud) platform, Prefect includes an open-source backend for orchestrating and managing flows, consisting primarily of [Prefect Server](https://github.com/prefecthq/server) and [Prefect UI](https://github.com/prefecthq/ui). This local server stores flow metadata in a Postgres database and exposes a GraphQL API.
+
+By default, Prefect is configured to use Prefect Cloud as the backend, and you can set Prefect Cloud as the backend by running the command: 
+
+```bash
+$ prefect backend cloud
+```
+
+To use Prefect Server as the backend, run the following command to configure Prefect for local orchestration:
+
+```bash
+$ prefect backend server
+``` 
+
+Please note the server requires [Docker](https://www.docker.com/) and [Docker Compose](https://docs.docker.com/compose/install/) to be running.
+
+To start the server, UI, and all required infrastructure, run:
+
+```bash
+$ prefect server start
+```
+
+Once all components are running, you can view the UI by visiting [http://localhost:8080](http://localhost:8080).
+
+**Tip:** Check our [troubleshooting guide](https://docs-v1.prefect.io/orchestration/server/troubleshooting.html) if you run into any issues starting the server.
+
+
+Please note that executing flows from the server requires at least one Prefect Agent to be running. For example, to start the local Agent, run the following command: 
+
+```bash
+$ prefect agent local start
+```
+
+Finally, to [register any flow](https://docs-v1.prefect.io/orchestration/concepts/flows.html#registration) with the server, call `flow.register(project_name="<project_name>")` within your flow using the name of your project. For more detail, please see the [orchestration docs](https://docs-v1.prefect.io/orchestration/).
+
+## "...Prefect?"
+
+From the Latin _praefectus_, meaning "one who is in charge", a prefect is an official who oversees a domain and makes sure that the rules are followed. Similarly, Prefect is responsible for making sure that workflows execute properly.
+
+It also happens to be the name of a roving researcher for that wholly remarkable book, _The Hitchhiker's Guide to the Galaxy_.
+
+## Integrations
+
+Thanks to Prefect's growing task library and deep ecosystem integrations, building data applicatio
+
+--- REPOSITORY: recommenders-team/recommenders ---
+README:
+<!--
+Copyright (c) Recommenders contributors.
+Licensed under the MIT License.
+-->
+<img src="https://raw.githubusercontent.com/recommenders-team/artwork/main/color/recommenders_color.svg" width="800">
+
+
+[![Documentation status](https://github.com/recommenders-team/recommenders/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/recommenders-team/recommenders/actions/workflows/pages/pages-build-deployment)
+[![License](https://img.shields.io/github/license/recommenders-team/recommenders.svg)](https://github.com/recommenders-team/recommenders/blob/main/LICENSE)
+[![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![PyPI Version](https://img.shields.io/pypi/v/recommenders.svg?logo=pypi&logoColor=white)](https://pypi.org/project/recommenders)
+[![Python Versions](https://img.shields.io/pypi/pyversions/recommenders.svg?logo=python&logoColor=white)](https://pypi.org/project/recommenders)
+
+[<img align="left" width="300" src="https://raw.githubusercontent.com/recommenders-team/artwork/main/mix/join_recommenders_slack.svg">](https://join.slack.com/t/lfaifoundation/shared_invite/zt-2iyl7zyya-g5rOO5K518CBoevyi28W6w)
+
+<br>
+
+## What's New (April, 2025)
+
+We reached 20,000 stars!!
+
+We are happy to announce that we have reached 20,000 stars on GitHub! Thank you for your support and contributions to the Recommenders project. We are excited to continue building and improving this project with your help.
+
+Check out the release [Recommenders 1.2.1](https://github.com/recommenders-team/recommenders/releases/tag/1.2.1)!
+
+We fixed a lot of bugs due to dependencies, improved security, reviewed the notebooks and the libraries.
+
+## Introduction
+
+Recommenders objective is to assist researchers, developers and enthusiasts in prototyping, experimenting with and bringing to production a range of classic and state-of-the-art recommendation systems.
+
+Recommenders is a project under the [Linux Foundation of AI and Data](https://lfaidata.foundation/projects/). 
+
+This repository contains examples and best practices for building recommendation systems, provided as Jupyter notebooks. The examples detail our learnings on five key tasks:
+
+- [Prepare Data](examples/01_prepare_data): Preparing and loading data for each recommendation algorithm.
+- [Model](examples/00_quick_start): Building models using various classical and deep learning recommendation algorithms such as Alternating Least Squares ([ALS](https://spark.apache.org/docs/latest/api/python/_modules/pyspark/ml/recommendation.html#ALS)) or eXtreme Deep Factorization Machines ([xDeepFM](https://arxiv.org/abs/1803.05170)).
+- [Evaluate](examples/03_evaluate): Evaluating algorithms with offline metrics.
+- [Model Select and Optimize](examples/04_model_select_and_optimize): Tuning and optimizing hyperparameters for recommendation models.
+- [Operationalize](examples/05_operationalize): Operationalizing models in a production environment on Azure.
+
+Several utilities are provided in [recommenders](recommenders) to support common tasks such as loading datasets in the format expected by different algorithms, evaluating model outputs, and splitting training/test data. Implementations of several state-of-the-art algorithms are included for self-study and customization in your own applications. See the [Recommenders documentation](https://readthedocs.org/projects/microsoft-recommenders/).
+
+For a more detailed overview of the repository, please see the documents on the [wiki page](https://github.com/microsoft/recommenders/wiki/Documents-and-Presentations).
+
+For some of the practical scenarios where recommendation systems have been applied, see [scenarios](scenarios). 
+
+## Getting Started
+
+We recommend [uv](https://docs.astral.sh/uv/) for environment management (10-100x faster than conda/pip), and [VS Code](https://code.visualstudio.com/) for development. To install the recommenders package and run an example notebook on Linux/WSL:
+
+```bash
+# 1. Install gcc if it is not installed already. On Ubuntu, this could done by using the command
+# sudo apt install gcc
+
+# 2. Install uv (if not already installed)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# 3. Create and activate a new virtual environment
+uv venv ~/.venvs/recommenders --python 3.11
+source ~/.venvs/recommenders/bin/activate
+
+# 4. Install the core recommenders package. It can run all the CPU notebooks.
+uv pip install recommenders
+
+# 5. Create a Jupyter kernel
+uv pip install ipykernel
+python -m ipykernel install --user --name recommenders --display-name "Python (recommenders)"
+
+# 6. Clone this repo within VSCode or using command line:
+git clone https://github.com/recommenders-team/recommenders.git
+
+# 7. Within VSCode:
+#   a. Open a notebook, e.g., examples/00_quick_start/sar_movielens.ipynb;
+#   b. Select Jupyter kernel "Python (recommenders)";
+#   c. Run the notebook.
+```
+
+For more information about setup on other platforms (e.g., Windows and macOS) and different configuratio
+
+--- REPOSITORY: marimo-team/marimo ---
+README:
+<p align="center">
+  <img src="https://raw.githubusercontent.com/marimo-team/marimo/main/docs/_static/marimo-logotype-thick.svg">
+</p>
+
+<p align="center">
+  <em>A reactive Python notebook that's reproducible, git-friendly, and deployable as scripts or apps.</em>
+</p>
+
+<p align="center">
+  <a href="https://docs.marimo.io" target="_blank"><strong>Docs</strong></a> ·
+  <a href="https://marimo.io/discord?ref=readme" target="_blank"><strong>Discord</strong></a> ·
+  <a href="https://docs.marimo.io/examples/" target="_blank"><strong>Examples</strong></a> ·
+  <a href="https://marimo.io/gallery/" target="_blank"><strong>Gallery</strong></a> ·
+  <a href="https://www.youtube.com/@marimo-team/" target="_blank"><strong>YouTube</strong></a>
+</p>
+
+<p align="center">
+  <b>English</b>
+  <b> | </b>
+  <a href="https://github.com/marimo-team/marimo/blob/main/README_Traditional_Chinese.md" target="_blank"><b>繁體中文</b></a>
+  <b> | </b>
+  <a href="https://github.com/marimo-team/marimo/blob/main/README_Chinese.md" target="_blank"><b>简体中文</b></a>
+  <b> | </b>
+  <a href="https://github.com/marimo-team/marimo/blob/main/README_Japanese.md" target="_blank"><b>日本語</b></a>
+  <b> | </b>
+  <a href="https://github.com/marimo-team/marimo/blob/main/README_Spanish.md" target="_blank"><b>Español</b></a>
+</p>
+
+<p align="center">
+  <a href="https://pypi.org/project/marimo/"><img src="https://img.shields.io/pypi/v/marimo?color=%2334D058&label=pypi"/></a>
+  <a href="https://anaconda.org/conda-forge/marimo"><img src="https://img.shields.io/conda/vn/conda-forge/marimo.svg"/></a>
+  <a href="https://marimo.io/discord?ref=readme"><img src="https://shields.io/discord/1059888774789730424" alt="discord"/></a>
+  <img alt="Pepy Total Downloads" src="https://img.shields.io/pepy/dt/marimo?label=pypi%20%7C%20downloads"/>
+  <img alt="Conda Downloads" src="https://img.shields.io/conda/d/conda-forge/marimo"/>
+  <a href="https://github.com/marimo-team/marimo/blob/main/LICENSE"><img src="https://img.shields.io/pypi/l/marimo"/></a>
+</p>
+
+**marimo** is a reactive Python notebook: run a cell or interact with a UI
+element, and marimo automatically runs dependent cells (or <a href="#expensive-notebooks">marks them as stale</a>), keeping code and outputs
+consistent. marimo notebooks are stored as pure Python (with first-class SQL support), executable as scripts,
+and deployable as apps.
+
+**Highlights**.
+
+- 🚀 **batteries-included:** replaces `jupyter`, `streamlit`, `jupytext`, `ipywidgets`, `papermill`, and more
+- ⚡️ **reactive**: run a cell, and marimo reactively [runs all dependent cells](https://docs.marimo.io/guides/reactivity.html) or <a href="#expensive-notebooks">marks them as stale</a>
+- 🖐️ **interactive:** [bind sliders, tables, plots, and more](https://docs.marimo.io/guides/interactivity.html) to Python — no callbacks required
+- 🐍 **git-friendly:** stored as `.py` files
+- 🛢️ **designed for data**: query dataframes, databases, warehouses, or lakehouses [with SQL](https://docs.marimo.io/guides/working_with_data/sql.html), filter and search [dataframes](https://docs.marimo.io/guides/working_with_data/dataframes.html)
+- 🤖 **AI-native**: [generate cells with AI](https://docs.marimo.io/guides/generate_with_ai/) tailored for data work
+- 🔬 **reproducible:** [no hidden state](https://docs.marimo.io/guides/reactivity.html#no-hidden-state), deterministic execution, [built-in package management](https://docs.marimo.io/guides/package_management/)
+- 🏃 **executable:** [execute as a Python script](https://docs.marimo.io/guides/scripts.html), parameterized by CLI args
+- 🛜 **shareable**: [deploy as an interactive web app](https://docs.marimo.io/guides/apps.html) or [slides](https://docs.marimo.io/guides/apps.html#slides-layout), [run in the browser via WASM](https://docs.marimo.io/guides/wasm.html)
+- 🧩 **reusable:** [import functions and classes](https://docs.marimo.io/guides/reusing_functions/) from one notebook to another
+- 🧪 **testable:** [run pytest](https://docs.marimo.io/guides/testing/) on notebooks
+- ⌨️ **a modern editor**: [GitHub Copilot](https://docs.marimo.io/guides/editor_features/ai_completion.html#github-copilot), [AI assistants](https://docs.marimo.io/guides/editor_features/ai_completion.html), vim keybindings, variable explorer, and [more](https://docs.marimo.io/guides/editor_features/index.html)
+- 🧑‍💻 **use your favorite editor**: run in [VS Code or Cursor](https://marketplace.visualstudio.com/items?itemName=marimo-team.vscode-marimo), or edit in neovim, Zed, [or any other text editor](https://docs.marimo.io/guides/editor_features/watching/)
+
+```python
+pip install marimo && marimo tutorial intro
+```
+
+_Get started instantly with [**mo**lab, our free online
+notebook](https://molab.marimo.io/notebooks). Or jump to the
+[quickstart](#quickstart) for a primer on our CLI._
+
+## A reactive programming environment
+
+marimo guarantees your notebook code, outputs, and program state are consistent. This [solves many problems](https://docs.marimo.io/faq.html#faq-problems) associa
+
+--- REPOSITORY: akfamily/akshare ---
+README:
+**资源分享**：对于想了解更多财经数据与量化投研的小伙伴，推荐一个专注于财经数据和量化研究的知识社区。
+该社区提供相关文档和视频学习资源，汇集了各类财经数据源和量化投研工具的使用经验。
+有兴趣深入学习的朋友可点此[了解更多](https://t.zsxq.com/ZCxUG)，也推荐大家关注微信公众号【数据科学实战】。
+
+**重磅推荐**：AKQuant 是一款专为 **量化投研 (Quantitative Research)** 打造的高性能量化回测框架。它以 Rust 铸造极速撮合内核，
+以 Python 链接数据与 AI 生态，旨在为量化投资者提供可靠高效的量化投研解决方案。参见[AKQuant](https://github.com/akfamily/akquant)
+
+**工具推荐**：期魔方是一款本地化期货量化分析工具，适合数据分析爱好者使用。无需复杂部署，支持数据分析和机器学习功能，研究功能免费开放。
+如需了解更多信息可访问[期魔方](https://qmfquant.com)。
+
+![AKShare Logo](https://github.com/akfamily/akshare/blob/main/assets/images/akshare_logo.jpg)
+
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/akshare.svg)](https://pypi.org/project/akshare/)
+[![PyPI](https://img.shields.io/pypi/v/akshare.svg)](https://pypi.org/project/akshare/)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/akshare?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/akshare)
+[![Documentation Status](https://readthedocs.org/projects/akshare/badge/?version=latest)](https://akshare.readthedocs.io/?badge=latest)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![akshare](https://img.shields.io/badge/Data%20Science-AKShare-green)](https://github.com/akfamily/akshare)
+[![Actions Status](https://github.com/akfamily/akshare/actions/workflows/release_and_deploy.yml/badge.svg)](https://github.com/akfamily/akshare/actions)
+[![MIT Licence](https://img.shields.io/badge/license-MIT-blue)](https://github.com/akfamily/akshare/blob/main/LICENSE)
+[![](https://img.shields.io/github/forks/jindaxiang/akshare)](https://github.com/akfamily/akshare)
+[![](https://img.shields.io/github/stars/jindaxiang/akshare)](https://github.com/akfamily/akshare)
+[![](https://img.shields.io/github/issues/jindaxiang/akshare)](https://github.com/akfamily/akshare)
+[![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
+
+## Overview
+
+[AKShare](https://github.com/akfamily/akshare) requires Python(64 bit) 3.9 or higher and
+aims to simplify the process of fetching financial data.
+
+**Write less, get more!**
+
+- Documentation: [中文文档](https://akshare.akfamily.xyz/)
+
+## Installation
+
+### General
+
+```shell
+pip install akshare --upgrade
+```
+
+### China
+
+```shell
+pip install akshare -i http://mirrors.aliyun.com/pypi/simple/ --trusted-host=mirrors.aliyun.com  --upgrade
+```
+
+### PR
+
+Please check out [Documentation](https://akshare.akfamily.xyz/contributing.html) if you
+want to contribute to AKShare
+
+### Docker
+
+#### Pull images
+
+```shell
+docker pull registry.cn-shanghai.aliyuncs.com/akfamily/aktools:jupyter
+```
+
+#### Run Container
+
+```shell
+docker run -it registry.cn-shanghai.aliyuncs.com/akfamily/aktools:jupyter python
+```
+
+#### Test
+
+```python
+import akshare as ak
+
+print(ak.__version__)
+```
+
+## Usage
+
+### Data
+
+Code:
+
+```python
+import akshare as ak
+
+stock_zh_a_hist_df = ak.stock_zh_a_hist(symbol="000001", period="daily", start_date="20170301", end_date='20231022', adjust="")
+print(stock_zh_a_hist_df)
+```
+
+Output:
+
+```
+      日期          开盘   收盘    最高  ...  振幅   涨跌幅  涨跌额  换手率
+0     2017-03-01   9.49   9.49   9.55  ...  0.84  0.11  0.01  0.21
+1     2017-03-02   9.51   9.43   9.54  ...  1.26 -0.63 -0.06  0.24
+2     2017-03-03   9.41   9.40   9.43  ...  0.74 -0.32 -0.03  0.20
+3     2017-03-06   9.40   9.45   9.46  ...  0.74  0.53  0.05  0.24
+4     2017-03-07   9.44   9.45   9.46  ...  0.63  0.00  0.00  0.17
+          ...    ...    ...    ...  ...   ...   ...   ...   ...
+1610  2023-10-16  11.00  11.01  11.03  ...  0.73  0.09  0.01  0.26
+1611  2023-10-17  11.01  11.02  11.05  ...  0.82  0.09  0.01  0.25
+1612  2023-10-18  10.99  10.95  11.02  ...  1.00 -0.64 -0.07  0.34
+1613  2023-10-19  10.91  10.60  10.92  ...  3.01 -3.20 -0.35  0.61
+1614  2023-10-20  10.55  10.60  10.67  ...  1.51  0.00  0.00  0.27
+[1615 rows x 11 columns]
+```
+
+### Plot
+
+Code:
+
+```python
+import akshare as ak
+import mplfinance as mpf  # Please install mplfinance as follows: pip install mplfinance
+
+stock_us_daily_df = ak.stock_us_daily(symbol="AAPL", adjust="qfq")
+stock_us_daily_df = stock_us_daily_df.set_index(["date"])
+stock_us_daily_df = stock_us_daily_df["2020-04-01": "2020-04-29"]
+mpf.plot(stock_us_daily_df, type="candle", mav=(3, 6, 9), volume=True, show_nontrading=False)
+```
+
+Output:
+
+![KLine](https://jfds-1252952517.cos.ap-chengdu.myqcloud.com/akshare/readme/home/AAPL_candle.png)
+
+## Features
+
+- **Easy of use**: Just one line code to fetch the data;
+- **Extensible**: Easy to customize your own code with other application;
+- **Powerful**: Python ecosystem.
+
+## Tutorials
+
+1. [Overview](https://akshare.akfamily.xyz/introduction.html)
+2. [Installation](https://akshare.akfamily.xyz/installation.html)
+3. [Tutorial](https://akshare.akfamily.xyz/tutorial.html)
+4. [Data Dict](https://akshare.akfamily.xyz/data/index.html)
+5. [Subjects](https://a

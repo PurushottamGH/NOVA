@@ -71,6 +71,10 @@ def save_checkpoint(
     latest_path = save_dir / "checkpoint"
     torch.save(checkpoint, latest_path)
 
+    # Also save 'latest.pt' for backward compatibility with older code/tests
+    legacy_latest = save_dir / "latest.pt"
+    torch.save(checkpoint, legacy_latest)
+
     # Save best model separately
     if is_best:
         best_path = save_dir / "best.pt"

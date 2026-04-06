@@ -116,7 +116,7 @@ class Trainer:
         print(f"  Max steps: {self.config.max_steps}")
         print(f"  Starting from step: {self.global_step}")
         print(f"  Gradient accumulation steps: {self.config.accumulation_steps}")  # FIXED: show accum steps
-        if self.global_step == 0 and config.warmup_steps < 100:
+        if self.global_step == 0 and self.config.warmup_steps < 100:
             print("[Trainer] Warning: warmup_steps < 100 may cause instability")
         print("=" * 60)
 

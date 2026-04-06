@@ -1,0 +1,1464 @@
+
+--- REPOSITORY: AUTOMATIC1111/stable-diffusion-webui ---
+README:
+# Stable Diffusion web UI
+A web interface for Stable Diffusion, implemented using Gradio library.
+
+![](screenshot.png)
+
+## Features
+[Detailed feature showcase with images](https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Features):
+- Original txt2img and img2img modes
+- One click install and run script (but you still must install python and git)
+- Outpainting
+- Inpainting
+- Color Sketch
+- Prompt Matrix
+- Stable Diffusion Upscale
+- Attention, specify parts of text that the model should pay more attention to
+    - a man in a `((tuxedo))` - will pay more attention to tuxedo
+    - a man in a `(tuxedo:1.21)` - alternative syntax
+    - select text and press `Ctrl+Up` or `Ctrl+Down` (or `Command+Up` or `Command+Down` if you're on a MacOS) to automatically adjust attention to selected text (code contributed by anonymous user)
+- Loopback, run img2img processing multiple times
+- X/Y/Z plot, a way to draw a 3 dimensional plot of images with different parameters
+- Textual Inversion
+    - have as many embeddings as you want and use any names you like for them
+    - use multiple embeddings with different numbers of vectors per token
+    - works with half precision floating point numbers
+    - train embeddings on 8GB (also reports of 6GB working)
+- Extras tab with:
+    - GFPGAN, neural network that fixes faces
+    - CodeFormer, face restoration tool as an alternative to GFPGAN
+    - RealESRGAN, neural network upscaler
+    - ESRGAN, neural network upscaler with a lot of third party models
+    - SwinIR and Swin2SR ([see here](https://github.com/AUTOMATIC1111/stable-diffusion-webui/pull/2092)), neural network upscalers
+    - LDSR, Latent diffusion super resolution upscaling
+- Resizing aspect ratio options
+- Sampling method selection
+    - Adjust sampler eta values (noise multiplier)
+    - More advanced noise setting options
+- Interrupt processing at any time
+- 4GB video card support (also reports of 2GB working)
+- Correct seeds for batches
+- Live prompt token length validation
+- Generation parameters
+     - parameters you used to generate images are saved with that image
+     - in PNG chunks for PNG, in EXIF for JPEG
+     - can drag the image to PNG info tab to restore generation parameters and automatically copy them into UI
+     - can be disabled in settings
+     - drag and drop an image/text-parameters to promptbox
+- Read Generation Parameters Button, loads parameters in promptbox to UI
+- Settings page
+- Running arbitrary python code from UI (must run with `--allow-code` to enable)
+- Mouseover hints for most UI elements
+- Possible to change defaults/mix/max/step values for UI elements via text config
+- Tiling support, a checkbox to create images that can be tiled like textures
+- Progress bar and live image generation preview
+    - Can use a separate neural network to produce previews with almost none VRAM or compute requirement
+- Negative prompt, an extra text field that allows you to list what you don't want to see in generated image
+- Styles, a way to save part of prompt and easily apply them via dropdown later
+- Variations, a way to generate same image but with tiny differences
+- Seed resizing, a way to generate same image but at slightly different resolution
+- CLIP interrogator, a button that tries to guess prompt from an image
+- Prompt Editing, a way to change prompt mid-generation, say to start making a watermelon and switch to anime girl midway
+- Batch Processing, process a group of files using img2img
+- Img2img Alternative, reverse Euler method of cross attention control
+- Highres Fix, a convenience option to produce high resolution pictures in one click without usual distortions
+- Reloading checkpoints on the fly
+- Checkpoint Merger, a tab that allows you to merge up to 3 checkpoints into one
+- [Custom scripts](https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Custom-Scripts) with many extensions from community
+- [Composable-Diffusion](https://energy-based-model.github.io/Compositional-Visual-Generation-with-Composable-Diffusion-Models/), a way to use multiple prompts at once
+     - separate prompts using uppercase `AND`
+     - also supports weights for prompts: `a cat :1.2 AND a dog AND a penguin :2.2`
+- No token limit for prompts (original stable diffusion lets you use up to 75 tokens)
+- DeepDanbooru integration, creates danbooru style tags for anime prompts
+- [xformers](https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/Xformers), major speed increase for select cards: (add `--xformers` to commandline args)
+- via extension: [History tab](https://github.com/yfszzx/stable-diffusion-webui-images-browser): view, direct and delete images conveniently within the UI
+- Generate forever option
+- Training tab
+     - hypernetworks and embeddings options
+     - Preprocessing images: cropping, mirroring, autotagging using BLIP or deepdanbooru (for anime)
+- Clip skip
+- Hypernetworks
+- Loras (same as Hypernetworks 
+
+--- REPOSITORY: huggingface/transformers ---
+README:
+<!---
+Copyright 2020 The HuggingFace Team. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://huggingface.co/datasets/huggingface/documentation-images/raw/main/transformers-logo-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="https://huggingface.co/datasets/huggingface/documentation-images/raw/main/transformers-logo-light.svg">
+    <img alt="Hugging Face Transformers Library" src="https://huggingface.co/datasets/huggingface/documentation-images/raw/main/transformers-logo-light.svg" width="352" height="59" style="max-width: 100%;">
+  </picture>
+  <br/>
+  <br/>
+</p>
+
+<p align="center">
+    <a href="https://huggingface.com/models"><img alt="Checkpoints on Hub" src="https://img.shields.io/endpoint?url=https://huggingface.co/api/shields/models&color=brightgreen"></a>
+    <a href="https://circleci.com/gh/huggingface/transformers"><img alt="Build" src="https://img.shields.io/circleci/build/github/huggingface/transformers/main"></a>
+    <a href="https://github.com/huggingface/transformers/blob/main/LICENSE"><img alt="GitHub" src="https://img.shields.io/github/license/huggingface/transformers.svg?color=blue"></a>
+    <a href="https://huggingface.co/docs/transformers/index"><img alt="Documentation" src="https://img.shields.io/website/http/huggingface.co/docs/transformers/index.svg?down_color=red&down_message=offline&up_message=online"></a>
+    <a href="https://github.com/huggingface/transformers/releases"><img alt="GitHub release" src="https://img.shields.io/github/release/huggingface/transformers.svg"></a>
+    <a href="https://github.com/huggingface/transformers/blob/main/CODE_OF_CONDUCT.md"><img alt="Contributor Covenant" src="https://img.shields.io/badge/Contributor%20Covenant-v2.0%20adopted-ff69b4.svg"></a>
+    <a href="https://zenodo.org/badge/latestdoi/155220641"><img src="https://zenodo.org/badge/155220641.svg" alt="DOI"></a>
+</p>
+
+<h4 align="center">
+    <p>
+        <b>English</b> |
+        <a href="https://github.com/huggingface/transformers/blob/main/i18n/README_zh-hans.md">简体中文</a> |
+        <a href="https://github.com/huggingface/transformers/blob/main/i18n/README_zh-hant.md">繁體中文</a> |
+        <a href="https://github.com/huggingface/transformers/blob/main/i18n/README_ko.md">한국어</a> |
+        <a href="https://github.com/huggingface/transformers/blob/main/i18n/README_es.md">Español</a> |
+        <a href="https://github.com/huggingface/transformers/blob/main/i18n/README_ja.md">日本語</a> |
+        <a href="https://github.com/huggingface/transformers/blob/main/i18n/README_hd.md">हिन्दी</a> |
+        <a href="https://github.com/huggingface/transformers/blob/main/i18n/README_ru.md">Русский</a> |
+        <a href="https://github.com/huggingface/transformers/blob/main/i18n/README_pt-br.md">Português</a> |
+        <a href="https://github.com/huggingface/transformers/blob/main/i18n/README_te.md">తెలుగు</a> |
+        <a href="https://github.com/huggingface/transformers/blob/main/i18n/README_fr.md">Français</a> |
+        <a href="https://github.com/huggingface/transformers/blob/main/i18n/README_de.md">Deutsch</a> |
+        <a href="https://github.com/huggingface/transformers/blob/main/i18n/README_it.md">Italiano</a> |
+        <a href="https://github.com/huggingface/transformers/blob/main/i18n/README_vi.md">Tiếng Việt</a> |
+        <a href="https://github.com/huggingface/transformers/blob/main/i18n/README_ar.md">العربية</a> |
+        <a href="https://github.com/huggingface/transformers/blob/main/i18n/README_ur.md">اردو</a> |
+        <a href="https://github.com/huggingface/transformers/blob/main/i18n/README_bn.md">বাংলা</a> |
+    </p>
+</h4>
+
+<h3 align="center">
+    <p>State-of-the-art pretrained models for inference and training</p>
+</h3>
+
+<h3 align="center">
+    <img src="https://huggingface.co/datasets/huggingface/documentation-images/resolve/main/transformers/transformers_as_a_model_definition.png"/>
+</h3>
+
+Transformers acts as the model-definition framework for state-of-the-art machine learning with text, computer
+vision, audio, video, and multimodal models, for both inference and training.
+
+It centralizes the model definition so that this definition is agreed upon across the ecosystem. `transformers` is the
+pivot across frameworks: if a model definition is supported, it will be compatible with the majority of training
+frameworks (Axolotl, Unsloth, DeepSpeed, FSDP, PyTorch-Lightning, ...), inference engines (vLLM
+
+--- REPOSITORY: Comfy-Org/ComfyUI ---
+README:
+<div align="center">
+
+# ComfyUI
+**The most powerful and modular visual AI engine and application.**
+
+
+[![Website][website-shield]][website-url]
+[![Dynamic JSON Badge][discord-shield]][discord-url]
+[![Twitter][twitter-shield]][twitter-url]
+[![Matrix][matrix-shield]][matrix-url]
+<br>
+[![][github-release-shield]][github-release-link]
+[![][github-release-date-shield]][github-release-link]
+[![][github-downloads-shield]][github-downloads-link]
+[![][github-downloads-latest-shield]][github-downloads-link]
+
+[matrix-shield]: https://img.shields.io/badge/Matrix-000000?style=flat&logo=matrix&logoColor=white
+[matrix-url]: https://app.element.io/#/room/%23comfyui_space%3Amatrix.org
+[website-shield]: https://img.shields.io/badge/ComfyOrg-4285F4?style=flat
+[website-url]: https://www.comfy.org/
+<!-- Workaround to display total user from https://github.com/badges/shields/issues/4500#issuecomment-2060079995 -->
+[discord-shield]: https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fdiscord.com%2Fapi%2Finvites%2Fcomfyorg%3Fwith_counts%3Dtrue&query=%24.approximate_member_count&logo=discord&logoColor=white&label=Discord&color=green&suffix=%20total
+[discord-url]: https://www.comfy.org/discord
+[twitter-shield]: https://img.shields.io/twitter/follow/ComfyUI
+[twitter-url]: https://x.com/ComfyUI
+
+[github-release-shield]: https://img.shields.io/github/v/release/comfyanonymous/ComfyUI?style=flat&sort=semver
+[github-release-link]: https://github.com/comfyanonymous/ComfyUI/releases
+[github-release-date-shield]: https://img.shields.io/github/release-date/comfyanonymous/ComfyUI?style=flat
+[github-downloads-shield]: https://img.shields.io/github/downloads/comfyanonymous/ComfyUI/total?style=flat
+[github-downloads-latest-shield]: https://img.shields.io/github/downloads/comfyanonymous/ComfyUI/latest/total?style=flat&label=downloads%40latest
+[github-downloads-link]: https://github.com/comfyanonymous/ComfyUI/releases
+
+![ComfyUI Screenshot](https://github.com/user-attachments/assets/7ccaf2c1-9b72-41ae-9a89-5688c94b7abe)
+</div>
+
+ComfyUI lets you design and execute advanced stable diffusion pipelines using a graph/nodes/flowchart based interface. Available on Windows, Linux, and macOS.
+
+## Get Started
+
+### Local
+
+#### [Desktop Application](https://www.comfy.org/download)
+- The easiest way to get started.
+- Available on Windows & macOS.
+
+#### [Windows Portable Package](#installing)
+- Get the latest commits and completely portable.
+- Available on Windows.
+
+#### [Manual Install](#manual-install-windows-linux)
+Supports all operating systems and GPU types (NVIDIA, AMD, Intel, Apple Silicon, Ascend).
+
+### Cloud
+
+#### [Comfy Cloud](https://www.comfy.org/cloud)
+- Our official paid cloud version for those who can't afford local hardware.
+
+## Examples
+See what ComfyUI can do with the [newer template workflows](https://comfy.org/workflows) or old [example workflows](https://comfyanonymous.github.io/ComfyUI_examples/).
+
+## Features
+- Nodes/graph/flowchart interface to experiment and create complex Stable Diffusion workflows without needing to code anything.
+- NOTE: There are many more models supported than the list below, if you want to see what is supported see our templates list inside ComfyUI.
+- Image Models
+   - SD1.x, SD2.x ([unCLIP](https://comfyanonymous.github.io/ComfyUI_examples/unclip/))
+   - [SDXL](https://comfyanonymous.github.io/ComfyUI_examples/sdxl/), [SDXL Turbo](https://comfyanonymous.github.io/ComfyUI_examples/sdturbo/)
+   - [Stable Cascade](https://comfyanonymous.github.io/ComfyUI_examples/stable_cascade/)
+   - [SD3 and SD3.5](https://comfyanonymous.github.io/ComfyUI_examples/sd3/)
+   - Pixart Alpha and Sigma
+   - [AuraFlow](https://comfyanonymous.github.io/ComfyUI_examples/aura_flow/)
+   - [HunyuanDiT](https://comfyanonymous.github.io/ComfyUI_examples/hunyuan_dit/)
+   - [Flux](https://comfyanonymous.github.io/ComfyUI_examples/flux/)
+   - [Lumina Image 2.0](https://comfyanonymous.github.io/ComfyUI_examples/lumina2/)
+   - [HiDream](https://comfyanonymous.github.io/ComfyUI_examples/hidream/)
+   - [Qwen Image](https://comfyanonymous.github.io/ComfyUI_examples/qwen_image/)
+   - [Hunyuan Image 2.1](https://comfyanonymous.github.io/ComfyUI_examples/hunyuan_image/)
+   - [Flux 2](https://comfyanonymous.github.io/ComfyUI_examples/flux2/)
+   - [Z Image](https://comfyanonymous.github.io/ComfyUI_examples/z_image/)
+- Image Editing Models
+   - [Omnigen 2](https://comfyanonymous.github.io/ComfyUI_examples/omnigen/)
+   - [Flux Kontext](https://comfyanonymous.github.io/ComfyUI_examples/flux/#flux-kontext-image-editing-model)
+   - [HiDream E1.1](https://comfyanonymous.github.io/ComfyUI_examples/hidream/#hidream-e11)
+   - [Qwen Image Edit](https://comfyanonymous.github.io/ComfyUI_examples/qwen_image/#edit-model)
+- Video Models
+   - [Stable Video Diffusion](https://comfyanonymous.github.io/ComfyUI_examples/video/)
+   - [Mochi](https://comfyanonymous.github.io/ComfyUI_examples/mochi/)
+   - [LTX-Video](https://comfyanonymous.github.io/ComfyUI_examples/ltxv/
+
+--- REPOSITORY: vllm-project/vllm ---
+README:
+<!-- markdownlint-disable MD001 MD041 -->
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/vllm-project/vllm/main/docs/assets/logos/vllm-logo-text-dark.png">
+    <img alt="vLLM" src="https://raw.githubusercontent.com/vllm-project/vllm/main/docs/assets/logos/vllm-logo-text-light.png" width=55%>
+  </picture>
+</p>
+
+<h3 align="center">
+Easy, fast, and cheap LLM serving for everyone
+</h3>
+
+<p align="center">
+| <a href="https://docs.vllm.ai"><b>Documentation</b></a> | <a href="https://blog.vllm.ai/"><b>Blog</b></a> | <a href="https://arxiv.org/abs/2309.06180"><b>Paper</b></a> | <a href="https://x.com/vllm_project"><b>Twitter/X</b></a> | <a href="https://discuss.vllm.ai"><b>User Forum</b></a> | <a href="https://slack.vllm.ai"><b>Developer Slack</b></a> |
+</p>
+
+🔥 We have built a vllm website to help you get started with vllm. Please visit [vllm.ai](https://vllm.ai) to learn more.
+For events, please visit [vllm.ai/events](https://vllm.ai/events) to join us.
+
+---
+
+## About
+
+vLLM is a fast and easy-to-use library for LLM inference and serving.
+
+Originally developed in the [Sky Computing Lab](https://sky.cs.berkeley.edu) at UC Berkeley, vLLM has evolved into a community-driven project with contributions from both academia and industry.
+
+vLLM is fast with:
+
+- State-of-the-art serving throughput
+- Efficient management of attention key and value memory with [**PagedAttention**](https://blog.vllm.ai/2023/06/20/vllm.html)
+- Continuous batching of incoming requests
+- Fast model execution with CUDA/HIP graph
+- Quantizations: [GPTQ](https://arxiv.org/abs/2210.17323), [AWQ](https://arxiv.org/abs/2306.00978), [AutoRound](https://arxiv.org/abs/2309.05516), INT4, INT8, and FP8
+- Optimized CUDA kernels, including integration with FlashAttention and FlashInfer
+- Speculative decoding
+- Chunked prefill
+
+vLLM is flexible and easy to use with:
+
+- Seamless integration with popular Hugging Face models
+- High-throughput serving with various decoding algorithms, including *parallel sampling*, *beam search*, and more
+- Tensor, pipeline, data and expert parallelism support for distributed inference
+- Streaming outputs
+- OpenAI-compatible API server
+- Support for NVIDIA GPUs, AMD CPUs and GPUs, Intel CPUs and GPUs, PowerPC CPUs, Arm CPUs, and TPU. Additionally, support for diverse hardware plugins such as Intel Gaudi, IBM Spyre and Huawei Ascend.
+- Prefix caching support
+- Multi-LoRA support
+
+vLLM seamlessly supports most popular open-source models on HuggingFace, including:
+
+- Transformer-like LLMs (e.g., Llama)
+- Mixture-of-Expert LLMs (e.g., Mixtral, Deepseek-V2 and V3)
+- Embedding Models (e.g., E5-Mistral)
+- Multi-modal LLMs (e.g., LLaVA)
+
+Find the full list of supported models [here](https://docs.vllm.ai/en/latest/models/supported_models.html).
+
+## Getting Started
+
+Install vLLM with `pip` or [from source](https://docs.vllm.ai/en/latest/getting_started/installation/gpu/index.html#build-wheel-from-source):
+
+```bash
+pip install vllm
+```
+
+Visit our [documentation](https://docs.vllm.ai/en/latest/) to learn more.
+
+- [Installation](https://docs.vllm.ai/en/latest/getting_started/installation.html)
+- [Quickstart](https://docs.vllm.ai/en/latest/getting_started/quickstart.html)
+- [List of Supported Models](https://docs.vllm.ai/en/latest/models/supported_models.html)
+
+## Contributing
+
+We welcome and value any contributions and collaborations.
+Please check out [Contributing to vLLM](https://docs.vllm.ai/en/latest/contributing/index.html) for how to get involved.
+
+## Citation
+
+If you use vLLM for your research, please cite our [paper](https://arxiv.org/abs/2309.06180):
+
+```bibtex
+@inproceedings{kwon2023efficient,
+  title={Efficient Memory Management for Large Language Model Serving with PagedAttention},
+  author={Woosuk Kwon and Zhuohan Li and Siyuan Zhuang and Ying Sheng and Lianmin Zheng and Cody Hao Yu and Joseph E. Gonzalez and Hao Zhang and Ion Stoica},
+  booktitle={Proceedings of the ACM SIGOPS 29th Symposium on Operating Systems Principles},
+  year={2023}
+}
+```
+
+## Contact Us
+
+<!-- --8<-- [start:contact-us] -->
+- For technical questions and feature requests, please use GitHub [Issues](https://github.com/vllm-project/vllm/issues)
+- For discussing with fellow users, please use the [vLLM Forum](https://discuss.vllm.ai)
+- For coordinating contributions and development, please use [Slack](https://slack.vllm.ai)
+- For security disclosures, please use GitHub's [Security Advisories](https://github.com/vllm-project/vllm/security/advisories) feature
+- For collaborations and partnerships, please contact us at [collaboration@vllm.ai](mailto:collaboration@vllm.ai)
+<!-- --8<-- [end:contact-us] -->
+
+## Media Kit
+
+- If you wish to use vLLM's logo, please refer to [our media kit repo](https://github.com/vllm-project/media-kit)
+
+
+--- REPOSITORY: labmlai/annotated_deep_learning_paper_implementations ---
+
+--- REPOSITORY: keras-team/keras ---
+README:
+# Keras 3: Deep Learning for Humans
+
+Keras 3 is a multi-backend deep learning framework, with support for JAX, TensorFlow, PyTorch, and OpenVINO (for inference-only).
+Effortlessly build and train models for computer vision, natural language processing, audio processing,
+timeseries forecasting, recommender systems, etc.
+
+- **Accelerated model development**: Ship deep learning solutions faster thanks to the high-level UX of Keras
+and the availability of easy-to-debug runtimes like PyTorch or JAX eager execution.
+- **State-of-the-art performance**: By picking the backend that is the fastest for your model architecture (often JAX!),
+leverage speedups ranging from 20% to 350% compared to other frameworks. [Benchmark here](https://keras.io/getting_started/benchmarks/).
+- **Datacenter-scale training**: Scale confidently from your laptop to large clusters of GPUs or TPUs.
+
+Join nearly three million developers, from burgeoning startups to global enterprises, in harnessing the power of Keras 3.
+
+
+## Installation
+
+### Install with pip
+
+Keras 3 is available on PyPI as `keras`. Note that Keras 2 remains available as the `tf-keras` package.
+
+1. Install `keras`:
+
+```
+pip install keras --upgrade
+```
+
+2. Install backend package(s).
+
+To use `keras`, you should also install the backend of choice: `tensorflow`, `jax`, or `torch`. Additionally,
+The `openvino` backend is available with support for model inference only.
+
+### Local installation
+
+#### Minimal installation
+
+Keras 3 is compatible with Linux and macOS systems. For Windows users, we recommend using WSL2 to run Keras.
+To install a local development version:
+
+1. Install dependencies:
+
+```
+pip install -r requirements.txt
+```
+
+2. Run installation command from the root directory.
+
+```
+python pip_build.py --install
+```
+
+3. Run API generation script when creating PRs that update `keras_export` public APIs:
+
+```
+./shell/api_gen.sh
+```
+
+## Backend Compatibility Table
+
+The following table lists the minimum supported versions of each backend for the latest stable release of Keras (v3.x):
+
+| Backend    | Minimum Supported Version |
+|------------|---------------------------|
+| TensorFlow | 2.16.1                    |
+| JAX        | 0.4.20                    |
+| PyTorch    | 2.1.0                     |
+| OpenVINO   | 2025.3.0                  |
+
+#### Adding GPU support
+
+The `requirements.txt` file will install a CPU-only version of TensorFlow, JAX, and PyTorch. For GPU support, we also
+provide a separate `requirements-{backend}-cuda.txt` for TensorFlow, JAX, and PyTorch. These install all CUDA
+dependencies via `pip` and expect a NVIDIA driver to be pre-installed. We recommend a clean Python environment for each
+backend to avoid CUDA version mismatches. As an example, here is how to create a JAX GPU environment with `conda`:
+
+```shell
+conda create -y -n keras-jax python=3.10
+conda activate keras-jax
+pip install -r requirements-jax-cuda.txt
+python pip_build.py --install
+```
+
+## Configuring your backend
+
+You can export the environment variable `KERAS_BACKEND` or you can edit your local config file at `~/.keras/keras.json`
+to configure your backend. Available backend options are: `"tensorflow"`, `"jax"`, `"torch"`, `"openvino"`. Example:
+
+```
+export KERAS_BACKEND="jax"
+```
+
+In Colab, you can do:
+
+```python
+import os
+os.environ["KERAS_BACKEND"] = "jax"
+
+import keras
+```
+
+**Note:** The backend must be configured before importing `keras`, and the backend cannot be changed after
+the package has been imported.
+
+**Note:** The OpenVINO backend is an inference-only backend, meaning it is designed only for running model
+predictions using `model.predict()` method.
+
+## Backwards compatibility
+
+Keras 3 is intended to work as a drop-in replacement for `tf.keras` (when using the TensorFlow backend). Just take your
+existing `tf.keras` code, make sure that your calls to `model.save()` are using the up-to-date `.keras` format, and you're
+done.
+
+If your `tf.keras` model does not include custom components, you can start running it on top of JAX or PyTorch immediately.
+
+If it does include custom components (e.g. custom layers or a custom `train_step()`), it is usually possible to convert it
+to a backend-agnostic implementation in just a few minutes.
+
+In addition, Keras models can consume datasets in any format, regardless of the backend you're using:
+you can train your models with your existing `tf.data.Dataset` pipelines or PyTorch `DataLoaders`.
+
+## Why use Keras 3?
+
+- Run your high-level Keras workflows on top of any framework -- benefiting at will from the advantages of each framework,
+e.g. the scalability and performance of JAX or the production ecosystem options of TensorFlow.
+- Write custom components (e.g. layers, models, metrics) that you can use in low-level workflows in any framework.
+    - You can take a Keras model and train it in a training loop written from scratch in native TF, JAX, or PyTorch.
+    - You can take a Keras model and use it as part of a PyTorch-native `Module` or as part of a 
+
+--- REPOSITORY: CorentinJ/Real-Time-Voice-Cloning ---
+README:
+# Real-Time Voice Cloning
+
+This repository is an implementation of [Transfer Learning from Speaker Verification to
+Multispeaker Text-To-Speech Synthesis](https://arxiv.org/pdf/1806.04558.pdf) (SV2TTS) with a vocoder that works in real-time. This was my [master's thesis](https://matheo.uliege.be/handle/2268.2/6801).
+
+SV2TTS is a deep learning framework in three stages. In the first stage, one creates a digital representation of a voice from a few seconds of audio. In the second and third stages, this representation is used as reference to generate speech given arbitrary text.
+
+**Video demonstration** (click the picture):
+
+[![Toolbox demo](https://i.imgur.com/8lFUlgz.png)](https://www.youtube.com/watch?v=-O_hYhToKoA)
+
+### Papers implemented
+
+| URL                                                    | Designation            | Title                                                                                    | Implementation source                                   |
+| ------------------------------------------------------ | ---------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| [**1806.04558**](https://arxiv.org/pdf/1806.04558.pdf) | **SV2TTS**             | **Transfer Learning from Speaker Verification to Multispeaker Text-To-Speech Synthesis** | This repo                                               |
+| [1802.08435](https://arxiv.org/pdf/1802.08435.pdf)     | WaveRNN (vocoder)      | Efficient Neural Audio Synthesis                                                         | [fatchord/WaveRNN](https://github.com/fatchord/WaveRNN) |
+| [1703.10135](https://arxiv.org/pdf/1703.10135.pdf)     | Tacotron (synthesizer) | Tacotron: Towards End-to-End Speech Synthesis                                            | [fatchord/WaveRNN](https://github.com/fatchord/WaveRNN) |
+| [1710.10467](https://arxiv.org/pdf/1710.10467.pdf)     | GE2E (encoder)         | Generalized End-To-End Loss for Speaker Verification                                     | This repo                                               |
+
+## Heads up
+
+Like everything else in Deep Learning, this repo has quickly gotten old. Many SaaS apps (often paying) will give you a better audio quality than this repository will. If you wish for an open-source solution with a high voice quality:
+
+- Check out [paperswithcode](https://paperswithcode.com/task/speech-synthesis/) for other repositories and recent research in the field of speech synthesis.
+- Check out [Chatterbox](https://github.com/resemble-ai/chatterbox) for a similar project up to date with the 2025 SOTA in voice cloning
+
+## Running the toolbox
+
+Both Windows and Linux are supported.
+1. Install [ffmpeg](https://ffmpeg.org/download.html#get-packages). This is necessary for reading audio files. Check if it's installed by running in a command line
+```
+ffmpeg
+```
+2. Install uv for python package management
+```
+# On Windows:
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+# On Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Alternatively, on any platform if you have pip installed you can do
+pip install -U uv
+```
+3. Run one of the following commands
+```
+# Run the toolbox if you have an NVIDIA GPU
+uv run --extra cuda demo_toolbox.py
+# Use this if you don't
+uv run --extra cpu demo_toolbox.py
+
+# Run in command line if you don't want the GUI
+uv run --extra cuda demo_cli.py
+uv run --extra cpu demo_cli.py
+```
+Uv will automatically create a .venv directory for you with an appropriate python environment. [Open an issue](https://github.com/CorentinJ/Real-Time-Voice-Cloning/issues) if this fails for you
+
+### (Optional) Download Pretrained Models
+
+Pretrained models are now downloaded automatically. If this doesn't work for you, you can manually download them from [Hugging Face](https://huggingface.co/CorentinJ/SV2TTS/tree/main).
+
+### (Optional) Download Datasets
+
+For playing with the toolbox alone, I only recommend downloading [`LibriSpeech/train-clean-100`](https://www.openslr.org/resources/12/train-clean-100.tar.gz). Extract the contents as `<datasets_root>/LibriSpeech/train-clean-100` where `<datasets_root>` is a directory of your choosing. Other datasets are supported in the toolbox, see [here](https://github.com/CorentinJ/Real-Time-Voice-Cloning/wiki/Training#datasets). You're free not to download any dataset, but then you will need your own data as audio files or you will have to record it with the toolbox.
+
+
+--- REPOSITORY: ultralytics/yolov5 ---
+README:
+<div align="center">
+  <p>
+    <a href="https://platform.ultralytics.com/?utm_source=github&utm_medium=referral&utm_campaign=platform_launch&utm_content=banner&utm_term=ultralytics_github" target="_blank">
+      <img width="100%" src="https://raw.githubusercontent.com/ultralytics/assets/main/yolov8/banner-yolov8.png" alt="Ultralytics YOLO banner"></a>
+  </p>
+
+[中文](https://docs.ultralytics.com/zh/) | [한국어](https://docs.ultralytics.com/ko/) | [日本語](https://docs.ultralytics.com/ja/) | [Русский](https://docs.ultralytics.com/ru/) | [Deutsch](https://docs.ultralytics.com/de/) | [Français](https://docs.ultralytics.com/fr/) | [Español](https://docs.ultralytics.com/es) | [Português](https://docs.ultralytics.com/pt/) | [Türkçe](https://docs.ultralytics.com/tr/) | [Tiếng Việt](https://docs.ultralytics.com/vi/) | [العربية](https://docs.ultralytics.com/ar/)
+
+<div>
+    <a href="https://github.com/ultralytics/yolov5/actions/workflows/ci-testing.yml"><img src="https://github.com/ultralytics/yolov5/actions/workflows/ci-testing.yml/badge.svg" alt="YOLOv5 CI Testing"></a>
+    <a href="https://hub.docker.com/r/ultralytics/yolov5"><img src="https://img.shields.io/docker/pulls/ultralytics/yolov5?logo=docker" alt="Docker Pulls"></a>
+    <a href="https://discord.com/invite/ultralytics"><img alt="Discord" src="https://img.shields.io/discord/1089800235347353640?logo=discord&logoColor=white&label=Discord&color=blue"></a> <a href="https://community.ultralytics.com/"><img alt="Ultralytics Forums" src="https://img.shields.io/discourse/users?server=https%3A%2F%2Fcommunity.ultralytics.com&logo=discourse&label=Forums&color=blue"></a> <a href="https://www.reddit.com/r/ultralytics/"><img alt="Ultralytics Reddit" src="https://img.shields.io/reddit/subreddit-subscribers/ultralytics?style=flat&logo=reddit&logoColor=white&label=Reddit&color=blue"></a>
+    <br>
+    <a href="https://bit.ly/yolov5-paperspace-notebook"><img src="https://assets.paperspace.io/img/gradient-badge.svg" alt="Run on Gradient"></a>
+    <a href="https://colab.research.google.com/github/ultralytics/yolov5/blob/master/tutorial.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"></a>
+    <a href="https://www.kaggle.com/models/ultralytics/yolov5"><img src="https://kaggle.com/static/images/open-in-kaggle.svg" alt="Open In Kaggle"></a>
+  </div>
+  <br>
+
+Ultralytics YOLOv5 🚀 is a cutting-edge, state-of-the-art (SOTA) computer vision model developed by [Ultralytics](https://www.ultralytics.com/). Based on the [PyTorch](https://pytorch.org/) framework, YOLOv5 is renowned for its ease of use, speed, and accuracy. It incorporates insights and best practices from extensive research and development, making it a popular choice for a wide range of vision AI tasks, including [object detection](https://docs.ultralytics.com/tasks/detect/), [image segmentation](https://docs.ultralytics.com/tasks/segment/), and [image classification](https://docs.ultralytics.com/tasks/classify/).
+
+We hope the resources here help you get the most out of YOLOv5. Please browse the [YOLOv5 Docs](https://docs.ultralytics.com/yolov5/) for detailed information, raise an issue on [GitHub](https://github.com/ultralytics/yolov5/issues/new/choose) for support, and join our [Discord community](https://discord.com/invite/ultralytics) for questions and discussions!
+
+To request an Enterprise License, please complete the form at [Ultralytics Licensing](https://www.ultralytics.com/license).
+
+<div align="center">
+  <a href="https://github.com/ultralytics"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-github.png" width="2%" alt="Ultralytics GitHub"></a>
+  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="space">
+  <a href="https://www.linkedin.com/company/ultralytics/"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-linkedin.png" width="2%" alt="Ultralytics LinkedIn"></a>
+  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="space">
+  <a href="https://twitter.com/ultralytics"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-twitter.png" width="2%" alt="Ultralytics Twitter"></a>
+  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="space">
+  <a href="https://youtube.com/ultralytics?sub_confirmation=1"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-youtube.png" width="2%" alt="Ultralytics YouTube"></a>
+  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="space">
+  <a href="https://www.tiktok.com/@ultralytics"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-tiktok.png" width="2%" alt="Ultralytics TikTok"></a>
+  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="space">
+  <a href="https://ultralytics.com
+
+--- REPOSITORY: ultralytics/ultralytics ---
+README:
+<div align="center">
+  <p>
+    <a href="https://platform.ultralytics.com/?utm_source=github&utm_medium=referral&utm_campaign=platform_launch&utm_content=banner&utm_term=ultralytics_github" target="_blank">
+      <img width="100%" src="https://raw.githubusercontent.com/ultralytics/assets/main/yolov8/banner-yolov8.png" alt="Ultralytics YOLO banner"></a>
+  </p>
+
+[中文](https://docs.ultralytics.com/zh/) | [한국어](https://docs.ultralytics.com/ko/) | [日本語](https://docs.ultralytics.com/ja/) | [Русский](https://docs.ultralytics.com/ru/) | [Deutsch](https://docs.ultralytics.com/de/) | [Français](https://docs.ultralytics.com/fr/) | [Español](https://docs.ultralytics.com/es) | [Português](https://docs.ultralytics.com/pt/) | [Türkçe](https://docs.ultralytics.com/tr/) | [Tiếng Việt](https://docs.ultralytics.com/vi/) | [العربية](https://docs.ultralytics.com/ar/) <br>
+
+<div>
+    <a href="https://github.com/ultralytics/ultralytics/actions/workflows/ci.yml"><img src="https://github.com/ultralytics/ultralytics/actions/workflows/ci.yml/badge.svg" alt="Ultralytics CI"></a>
+    <a href="https://clickpy.clickhouse.com/dashboard/ultralytics"><img src="https://static.pepy.tech/badge/ultralytics" alt="Ultralytics Downloads"></a>
+    <a href="https://discord.com/invite/ultralytics"><img alt="Ultralytics Discord" src="https://img.shields.io/discord/1089800235347353640?logo=discord&logoColor=white&label=Discord&color=blue"></a>
+    <a href="https://community.ultralytics.com/"><img alt="Ultralytics Forums" src="https://img.shields.io/discourse/users?server=https%3A%2F%2Fcommunity.ultralytics.com&logo=discourse&label=Forums&color=blue"></a>
+    <a href="https://www.reddit.com/r/ultralytics/"><img alt="Ultralytics Reddit" src="https://img.shields.io/reddit/subreddit-subscribers/ultralytics?style=flat&logo=reddit&logoColor=white&label=Reddit&color=blue"></a>
+    <br>
+    <a href="https://console.paperspace.com/github/ultralytics/ultralytics"><img src="https://assets.paperspace.io/img/gradient-badge.svg" alt="Run Ultralytics on Gradient"></a>
+    <a href="https://colab.research.google.com/github/ultralytics/ultralytics/blob/main/examples/tutorial.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open Ultralytics In Colab"></a>
+    <a href="https://www.kaggle.com/models/ultralytics/yolo26"><img src="https://kaggle.com/static/images/open-in-kaggle.svg" alt="Open Ultralytics In Kaggle"></a>
+    <a href="https://mybinder.org/v2/gh/ultralytics/ultralytics/HEAD?labpath=examples%2Ftutorial.ipynb"><img src="https://mybinder.org/badge_logo.svg" alt="Open Ultralytics In Binder"></a>
+</div>
+</div>
+<br>
+
+[Ultralytics](https://www.ultralytics.com/) creates cutting-edge, state-of-the-art (SOTA) [YOLO models](https://www.ultralytics.com/yolo) built on years of foundational research in computer vision and AI. Constantly updated for performance and flexibility, our models are **fast**, **accurate**, and **easy to use**. They excel at [object detection](https://docs.ultralytics.com/tasks/detect/), [tracking](https://docs.ultralytics.com/modes/track/), [instance segmentation](https://docs.ultralytics.com/tasks/segment/), [image classification](https://docs.ultralytics.com/tasks/classify/), and [pose estimation](https://docs.ultralytics.com/tasks/pose/) tasks.
+
+Find detailed documentation in the [Ultralytics Docs](https://docs.ultralytics.com/). Get support via [GitHub Issues](https://github.com/ultralytics/ultralytics/issues/new/choose). Join discussions on [Discord](https://discord.com/invite/ultralytics), [Reddit](https://www.reddit.com/r/ultralytics/), and the [Ultralytics Community Forums](https://community.ultralytics.com/)!
+
+Request an Enterprise License for commercial use at [Ultralytics Licensing](https://www.ultralytics.com/license).
+
+<a href="https://platform.ultralytics.com/ultralytics/yolo26" target="_blank">
+  <img width="100%" src="https://raw.githubusercontent.com/ultralytics/assets/refs/heads/main/yolo/performance-comparison.png" alt="YOLO26 performance plots">
+</a>
+
+<div align="center">
+  <a href="https://github.com/ultralytics"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-github.png" width="2%" alt="Ultralytics GitHub"></a>
+  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="space">
+  <a href="https://www.linkedin.com/company/ultralytics/"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-linkedin.png" width="2%" alt="Ultralytics LinkedIn"></a>
+  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="space">
+  <a href="https://twitter.com/ultralytics"><img src="https://github.com/ultralytics/assets/raw/main/social/logo-social-twitter.png" width="2%" alt="Ultralytics Twitter"></a>
+  <img src="https://github.com/ultralytics/assets/raw/main/social/logo-transparent.png" width="2%" alt="space">
+  <a href="https://www.youtube.com/ultralytics?sub_confirmation=1"><img s
+
+--- REPOSITORY: coqui-ai/TTS ---
+README:
+
+## 🐸Coqui.ai News
+- 📣 ⓍTTSv2 is here with 16 languages and better performance across the board.
+- 📣 ⓍTTS fine-tuning code is out. Check the [example recipes](https://github.com/coqui-ai/TTS/tree/dev/recipes/ljspeech).
+- 📣 ⓍTTS can now stream with <200ms latency.
+- 📣 ⓍTTS, our production TTS model that can speak 13 languages, is released [Blog Post](https://coqui.ai/blog/tts/open_xtts), [Demo](https://huggingface.co/spaces/coqui/xtts), [Docs](https://tts.readthedocs.io/en/dev/models/xtts.html)
+- 📣 [🐶Bark](https://github.com/suno-ai/bark) is now available for inference with unconstrained voice cloning. [Docs](https://tts.readthedocs.io/en/dev/models/bark.html)
+- 📣 You can use [~1100 Fairseq models](https://github.com/facebookresearch/fairseq/tree/main/examples/mms) with 🐸TTS.
+- 📣 🐸TTS now supports 🐢Tortoise with faster inference. [Docs](https://tts.readthedocs.io/en/dev/models/tortoise.html)
+- 📣 Voice generation with prompts - **Prompt to Voice** - is live on [**Coqui Studio**](https://app.coqui.ai/auth/signin)!! - [Blog Post](https://coqui.ai/blog/tts/prompt-to-voice)
+- 📣 Voice generation with fusion - **Voice fusion** - is live on [**Coqui Studio**](https://app.coqui.ai/auth/signin).
+- 📣 Voice cloning is live on [**Coqui Studio**](https://app.coqui.ai/auth/signin).
+
+<div align="center">
+<img src="https://static.scarf.sh/a.png?x-pxid=cf317fe7-2188-4721-bc01-124bb5d5dbb2" />
+
+## <img src="https://raw.githubusercontent.com/coqui-ai/TTS/main/images/coqui-log-green-TTS.png" height="56"/>
+
+
+**🐸TTS is a library for advanced Text-to-Speech generation.**
+
+🚀 Pretrained models in +1100 languages.
+
+🛠️ Tools for training new models and fine-tuning existing models in any language.
+
+📚 Utilities for dataset analysis and curation.
+______________________________________________________________________
+
+[![Discord](https://img.shields.io/discord/1037326658807533628?color=%239B59B6&label=chat%20on%20discord)](https://discord.gg/5eXr5seRrv)
+[![License](<https://img.shields.io/badge/License-MPL%202.0-brightgreen.svg>)](https://opensource.org/licenses/MPL-2.0)
+[![PyPI version](https://badge.fury.io/py/TTS.svg)](https://badge.fury.io/py/TTS)
+[![Covenant](https://camo.githubusercontent.com/7d620efaa3eac1c5b060ece5d6aacfcc8b81a74a04d05cd0398689c01c4463bb/68747470733a2f2f696d672e736869656c64732e696f2f62616467652f436f6e7472696275746f72253230436f76656e616e742d76322e3025323061646f707465642d6666363962342e737667)](https://github.com/coqui-ai/TTS/blob/master/CODE_OF_CONDUCT.md)
+[![Downloads](https://pepy.tech/badge/tts)](https://pepy.tech/project/tts)
+[![DOI](https://zenodo.org/badge/265612440.svg)](https://zenodo.org/badge/latestdoi/265612440)
+
+![GithubActions](https://github.com/coqui-ai/TTS/actions/workflows/aux_tests.yml/badge.svg)
+![GithubActions](https://github.com/coqui-ai/TTS/actions/workflows/data_tests.yml/badge.svg)
+![GithubActions](https://github.com/coqui-ai/TTS/actions/workflows/docker.yaml/badge.svg)
+![GithubActions](https://github.com/coqui-ai/TTS/actions/workflows/inference_tests.yml/badge.svg)
+![GithubActions](https://github.com/coqui-ai/TTS/actions/workflows/style_check.yml/badge.svg)
+![GithubActions](https://github.com/coqui-ai/TTS/actions/workflows/text_tests.yml/badge.svg)
+![GithubActions](https://github.com/coqui-ai/TTS/actions/workflows/tts_tests.yml/badge.svg)
+![GithubActions](https://github.com/coqui-ai/TTS/actions/workflows/vocoder_tests.yml/badge.svg)
+![GithubActions](https://github.com/coqui-ai/TTS/actions/workflows/zoo_tests0.yml/badge.svg)
+![GithubActions](https://github.com/coqui-ai/TTS/actions/workflows/zoo_tests1.yml/badge.svg)
+![GithubActions](https://github.com/coqui-ai/TTS/actions/workflows/zoo_tests2.yml/badge.svg)
+[![Docs](<https://readthedocs.org/projects/tts/badge/?version=latest&style=plastic>)](https://tts.readthedocs.io/en/latest/)
+
+</div>
+
+______________________________________________________________________
+
+## 💬 Where to ask questions
+Please use our dedicated channels for questions and discussion. Help is much more valuable if it's shared publicly so that more people can benefit from it.
+
+| Type                            | Platforms                               |
+| ------------------------------- | --------------------------------------- |
+| 🚨 **Bug Reports**              | [GitHub Issue Tracker]                  |
+| 🎁 **Feature Requests & Ideas** | [GitHub Issue Tracker]                  |
+| 👩‍💻 **Usage Questions**          | [GitHub Discussions]                    |
+| 🗯 **General Discussion**       | [GitHub Discussions] or [Discord]   |
+
+[github issue tracker]: https://github.com/coqui-ai/tts/issues
+[github discussions]: https://github.com/coqui-ai/TTS/discussions
+[discord]: https://discord.gg/5eXr5seRrv
+[Tutorials and Examples]: https://github.com/coqui-ai/TTS/wiki/TTS-Notebooks-and-Tutorials
+
+
+## 🔗 Links and Resources
+| Type                            | Links                               |
+| ------------------------------- | --------------------------------------- |
+| 💼 **Documentati
+
+--- REPOSITORY: deepspeedai/DeepSpeed ---
+README:
+[![License Apache 2.0](https://badgen.net/badge/license/apache2.0/blue)](https://github.com/deepspeedai/DeepSpeed/blob/master/LICENSE)
+[![PyPI version](https://badge.fury.io/py/deepspeed.svg)](https://pypi.org/project/deepspeed/)
+[![Downloads](https://static.pepy.tech/badge/deepspeed)](https://pepy.tech/project/deepspeed)
+[![Build](https://badgen.net/badge/build/check-status/blue)](#build-pipeline-status)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/9530/badge)](https://www.bestpractices.dev/projects/9530)
+[![Twitter](https://img.shields.io/twitter/follow/DeepSpeedAI)](https://twitter.com/intent/follow?screen_name=DeepSpeedAI)
+[![Japanese Twitter](https://img.shields.io/badge/%E6%97%A5%E6%9C%AC%E8%AA%9ETwitter-%40DeepSpeedAI_JP-blue)](https://twitter.com/DeepSpeedAI_JP)
+[![Chinese Zhihu](https://img.shields.io/badge/%E7%9F%A5%E4%B9%8E-%E5%BE%AE%E8%BD%AFDeepSpeed-blue)](https://www.zhihu.com/people/deepspeed)
+[![Slack](https://img.shields.io/badge/Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white)](https://join.slack.com/t/deepspeedworkspace/shared_invite/zt-3a8pjd8dd-PCj2hMvR4Y2syPwVnjEoww)
+
+
+<div align="center">
+ <img src="docs/assets/images/DeepSpeed_light.svg#gh-light-mode-only" width="400px">
+ <img src="docs/assets/images/DeepSpeed_dark_transparent.svg#gh-dark-mode-only" width="400px">
+</div>
+
+## Latest News
+
+* [2026/03] DeepSpeed Team gave a tutorial at ASPLOS 2026 titled ["Building Efficient Large-Scale Model Systems with DeepSpeed: From Open-Source Foundations to Emerging Research" ](https://supercomputing-system-ai-lab.github.io/events/asplos2026-llm-tutorial/index.html)
+
+* [2026/03] [Our SuperOffload work received an Honorable Mention for the ASPLOS 2026 Best Paper Award](https://dl.acm.org/doi/10.1145/3760250.3762217)
+
+* [2025/12] [DeepSpeed Core API updates: PyTorch-style backward and low-precision master states](https://github.com/deepspeedai/DeepSpeed/blob/master/blogs/core_api_update/README.md)
+
+* [2025/11] [DeepSpeed ZeRO++ powers large-scale distillation training of LLMs for Recommendation Systems at LinkedIn](https://aclanthology.org/2025.emnlp-industry.119/)
+
+* [2025/10] We hosted the [Ray x DeepSpeed Meetup](https://luma.com/3wctqteh) at Anyscale. We shared our most recent work on SuperOffload, ZenFlow, Muon Optimizer Support, Arctic Long Sequence Training and DeepCompile. Please find the meetup slides [here](https://docs.google.com/presentation/d/1eM3mY6oW9GYkRy1Xz0iOnbbEr5T1t0JJXOM5BKtR-Ks/edit?slide=id.g38615d6b4c2_0_87#slide=id.g38615d6b4c2_0_87).
+
+* [2025/10] [SuperOffload: Unleashing the Power of Large-Scale LLM Training on Superchips](https://pytorch.org/blog/superoffload-unleashing-the-power-of-large-scale-llm-training-on-superchips/)
+
+* [2025/10] [Study of ZenFlow and ZeRO offload performance with DeepSpeed CPU core binding](https://github.com/deepspeedai/DeepSpeed/blob/master/blogs/zenflow-corebinding/README.md)
+
+* [2025/08] [ZenFlow: Stall-Free Offloading Engine for LLM Training](https://pytorch.org/blog/zenflow-stall-free-offloading-engine-for-llm-training/)
+
+* [2025/06] [Arctic Long Sequence Training (ALST) with DeepSpeed: Scalable And Efficient Training For Multi-Million Token Sequences](https://www.snowflake.com/en/engineering-blog/arctic-long-sequence-training-multi-million-token-ai/)
+
+* [2025/06] [DeepNVMe: Affordable I/O scaling for Deep Learning Applications](https://github.com/deepspeedai/DeepSpeed/blob/master/blogs/deepnvme/06-2025/README.md)
+
+
+<!-- NOTE: we must use html for news items otherwise links will be broken in the 'more news' section -->
+<details>
+<!-- NOTE: Maintain only three items in 'more news' section -->
+ <summary>More news</summary>
+ <ul>
+
+   <li>[2025/04] <a href="https://github.com/deepspeedai/DeepSpeed/blob/master/blogs/deepcompile/README.md">DeepCompile: Unlocking Compiler Optimization for Distributed Training</a></li>
+
+   <li>[2025/03] <a href="https://github.com/deepspeedai/DeepSpeed/blob/master/blogs/huggingface-tp/README.md">DeepSpeed AutoTP: Automatic Tensor Parallel Training of Hugging Face models</a></li>
+
+<li>[2024/12] <a href="https://github.com/deepspeedai/DeepSpeed/blob/master/blogs/ulysses-offload/README.md">Ulysses-Offload: Democratizing Long Context LLM Training</a></li>
+
+ </ul>
+</details>
+
+---
+
+# Extreme Speed and Scale for DL Training
+
+***[DeepSpeed](https://www.deepspeed.ai/) enabled the world's most powerful language models (at the time of this writing) such as [MT-530B](https://www.microsoft.com/en-us/research/blog/using-deepspeed-and-megatron-to-train-megatron-turing-nlg-530b-the-worlds-largest-and-most-powerful-generative-language-model/) and [BLOOM](https://huggingface.co/blog/bloom-megatron-deepspeed)***. DeepSpeed offers a confluence of [system innovations](https://www.deepspeed.ai/training/), that has made large scale DL training effective, and efficient, greatly improved ease of use, and redefined the DL training landscape in terms of scale that is possible. These innovations include ZeRO, Z
+
+--- REPOSITORY: ray-project/ray ---
+
+--- REPOSITORY: roboflow/supervision ---
+README:
+<div align="center">
+  <p>
+    <a align="center" href="" target="https://supervision.roboflow.com">
+      <img
+        width="100%"
+        src="https://media.roboflow.com/open-source/supervision/rf-supervision-banner.png?updatedAt=1678995927529"
+      >
+    </a>
+  </p>
+
+<br>
+
+[notebooks](https://github.com/roboflow/notebooks) | [inference](https://github.com/roboflow/inference) | [autodistill](https://github.com/autodistill/autodistill) | [maestro](https://github.com/roboflow/multimodal-maestro)
+
+<br>
+
+[![version](https://badge.fury.io/py/supervision.svg)](https://badge.fury.io/py/supervision)
+[![downloads](https://img.shields.io/pypi/dm/supervision)](https://pypistats.org/packages/supervision)
+[![license](https://img.shields.io/pypi/l/supervision)](LICENSE.md)
+[![python-version](https://img.shields.io/pypi/pyversions/supervision)](https://badge.fury.io/py/supervision)
+[![codecov](https://codecov.io/gh/roboflow/supervision/graph/badge.svg?token=HMNJ5FVZ36)](https://codecov.io/gh/roboflow/supervision)
+
+[![snyk](https://snyk.io/advisor/python/supervision/badge.svg)](https://snyk.io/advisor/python/supervision)
+[![colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/roboflow/supervision/blob/main/demo.ipynb)
+[![gradio](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/Roboflow/Annotators)
+[![discord](https://img.shields.io/discord/1159501506232451173?logo=discord&label=discord&labelColor=fff&color=5865f2&link=https%3A%2F%2Fdiscord.gg%2FGbfgXGJ8Bk)](https://discord.gg/GbfgXGJ8Bk)
+
+<div align="center">
+    <a href="https://trendshift.io/repositories/124"  target="_blank"><img src="https://trendshift.io/api/badge/repositories/124" alt="roboflow%2Fsupervision | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+  </div>
+
+</div>
+
+## 👋 hello
+
+**We write your reusable computer vision tools.** Whether you need to load your dataset from your hard drive, draw detections on an image or video, or count how many detections are in a zone. You can count on us! 🤝
+
+## 💻 install
+
+Pip install the supervision package in a
+[**Python>=3.9**](https://www.python.org/) environment.
+
+```bash
+pip install supervision
+```
+
+Read more about conda, mamba, and installing from source in our [guide](https://roboflow.github.io/supervision/).
+
+## 🔥 quickstart
+
+### models
+
+Supervision was designed to be model agnostic. Just plug in any classification, detection, or segmentation model. For your convenience, we have created [connectors](https://supervision.roboflow.com/latest/detection/core/#detections) for the most popular libraries like Ultralytics, Transformers, MMDetection, or Inference. Other integrations, like `rfdetr`, already return `sv.Detections` directly.
+
+Install the optional dependencies for this example with `pip install pillow rfdetr`.
+
+```python
+import supervision as sv
+from PIL import Image
+from rfdetr import RFDETRSmall
+
+image = Image.open(...)
+model = RFDETRSmall()
+detections = model.predict(image, threshold=0.5)
+
+len(detections)
+# 5
+```
+
+<details>
+<summary>👉 more model connectors</summary>
+
+- inference
+
+    Running with [Inference](https://github.com/roboflow/inference) requires a [Roboflow API KEY](https://docs.roboflow.com/api-reference/authentication#retrieve-an-api-key).
+
+    ```python
+    import supervision as sv
+    from PIL import Image
+    from inference import get_model
+
+    image = Image.open(...)
+    model = get_model(model_id="rfdetr-small", api_key="ROBOFLOW_API_KEY")
+    result = model.infer(image)[0]
+    detections = sv.Detections.from_inference(result)
+
+    len(detections)
+    # 5
+    ```
+
+</details>
+
+### annotators
+
+Supervision offers a wide range of highly customizable [annotators](https://supervision.roboflow.com/latest/detection/annotators/), allowing you to compose the perfect visualization for your use case.
+
+```python
+import cv2
+import supervision as sv
+
+image = cv2.imread(...)
+detections = sv.Detections(...)
+
+box_annotator = sv.BoxAnnotator()
+annotated_frame = box_annotator.annotate(scene=image.copy(), detections=detections)
+```
+
+https://github.com/roboflow/supervision/assets/26109316/691e219c-0565-4403-9218-ab5644f39bce
+
+### datasets
+
+Supervision provides a set of [utils](https://supervision.roboflow.com/latest/datasets/core/) that allow you to load, split, merge, and save datasets in one of the supported formats.
+
+```python
+import supervision as sv
+from roboflow import Roboflow
+
+project = Roboflow().workspace("WORKSPACE_ID").project("PROJECT_ID")
+dataset = project.version("PROJECT_VERSION").download("coco")
+
+ds = sv.DetectionDataset.from_coco(
+    images_directory_path=f"{dataset.location}/train",
+    annotations_path=f"{dataset.location}/train/_annotations.coco.json",
+)
+
+path, image, annotation = ds[0]
+# loads image on demand
+
+for path, image, annotation in ds:
+    # loads image on demand
+    pass
+```
+
+<details close>
+<summary>👉 more dataset utils</summary>
+
+- load
+
+    `
+
+--- REPOSITORY: TencentARC/GFPGAN ---
+README:
+<p align="center">
+  <img src="assets/gfpgan_logo.png" height=130>
+</p>
+
+## <div align="center"><b><a href="README.md">English</a> | <a href="README_CN.md">简体中文</a></b></div>
+
+<div align="center">
+<!-- <a href="https://twitter.com/_Xintao_" style="text-decoration:none;">
+    <img src="https://user-images.githubusercontent.com/17445847/187162058-c764ced6-952f-404b-ac85-ba95cce18e7b.png" width="4%" alt="" />
+</a> -->
+
+[![download](https://img.shields.io/github/downloads/TencentARC/GFPGAN/total.svg)](https://github.com/TencentARC/GFPGAN/releases)
+[![PyPI](https://img.shields.io/pypi/v/gfpgan)](https://pypi.org/project/gfpgan/)
+[![Open issue](https://img.shields.io/github/issues/TencentARC/GFPGAN)](https://github.com/TencentARC/GFPGAN/issues)
+[![Closed issue](https://img.shields.io/github/issues-closed/TencentARC/GFPGAN)](https://github.com/TencentARC/GFPGAN/issues)
+[![LICENSE](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/TencentARC/GFPGAN/blob/master/LICENSE)
+[![python lint](https://github.com/TencentARC/GFPGAN/actions/workflows/pylint.yml/badge.svg)](https://github.com/TencentARC/GFPGAN/blob/master/.github/workflows/pylint.yml)
+[![Publish-pip](https://github.com/TencentARC/GFPGAN/actions/workflows/publish-pip.yml/badge.svg)](https://github.com/TencentARC/GFPGAN/blob/master/.github/workflows/publish-pip.yml)
+</div>
+
+1. :boom: **Updated** online demo: [![Replicate](https://img.shields.io/static/v1?label=Demo&message=Replicate&color=blue)](https://replicate.com/tencentarc/gfpgan). Here is the [backup](https://replicate.com/xinntao/gfpgan).
+1. :boom: **Updated** online demo: [![Huggingface Gradio](https://img.shields.io/static/v1?label=Demo&message=Huggingface%20Gradio&color=orange)](https://huggingface.co/spaces/Xintao/GFPGAN)
+1. [Colab Demo](https://colab.research.google.com/drive/1sVsoBd9AjckIXThgtZhGrHRfFI6UUYOo) for GFPGAN <a href="https://colab.research.google.com/drive/1sVsoBd9AjckIXThgtZhGrHRfFI6UUYOo"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="google colab logo"></a>; (Another [Colab Demo](https://colab.research.google.com/drive/1Oa1WwKB4M4l1GmR7CtswDVgOCOeSLChA?usp=sharing) for the original paper model)
+
+<!-- 3. Online demo: [Replicate.ai](https://replicate.com/xinntao/gfpgan) (may need to sign in, return the whole image)
+4. Online demo: [Baseten.co](https://app.baseten.co/applications/Q04Lz0d/operator_views/8qZG6Bg) (backed by GPU, returns the whole image)
+5. We provide a *clean* version of GFPGAN, which can run without CUDA extensions. So that it can run in **Windows** or on **CPU mode**. -->
+
+> :rocket: **Thanks for your interest in our work. You may also want to check our new updates on the *tiny models* for *anime images and videos* in [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN/blob/master/docs/anime_video_model.md)** :blush:
+
+GFPGAN aims at developing a **Practical Algorithm for Real-world Face Restoration**.<br>
+It leverages rich and diverse priors encapsulated in a pretrained face GAN (*e.g.*, StyleGAN2) for blind face restoration.
+
+:question: Frequently Asked Questions can be found in [FAQ.md](FAQ.md).
+
+:triangular_flag_on_post: **Updates**
+
+- :white_check_mark: Add [RestoreFormer](https://github.com/wzhouxiff/RestoreFormer) inference codes.
+- :white_check_mark: Add [V1.4 model](https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.4.pth), which produces slightly more details and better identity than V1.3.
+- :white_check_mark: Add **[V1.3 model](https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.3.pth)**, which produces **more natural** restoration results, and better results on *very low-quality* / *high-quality* inputs. See more in [Model zoo](#european_castle-model-zoo), [Comparisons.md](Comparisons.md)
+- :white_check_mark: Integrated to [Huggingface Spaces](https://huggingface.co/spaces) with [Gradio](https://github.com/gradio-app/gradio). See [Gradio Web Demo](https://huggingface.co/spaces/akhaliq/GFPGAN).
+- :white_check_mark: Support enhancing non-face regions (background) with [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN).
+- :white_check_mark: We provide a *clean* version of GFPGAN, which does not require CUDA extensions.
+- :white_check_mark: We provide an updated model without colorizing faces.
+
+---
+
+If GFPGAN is helpful in your photos/projects, please help to :star: this repo or recommend it to your friends. Thanks:blush:
+Other recommended projects:<br>
+:arrow_forward: [Real-ESRGAN](https://github.com/xinntao/Real-ESRGAN): A practical algorithm for general image restoration<br>
+:arrow_forward: [BasicSR](https://github.com/xinntao/BasicSR): An open-source image and video restoration toolbox<br>
+:arrow_forward: [facexlib](https://github.com/xinntao/facexlib): A collection that provides useful face-relation functions<br>
+:arrow_forward: [HandyView](https://github.com/xinntao/HandyView): A PyQt5-based image viewer that is handy for view and comparison<br>
+
+---
+
+### :book:
+
+--- REPOSITORY: babysor/MockingBird ---
+README:
+> 🚧 While I no longer actively update this repo, you can find me continuously pushing this tech forward to good side and open-source. I'm also building an optimized and cloud hosted version: https://noiz.ai/ and [we're hiring](https://github.com/babysor/MockingBird/issues/1029).
+>
+![mockingbird](https://user-images.githubusercontent.com/12797292/131216767-6eb251d6-14fc-4951-8324-2722f0cd4c63.jpg)
+<a href="https://trendshift.io/repositories/3869" target="_blank"><img src="https://trendshift.io/api/badge/repositories/3869" alt="babysor%2FMockingBird | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
+
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat)](http://choosealicense.com/licenses/mit/)
+
+> English | [中文](README-CN.md)| [中文Linux](README-LINUX-CN.md)
+
+## Features
+🌍 **Chinese** supported mandarin and tested with multiple datasets: aidatatang_200zh, magicdata, aishell3, data_aishell, and etc.
+
+🤩 **PyTorch** worked for pytorch, tested in version of 1.9.0(latest in August 2021), with GPU Tesla T4 and GTX 2060
+
+🌍 **Windows + Linux** run in both Windows OS and linux OS (even in M1 MACOS)
+
+🤩 **Easy & Awesome** effect with only newly-trained synthesizer, by reusing the pretrained encoder/vocoder
+
+🌍 **Webserver Ready** to serve your result with remote calling
+
+### [DEMO VIDEO](https://www.bilibili.com/video/BV17Q4y1B7mY/)
+
+## Quick Start
+
+### 1. Install Requirements
+#### 1.1 General Setup
+> Follow the original repo to test if you got all environment ready.
+**Python 3.7 or higher ** is needed to run the toolbox.
+
+* Install [PyTorch](https://pytorch.org/get-started/locally/).
+> If you get an `ERROR: Could not find a version that satisfies the requirement torch==1.9.0+cu102 (from versions: 0.1.2, 0.1.2.post1, 0.1.2.post2 )` This error is probably due to a low version of python, try using 3.9 and it will install successfully
+* Install [ffmpeg](https://ffmpeg.org/download.html#get-packages).
+* Run `pip install -r requirements.txt` to install the remaining necessary packages.
+> The recommended environment here is `Repo Tag 0.0.1` `Pytorch1.9.0 with Torchvision0.10.0 and cudatoolkit10.2` `requirements.txt` `webrtcvad-wheels` because `requirements. txt` was exported a few months ago, so it doesn't work with newer versions
+* Install webrtcvad `pip install webrtcvad-wheels`(If you need)
+
+or
+- install dependencies with `conda` or `mamba`
+
+  ```conda env create -n env_name -f env.yml```
+
+  ```mamba env create -n env_name -f env.yml```
+
+  will create a virtual environment where necessary dependencies are installed. Switch to the new environment by `conda activate env_name` and enjoy it.
+  > env.yml only includes the necessary dependencies to run the project，temporarily without monotonic-align. You can check the official website to install the GPU version of pytorch.
+
+#### 1.2 Setup with a M1 Mac
+> The following steps are a workaround to directly use the original `demo_toolbox.py`without the changing of codes.
+>
+  >  Since the major issue comes with the PyQt5 packages used in `demo_toolbox.py` not compatible with M1 chips, were one to attempt on training models with the M1 chip, either that person can forgo `demo_toolbox.py`, or one can try the `web.py` in the project.
+
+##### 1.2.1 Install `PyQt5`, with [ref](https://stackoverflow.com/a/68038451/20455983) here.
+  * Create and open a Rosetta Terminal, with [ref](https://dev.to/courier/tips-and-tricks-to-setup-your-apple-m1-for-development-547g) here.
+  * Use system Python to create a virtual environment for the project
+    ```
+    /usr/bin/python3 -m venv /PathToMockingBird/venv
+    source /PathToMockingBird/venv/bin/activate
+    ```
+  * Upgrade pip and install `PyQt5`
+    ```
+    pip install --upgrade pip
+    pip install pyqt5
+    ```
+##### 1.2.2 Install `pyworld` and `ctc-segmentation`
+
+> Both packages seem to be unique to this project and are not seen in the original [Real-Time Voice Cloning](https://github.com/CorentinJ/Real-Time-Voice-Cloning) project. When installing with `pip install`, both packages lack wheels so the program tries to directly compile from c code and could not find `Python.h`.
+
+  * Install `pyworld`
+      * `brew install python` `Python.h` can come with Python installed by brew
+      * `export CPLUS_INCLUDE_PATH=/opt/homebrew/Frameworks/Python.framework/Headers` The filepath of brew-installed `Python.h` is unique to M1 MacOS and listed above. One needs to manually add the path to the environment variables.
+      * `pip install pyworld` that should do.
+
+
+  * Install`ctc-segmentation`
+    > Same method does not apply to `ctc-segmentation`, and one needs to compile it from the source code on [github](https://github.com/lumaku/ctc-segmentation).
+    * `git clone https://github.com/lumaku/ctc-segmentation.git`
+    * `cd ctc-segmentation`
+    * `source /PathToMockingBird/venv/bin/activate` If the virtual environment hasn't been deployed, activate it.
+    * `cythonize -3 ctc_segmentation/ctc_segmentation_dyn
+
+--- REPOSITORY: huggingface/pytorch-image-models ---
+README:
+# PyTorch Image Models
+- [What's New](#whats-new)
+- [Introduction](#introduction)
+- [Models](#models)
+- [Features](#features)
+- [Results](#results)
+- [Getting Started (Documentation)](#getting-started-documentation)
+- [Train, Validation, Inference Scripts](#train-validation-inference-scripts)
+- [Awesome PyTorch Resources](#awesome-pytorch-resources)
+- [Licenses](#licenses)
+- [Citing](#citing)
+
+## What's New
+
+## March 23, 2026
+* Improve pickle checkpoint handling security. Default all loading to `weights_only=True`, add safe_global for ArgParse.
+* Improve attention mask handling for core ViT/EVA models & layers. Resolve bool masks, pass `is_causal` through for SSL tasks.
+* Fix class & register token uses with ViT and no pos embed enabled.
+* Add Patch Representation Refinement (PRR) as a pooling option in ViT. Thanks Sina (https://github.com/sinahmr).
+* Improve consistency of output projection / MLP dimensions for attention pooling layers.
+* Hiera model F.SDPA optimization to allow Flash Attention kernel use.
+* Caution added to SGDP optimizer.
+* Release 1.0.26. First maintenance release since my departure from Hugging Face.
+
+## Feb 23, 2026
+* Add token distillation training support to distillation task wrappers
+* Remove some torch.jit usage in prep for official deprecation
+* Caution added to AdamP optimizer
+* Call reset_parameters() even if meta-device init so that buffers get init w/ hacks like init_empty_weights
+* Tweak Muon optimizer to work with DTensor/FSDP2 (clamp_ instead of clamp_min_, alternate NS branch for DTensor)
+* Release 1.0.25
+
+## Jan 21, 2026
+* **Compat Break**: Fix oversight w/ QKV vs MLP bias in `ParallelScalingBlock` (& `DiffParallelScalingBlock`)
+  * Does not impact any trained `timm` models but could impact downstream use.
+
+## Jan 5 & 6, 2026
+* Release 1.0.24
+* Add new benchmark result csv files for inference timing on all models w/ RTX Pro 6000, 5090, and 4090 cards w/ PyTorch 2.9.1
+* Fix moved module error in deprecated timm.models.layers import path that impacts legacy imports
+* Release 1.0.23
+
+## Dec 30, 2025
+* Add better NAdaMuon trained `dpwee`, `dwee`, `dlittle` (differential) ViTs with a small boost over previous runs
+  * https://huggingface.co/timm/vit_dlittle_patch16_reg1_gap_256.sbb_nadamuon_in1k (83.24% top-1)
+  * https://huggingface.co/timm/vit_dwee_patch16_reg1_gap_256.sbb_nadamuon_in1k  (81.80% top-1)
+  * https://huggingface.co/timm/vit_dpwee_patch16_reg1_gap_256.sbb_nadamuon_in1k (81.67% top-1)
+* Add a ~21M param `timm` variant of the CSATv2 model at 512x512 & 640x640
+  * https://huggingface.co/timm/csatv2_21m.sw_r640_in1k (83.13% top-1)
+  * https://huggingface.co/timm/csatv2_21m.sw_r512_in1k (82.58% top-1)
+* Factor non-persistent param init out of `__init__` into a common method that can be externally called via `init_non_persistent_buffers()` after meta-device init. 
+  
+## Dec 12, 2025
+* Add CSATV2 model (thanks https://github.com/gusdlf93) -- a lightweight but high res model with DCT stem & spatial attention. https://huggingface.co/Hyunil/CSATv2
+* Add AdaMuon and NAdaMuon optimizer support to existing `timm` Muon impl. Appears more competitive vs AdamW with familiar hparams for image tasks.
+* End of year PR cleanup, merge aspects of several long open PR
+  * Merge differential attention (`DiffAttention`), add corresponding `DiffParallelScalingBlock` (for ViT), train some wee vits
+    * https://huggingface.co/timm/vit_dwee_patch16_reg1_gap_256.sbb_in1k
+    * https://huggingface.co/timm/vit_dpwee_patch16_reg1_gap_256.sbb_in1k
+  * Add a few pooling modules, `LsePlus` and `SimPool`
+  * Cleanup, optimize `DropBlock2d` (also add support to ByobNet based models)
+* Bump unit tests to PyTorch 2.9.1 + Python 3.13 on upper end, lower still PyTorch 1.13 + Python 3.10
+  
+## Dec 1, 2025
+* Add lightweight task abstraction, add logits and feature distillation support to train script via new tasks.
+* Remove old APEX AMP support
+
+## Nov 4, 2025
+* Fix LayerScale / LayerScale2d init bug (init values ignored), introduced in 1.0.21. Thanks https://github.com/Ilya-Fradlin
+* Release 1.0.22
+
+## Oct 31, 2025 🎃
+* Update imagenet & OOD variant result csv files to include a few new models and verify correctness over several torch & timm versions
+* EfficientNet-X and EfficientNet-H B5 model weights added as part of a hparam search for AdamW vs Muon (still iterating on Muon runs)
+
+## Oct 16-20, 2025
+* Add an impl of the Muon optimizer (based on https://github.com/KellerJordan/Muon) with customizations
+  * extra flexibility and improved handling for conv weights and fallbacks for weight shapes not suited for orthogonalization
+  * small speedup for NS iterations by reducing allocs and using fused (b)add(b)mm ops
+  * by default uses AdamW (or NAdamW if `nesterov=True`) updates if muon not suitable for parameter shape (or excluded via param group flag)
+  * like torch impl, select from several LR scale adjustment fns via `adjust_lr_fn`
+  * select from several NS coefficient presets or specify your own via
+
+--- REPOSITORY: xinntao/Real-ESRGAN ---
+README:
+<p align="center">
+  <img src="assets/realesrgan_logo.png" height=120>
+</p>
+
+## <div align="center"><b><a href="README.md">English</a> | <a href="README_CN.md">简体中文</a></b></div>
+
+<div align="center">
+
+👀[**Demos**](#-demos-videos) **|** 🚩[**Updates**](#-updates) **|** ⚡[**Usage**](#-quick-inference) **|** 🏰[**Model Zoo**](docs/model_zoo.md) **|** 🔧[Install](#-dependencies-and-installation)  **|** 💻[Train](docs/Training.md) **|** ❓[FAQ](docs/FAQ.md) **|** 🎨[Contribution](docs/CONTRIBUTING.md)
+
+[![download](https://img.shields.io/github/downloads/xinntao/Real-ESRGAN/total.svg)](https://github.com/xinntao/Real-ESRGAN/releases)
+[![PyPI](https://img.shields.io/pypi/v/realesrgan)](https://pypi.org/project/realesrgan/)
+[![Open issue](https://img.shields.io/github/issues/xinntao/Real-ESRGAN)](https://github.com/xinntao/Real-ESRGAN/issues)
+[![Closed issue](https://img.shields.io/github/issues-closed/xinntao/Real-ESRGAN)](https://github.com/xinntao/Real-ESRGAN/issues)
+[![LICENSE](https://img.shields.io/github/license/xinntao/Real-ESRGAN.svg)](https://github.com/xinntao/Real-ESRGAN/blob/master/LICENSE)
+[![python lint](https://github.com/xinntao/Real-ESRGAN/actions/workflows/pylint.yml/badge.svg)](https://github.com/xinntao/Real-ESRGAN/blob/master/.github/workflows/pylint.yml)
+[![Publish-pip](https://github.com/xinntao/Real-ESRGAN/actions/workflows/publish-pip.yml/badge.svg)](https://github.com/xinntao/Real-ESRGAN/blob/master/.github/workflows/publish-pip.yml)
+
+</div>
+
+🔥 **AnimeVideo-v3 model (动漫视频小模型)**. Please see [[*anime video models*](docs/anime_video_model.md)] and [[*comparisons*](docs/anime_comparisons.md)]<br>
+🔥 **RealESRGAN_x4plus_anime_6B** for anime images **(动漫插图模型)**. Please see [[*anime_model*](docs/anime_model.md)]
+
+<!-- 1. You can try in our website: [ARC Demo](https://arc.tencent.com/en/ai-demos/imgRestore) (now only support RealESRGAN_x4plus_anime_6B) -->
+1. :boom: **Update** online Replicate demo: [![Replicate](https://img.shields.io/static/v1?label=Demo&message=Replicate&color=blue)](https://replicate.com/xinntao/realesrgan)
+1. Online Colab demo for Real-ESRGAN: [![Colab](https://img.shields.io/static/v1?label=Demo&message=Colab&color=orange)](https://colab.research.google.com/drive/1k2Zod6kSHEvraybHl50Lys0LerhyTMCo?usp=sharing) **|** Online Colab demo for for Real-ESRGAN (**anime videos**): [![Colab](https://img.shields.io/static/v1?label=Demo&message=Colab&color=orange)](https://colab.research.google.com/drive/1yNl9ORUxxlL4N0keJa2SEPB61imPQd1B?usp=sharing)
+1. Portable [Windows](https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesrgan-ncnn-vulkan-20220424-windows.zip) / [Linux](https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesrgan-ncnn-vulkan-20220424-ubuntu.zip) / [MacOS](https://github.com/xinntao/Real-ESRGAN/releases/download/v0.2.5.0/realesrgan-ncnn-vulkan-20220424-macos.zip) **executable files for Intel/AMD/Nvidia GPU**. You can find more information [here](#portable-executable-files-ncnn). The ncnn implementation is in [Real-ESRGAN-ncnn-vulkan](https://github.com/xinntao/Real-ESRGAN-ncnn-vulkan)
+<!-- 1. You can watch enhanced animations in [Tencent Video](https://v.qq.com/s/topic/v_child/render/fC4iyCAM.html). 欢迎观看[腾讯视频动漫修复](https://v.qq.com/s/topic/v_child/render/fC4iyCAM.html) -->
+
+Real-ESRGAN aims at developing **Practical Algorithms for General Image/Video Restoration**.<br>
+We extend the powerful ESRGAN to a practical restoration application (namely, Real-ESRGAN), which is trained with pure synthetic data.
+
+🌌 Thanks for your valuable feedbacks/suggestions. All the feedbacks are updated in [feedback.md](docs/feedback.md).
+
+---
+
+If Real-ESRGAN is helpful, please help to ⭐ this repo or recommend it to your friends 😊 <br>
+Other recommended projects:<br>
+▶️ [GFPGAN](https://github.com/TencentARC/GFPGAN): A practical algorithm for real-world face restoration <br>
+▶️ [BasicSR](https://github.com/xinntao/BasicSR): An open-source image and video restoration toolbox<br>
+▶️ [facexlib](https://github.com/xinntao/facexlib): A collection that provides useful face-relation functions.<br>
+▶️ [HandyView](https://github.com/xinntao/HandyView): A PyQt5-based image viewer that is handy for view and comparison <br>
+▶️ [HandyFigure](https://github.com/xinntao/HandyFigure): Open source of paper figures <br>
+
+---
+
+### 📖 Real-ESRGAN: Training Real-World Blind Super-Resolution with Pure Synthetic Data
+
+> [[Paper](https://arxiv.org/abs/2107.10833)] &emsp; [[YouTube Video](https://www.youtube.com/watch?v=fxHWoDSSvSc)] &emsp; [[B站讲解](https://www.bilibili.com/video/BV1H34y1m7sS/)] &emsp; [[Poster](https://xinntao.github.io/projects/RealESRGAN_src/RealESRGAN_poster.pdf)] &emsp; [[PPT slides](https://docs.google.com/presentation/d/1QtW6Iy8rm8rGLsJ0Ldti6kP-7Qyzy6XL/edit?usp=sharing&ouid=109799856763657548160&rtpof=true&sd=true)]<br>
+> [Xintao Wang](https://xinntao.github.io/), Liangbin Xie, [Chao Dong](https://scholar.google.com.hk/citations?user=OSDCB0UAAAAJ), [Ying Shan](htt
+
+--- REPOSITORY: huggingface/diffusers ---
+README:
+<!---
+Copyright 2022 - The HuggingFace Team. All rights reserved.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<p align="center">
+    <br>
+    <img src="https://raw.githubusercontent.com/huggingface/diffusers/main/docs/source/en/imgs/diffusers_library.jpg" width="400"/>
+    <br>
+<p>
+<p align="center">
+    <a href="https://github.com/huggingface/diffusers/blob/main/LICENSE"><img alt="GitHub" src="https://img.shields.io/github/license/huggingface/datasets.svg?color=blue"></a>
+    <a href="https://github.com/huggingface/diffusers/releases"><img alt="GitHub release" src="https://img.shields.io/github/release/huggingface/diffusers.svg"></a>
+    <a href="https://pepy.tech/project/diffusers"><img alt="GitHub release" src="https://static.pepy.tech/badge/diffusers/month"></a>
+    <a href="CODE_OF_CONDUCT.md"><img alt="Contributor Covenant" src="https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg"></a>
+    <a href="https://twitter.com/diffuserslib"><img alt="X account" src="https://img.shields.io/twitter/url/https/twitter.com/diffuserslib.svg?style=social&label=Follow%20%40diffuserslib"></a>
+</p>
+
+🤗 Diffusers is the go-to library for state-of-the-art pretrained diffusion models for generating images, audio, and even 3D structures of molecules. Whether you're looking for a simple inference solution or training your own diffusion models, 🤗 Diffusers is a modular toolbox that supports both. Our library is designed with a focus on [usability over performance](https://huggingface.co/docs/diffusers/conceptual/philosophy#usability-over-performance), [simple over easy](https://huggingface.co/docs/diffusers/conceptual/philosophy#simple-over-easy), and [customizability over abstractions](https://huggingface.co/docs/diffusers/conceptual/philosophy#tweakable-contributorfriendly-over-abstraction).
+
+🤗 Diffusers offers three core components:
+
+- State-of-the-art [diffusion pipelines](https://huggingface.co/docs/diffusers/api/pipelines/overview) that can be run in inference with just a few lines of code.
+- Interchangeable noise [schedulers](https://huggingface.co/docs/diffusers/api/schedulers/overview) for different diffusion speeds and output quality.
+- Pretrained [models](https://huggingface.co/docs/diffusers/api/models/overview) that can be used as building blocks, and combined with schedulers, for creating your own end-to-end diffusion systems.
+
+## Installation
+
+We recommend installing 🤗 Diffusers in a virtual environment from PyPI or Conda. For more details about installing [PyTorch](https://pytorch.org/get-started/locally/), please refer to their official documentation.
+
+### PyTorch
+
+With `pip` (official package):
+
+```bash
+pip install --upgrade diffusers[torch]
+```
+
+With `conda` (maintained by the community):
+
+```sh
+conda install -c conda-forge diffusers
+```
+
+### Apple Silicon (M1/M2) support
+
+Please refer to the [How to use Stable Diffusion in Apple Silicon](https://huggingface.co/docs/diffusers/optimization/mps) guide.
+
+## Quickstart
+
+Generating outputs is super easy with 🤗 Diffusers. To generate an image from text, use the `from_pretrained` method to load any pretrained diffusion model (browse the [Hub](https://huggingface.co/models?library=diffusers&sort=downloads) for 30,000+ checkpoints):
+
+```python
+from diffusers import DiffusionPipeline
+import torch
+
+pipeline = DiffusionPipeline.from_pretrained("stable-diffusion-v1-5/stable-diffusion-v1-5", torch_dtype=torch.float16)
+pipeline.to("cuda")
+pipeline("An image of a squirrel in Picasso style").images[0]
+```
+
+You can also dig into the models and schedulers toolbox to build your own diffusion system:
+
+```python
+from diffusers import DDPMScheduler, UNet2DModel
+from PIL import Image
+import torch
+
+scheduler = DDPMScheduler.from_pretrained("google/ddpm-cat-256")
+model = UNet2DModel.from_pretrained("google/ddpm-cat-256").to("cuda")
+scheduler.set_timesteps(50)
+
+sample_size = model.config.sample_size
+noise = torch.randn((1, 3, sample_size, sample_size), device="cuda")
+input = noise
+
+for t in scheduler.timesteps:
+    with torch.no_grad():
+        noisy_residual = model(input, t).sample
+        prev_noisy_sample = scheduler.step(noisy_residual, t, input).prev_sample
+        input = prev_noisy_sample
+
+image = (input / 2 + 0.5).clamp(0, 1)
+image = image.cpu().permute(0, 2, 3, 1).numpy()[0]
+image = Image.fromarray((image * 255).round().astype("uint8"))
+image
+```
+
+Check out the [Quickstart](https://huggingface.co/docs/diffusers/quicktour) to launch your diffusion journey today!
+
+## How to navigate th
+
+--- REPOSITORY: open-mmlab/mmdetection ---
+README:
+<div align="center">
+  <img src="resources/mmdet-logo.png" width="600"/>
+  <div>&nbsp;</div>
+  <div align="center">
+    <b><font size="5">OpenMMLab website</font></b>
+    <sup>
+      <a href="https://openmmlab.com">
+        <i><font size="4">HOT</font></i>
+      </a>
+    </sup>
+    &nbsp;&nbsp;&nbsp;&nbsp;
+    <b><font size="5">OpenMMLab platform</font></b>
+    <sup>
+      <a href="https://platform.openmmlab.com">
+        <i><font size="4">TRY IT OUT</font></i>
+      </a>
+    </sup>
+  </div>
+  <div>&nbsp;</div>
+
+[![PyPI](https://img.shields.io/pypi/v/mmdet)](https://pypi.org/project/mmdet)
+[![docs](https://img.shields.io/badge/docs-latest-blue)](https://mmdetection.readthedocs.io/en/latest/)
+[![badge](https://github.com/open-mmlab/mmdetection/workflows/build/badge.svg)](https://github.com/open-mmlab/mmdetection/actions)
+[![codecov](https://codecov.io/gh/open-mmlab/mmdetection/branch/master/graph/badge.svg)](https://codecov.io/gh/open-mmlab/mmdetection)
+[![license](https://img.shields.io/github/license/open-mmlab/mmdetection.svg)](https://github.com/open-mmlab/mmdetection/blob/master/LICENSE)
+[![open issues](https://isitmaintained.com/badge/open/open-mmlab/mmdetection.svg)](https://github.com/open-mmlab/mmdetection/issues)
+[![issue resolution](https://isitmaintained.com/badge/resolution/open-mmlab/mmdetection.svg)](https://github.com/open-mmlab/mmdetection/issues)
+
+[📘Documentation](https://mmdetection.readthedocs.io/en/stable/) |
+[🛠️Installation](https://mmdetection.readthedocs.io/en/stable/get_started.html) |
+[👀Model Zoo](https://mmdetection.readthedocs.io/en/stable/model_zoo.html) |
+[🆕Update News](https://mmdetection.readthedocs.io/en/stable/changelog.html) |
+[🚀Ongoing Projects](https://github.com/open-mmlab/mmdetection/projects) |
+[🤔Reporting Issues](https://github.com/open-mmlab/mmdetection/issues/new/choose)
+
+</div>
+
+<div align="center">
+
+English | [简体中文](README_zh-CN.md)
+
+</div>
+
+<div align="center">
+  <a href="https://openmmlab.medium.com/" style="text-decoration:none;">
+    <img src="https://user-images.githubusercontent.com/25839884/218352562-cdded397-b0f3-4ca1-b8dd-a60df8dca75b.png" width="3%" alt="" /></a>
+  <img src="https://user-images.githubusercontent.com/25839884/218346358-56cc8e2f-a2b8-487f-9088-32480cceabcf.png" width="3%" alt="" />
+  <a href="https://discord.gg/raweFPmdzG" style="text-decoration:none;">
+    <img src="https://user-images.githubusercontent.com/25839884/218347213-c080267f-cbb6-443e-8532-8e1ed9a58ea9.png" width="3%" alt="" /></a>
+  <img src="https://user-images.githubusercontent.com/25839884/218346358-56cc8e2f-a2b8-487f-9088-32480cceabcf.png" width="3%" alt="" />
+  <a href="https://twitter.com/OpenMMLab" style="text-decoration:none;">
+    <img src="https://user-images.githubusercontent.com/25839884/218346637-d30c8a0f-3eba-4699-8131-512fb06d46db.png" width="3%" alt="" /></a>
+  <img src="https://user-images.githubusercontent.com/25839884/218346358-56cc8e2f-a2b8-487f-9088-32480cceabcf.png" width="3%" alt="" />
+  <a href="https://www.youtube.com/openmmlab" style="text-decoration:none;">
+    <img src="https://user-images.githubusercontent.com/25839884/218346691-ceb2116a-465a-40af-8424-9f30d2348ca9.png" width="3%" alt="" /></a>
+</div>
+## Introduction
+
+MMDetection is an open source object detection toolbox based on PyTorch. It is
+a part of the [OpenMMLab](https://openmmlab.com/) project.
+
+The master branch works with **PyTorch 1.5+**.
+
+<img src="https://user-images.githubusercontent.com/12907710/137271636-56ba1cd2-b110-4812-8221-b4c120320aa9.png"/>
+
+<details open>
+<summary>Major features</summary>
+
+- **Modular Design**
+
+  We decompose the detection framework into different components and one can easily construct a customized object detection framework by combining different modules.
+
+- **Support of multiple frameworks out of box**
+
+  The toolbox directly supports popular and contemporary detection frameworks, *e.g.* Faster RCNN, Mask RCNN, RetinaNet, etc.
+
+- **High efficiency**
+
+  All basic bbox and mask operations run on GPUs. The training speed is faster than or comparable to other codebases, including [Detectron2](https://github.com/facebookresearch/detectron2), [maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark) and [SimpleDet](https://github.com/TuSimple/simpledet).
+
+- **State of the art**
+
+  The toolbox stems from the codebase developed by the *MMDet* team, who won [COCO Detection Challenge](http://cocodataset.org/#detection-leaderboard) in 2018, and we keep pushing it forward.
+
+</details>
+
+Apart from MMDetection, we also released a library [mmcv](https://github.com/open-mmlab/mmcv) for computer vision research, which is heavily depended on by this toolbox.
+
+## What's New
+
+### 💎 Stable version
+
+**2.28.2** was released in 27/2/2023:
+
+- Fixed some known documentation, configuration and linking error issues
+
+Please refer to [changelog.md](docs/en/changelog.md) for details and release history.
+
+For compatibility changes between different versions of MMDetec
+
+--- REPOSITORY: yunjey/pytorch-tutorial ---
+README:
+<p align="center"><img width="40%" src="logo/pytorch_logo_2018.svg" /></p>
+
+--------------------------------------------------------------------------------
+
+This repository provides tutorial code for deep learning researchers to learn [PyTorch](https://github.com/pytorch/pytorch). In the tutorial, most of the models were implemented with less than 30 lines of code. Before starting this tutorial, it is recommended to finish [Official Pytorch Tutorial](http://pytorch.org/tutorials/beginner/deep_learning_60min_blitz.html).
+
+
+<br/>
+
+## Table of Contents
+
+#### 1. Basics
+* [PyTorch Basics](https://github.com/yunjey/pytorch-tutorial/tree/master/tutorials/01-basics/pytorch_basics/main.py)
+* [Linear Regression](https://github.com/yunjey/pytorch-tutorial/tree/master/tutorials/01-basics/linear_regression/main.py#L22-L23)
+* [Logistic Regression](https://github.com/yunjey/pytorch-tutorial/tree/master/tutorials/01-basics/logistic_regression/main.py#L33-L34)
+* [Feedforward Neural Network](https://github.com/yunjey/pytorch-tutorial/tree/master/tutorials/01-basics/feedforward_neural_network/main.py#L37-L49)
+
+#### 2. Intermediate
+* [Convolutional Neural Network](https://github.com/yunjey/pytorch-tutorial/tree/master/tutorials/02-intermediate/convolutional_neural_network/main.py#L35-L56)
+* [Deep Residual Network](https://github.com/yunjey/pytorch-tutorial/tree/master/tutorials/02-intermediate/deep_residual_network/main.py#L76-L113)
+* [Recurrent Neural Network](https://github.com/yunjey/pytorch-tutorial/tree/master/tutorials/02-intermediate/recurrent_neural_network/main.py#L39-L58)
+* [Bidirectional Recurrent Neural Network](https://github.com/yunjey/pytorch-tutorial/tree/master/tutorials/02-intermediate/bidirectional_recurrent_neural_network/main.py#L39-L58)
+* [Language Model (RNN-LM)](https://github.com/yunjey/pytorch-tutorial/tree/master/tutorials/02-intermediate/language_model/main.py#L30-L50)
+
+#### 3. Advanced
+* [Generative Adversarial Networks](https://github.com/yunjey/pytorch-tutorial/blob/master/tutorials/03-advanced/generative_adversarial_network/main.py#L41-L57)
+* [Variational Auto-Encoder](https://github.com/yunjey/pytorch-tutorial/blob/master/tutorials/03-advanced/variational_autoencoder/main.py#L38-L65)
+* [Neural Style Transfer](https://github.com/yunjey/pytorch-tutorial/tree/master/tutorials/03-advanced/neural_style_transfer)
+* [Image Captioning (CNN-RNN)](https://github.com/yunjey/pytorch-tutorial/tree/master/tutorials/03-advanced/image_captioning)
+
+#### 4. Utilities
+* [TensorBoard in PyTorch](https://github.com/yunjey/pytorch-tutorial/tree/master/tutorials/04-utils/tensorboard)
+
+
+<br/>
+
+## Getting Started
+```bash
+$ git clone https://github.com/yunjey/pytorch-tutorial.git
+$ cd pytorch-tutorial/tutorials/PATH_TO_PROJECT
+$ python main.py
+```
+
+<br/>
+
+## Dependencies
+* [Python 2.7 or 3.5+](https://www.continuum.io/downloads)
+* [PyTorch 0.4.0+](http://pytorch.org/)
+
+
+
+
+
