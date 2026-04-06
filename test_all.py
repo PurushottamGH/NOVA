@@ -23,9 +23,6 @@ try:
     HAS_PYTEST = True
 except ImportError:
     HAS_PYTEST = False
-    HAS_PYTEST = True
-except ImportError:
-    HAS_PYTEST = False
 
 
 def test_config():
@@ -250,35 +247,5 @@ if __name__ == "__main__":
     else:
         print(f"  {failed} test(s) FAILED, {passed} passed")
     print("=" * 50)
-    print()
 
-    tests = [
-        test_config,
-        test_tokenizer,
-        test_attention,
-        test_model,
-        test_generate,
-        test_loss_fn,
-        test_checkpointing,
-        test_sampler,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test_fn in tests:
-        try:
-            test_fn()
-            passed += 1
-            print(f"PASS: {test_fn.__name__}")
-        except Exception as e:
-            print(f"FAIL: {test_fn.__name__} — {e}")
-            failed += 1
-
-    print()
-    print("=" * 50)
-    if failed == 0:
-        print(f"  All {passed} tests passed — NovaMind is healthy!")
-    else:
-        print(f"  {failed} test(s) FAILED, {passed} passed")
-    print("=" * 50)
+    sys.exit(1 if failed > 0 else 0)
