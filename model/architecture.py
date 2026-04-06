@@ -11,15 +11,16 @@ This reduces params and acts as regularization (GPT-2, ALBERT style).
 """
 
 import json
+from pathlib import Path
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.checkpoint import checkpoint  # FIXED: added for VRAM efficiency
-from pathlib import Path
 
+from model.block import TransformerDecoderBlock
 from model.config import NovaMindConfig
 from model.positional import SinusoidalPositionalEncoding
-from model.block import TransformerDecoderBlock
 
 
 class NovaMind(nn.Module):
@@ -38,9 +39,9 @@ class NovaMind(nn.Module):
         self.positional_encoding = SinusoidalPositionalEncoding(config)
 
         # Stack of transformer decoder blocks
-        self.blocks = nn.ModuleList([
-            TransformerDecoderBlock(config) for _ in range(config.num_layers)
-        ])
+        self.blocks = nn.ModuleList(
+            [TransformerDecoderBlock(config) for _ in range(config.num_layers)]
+        )
 
         # Final LayerNorm before output projection
         self.final_norm = nn.LayerNorm(config.embed_dim, eps=config.norm_eps)
@@ -50,8 +51,12 @@ class NovaMind(nn.Module):
 
         # Weight tying: share embedding and output projection weights
         if config.weight_tying:
-            self.lm_head.weight = self.token_embedding.weight  # FIXED: verified — same tensor object, not a copy
-            assert self.lm_head.weight is self.token_embedding.weight  # FIXED: assertion proves weight tying shares the tensor
+            self.lm_head.weight = (
+                self.token_embedding.weight
+            )  # FIXED: verified — same tensor object, not a copy
+            assert (
+                self.lm_head.weight is self.token_embedding.weight
+            )  # FIXED: assertion proves weight tying shares the tensor
 
         # Initialize weights
         self.apply(self._init_weights)
@@ -82,7 +87,7 @@ class NovaMind(nn.Module):
             (logits, loss) or (logits, past_key_values_out) if use_cache=True
             (logits, loss) where logits is (batch, seq_len, vocab_size)
         """
-        batch_size, seq_len = input_ids.shape  # (batch, seq_len)
+        _batch_size, seq_len = input_ids.shape  # (batch, seq_len)
         assert seq_len <= self.config.context_length
 
         # Step 1: Token embedding (batch, seq_len) → (batch, seq_len, embed_dim)
@@ -103,7 +108,7 @@ class NovaMind(nn.Module):
             else:
                 past_kv = past_key_values[i] if past_key_values is not None else None
                 x, present_kv = block(x, past_kv=past_kv, use_cache=use_cache)
-            
+
             if use_cache:
                 past_key_values_out.append(present_kv)
 
@@ -118,18 +123,25 @@ class NovaMind(nn.Module):
         if targets is not None:
             loss = F.cross_entropy(
                 logits.view(-1, self.config.vocab_size),  # (batch*seq_len, vocab_size)
-                targets.view(-1),                          # (batch*seq_len,)
-                ignore_index=self.config.pad_token_id
+                targets.view(-1),  # (batch*seq_len,)
+                ignore_index=self.config.pad_token_id,
             )
 
         if use_cache:
             return logits, past_key_values_out
-        
+
         return logits, loss
 
     @torch.inference_mode()
-    def generate(self, input_ids, max_new_tokens=100, temperature=0.8,
-                 top_k=50, top_p=0.9, repetition_penalty=1.1):
+    def generate(
+        self,
+        input_ids,
+        max_new_tokens=100,
+        temperature=0.8,
+        top_k=50,
+        top_p=0.9,
+        repetition_penalty=1.1,
+    ):
         """
         Autoregressive generation: predict one token at a time.
         Args:
@@ -146,18 +158,22 @@ class NovaMind(nn.Module):
         generated = input_ids
 
         # FIXED: temperature guard — clamp to safe range to prevent division by zero or garbage
-        temperature = max(0.1, min(float(temperature), 2.0))  # FIXED: was unguarded, could be 0 or >2
+        temperature = max(
+            0.1, min(float(temperature), 2.0)
+        )  # FIXED: was unguarded, could be 0 or >2
 
         past_kv = None
 
         for _ in range(max_new_tokens):
             if past_kv is None:
                 # Crop to context window
-                seq = generated[:, -self.config.context_length:]  # (batch, ≤context_length)
+                seq = generated[:, -self.config.context_length :]  # (batch, ≤context_length)
             else:
                 seq = generated[:, -1:]  # (batch, 1)
 
-            logits, past_kv = self.forward(seq, past_key_values=past_kv, use_cache=True)  # (batch, seq_len, vocab_size)
+            logits, past_kv = self.forward(
+                seq, past_key_values=past_kv, use_cache=True
+            )  # (batch, seq_len, vocab_size)
             next_logits = logits[:, -1, :]  # (batch, vocab_size)
 
             # Repetition penalty
@@ -170,13 +186,15 @@ class NovaMind(nn.Module):
                             next_logits[b, tok] *= repetition_penalty
 
             # Temperature scaling
-            next_logits = next_logits / temperature  # FIXED: always apply since we clamped temperature >= 0.1
+            next_logits = (
+                next_logits / temperature
+            )  # FIXED: always apply since we clamped temperature >= 0.1
 
             # Top-k filtering
             if top_k > 0:
                 topk_vals, _ = torch.topk(next_logits, min(top_k, next_logits.size(-1)))
                 threshold = topk_vals[:, -1].unsqueeze(-1)
-                next_logits = next_logits.masked_fill(next_logits < threshold, float('-inf'))
+                next_logits = next_logits.masked_fill(next_logits < threshold, float("-inf"))
 
             # Top-p (nucleus) filtering
             if top_p < 1.0:
@@ -186,7 +204,7 @@ class NovaMind(nn.Module):
                 remove[:, 1:] = remove[:, :-1].clone()
                 remove[:, 0] = False
                 indices_to_remove = remove.scatter(1, sorted_idx, remove)
-                next_logits = next_logits.masked_fill(indices_to_remove, float('-inf'))
+                next_logits = next_logits.masked_fill(indices_to_remove, float("-inf"))
 
             # Sample
             probs = F.softmax(next_logits, dim=-1)  # (batch, vocab_size)
@@ -204,7 +222,8 @@ class NovaMind(nn.Module):
         total = sum(p.numel() for p in self.parameters())
         trainable = sum(p.numel() for p in self.parameters() if p.requires_grad)
         return {
-            "total": total, "trainable": trainable,
+            "total": total,
+            "trainable": trainable,
             "non_trainable": total - trainable,
             "total_million": round(total / 1e6, 2),
             "trainable_million": round(trainable / 1e6, 2),
@@ -215,7 +234,9 @@ class NovaMind(nn.Module):
         save_dir = Path(path)
         save_dir.mkdir(parents=True, exist_ok=True)
         torch.save(self.state_dict(), save_dir / "model.pt")
-        with open(save_dir / "config.json", "w", encoding="utf-8") as f:  # FIXED: added encoding='utf-8'
+        with open(
+            save_dir / "config.json", "w", encoding="utf-8"
+        ) as f:  # FIXED: added encoding='utf-8'
             json.dump(self.config.to_dict(), f, indent=2)
         info = self.count_parameters()
         print(f"[NovaMind] Saved to {save_dir} ({info['total_million']}M params)")
@@ -224,7 +245,7 @@ class NovaMind(nn.Module):
     def load(cls, path, device="auto"):
         """Load a saved NovaMind model from directory."""
         load_dir = Path(path)
-        with open(load_dir / "config.json", "r", encoding="utf-8") as f:  # FIXED: added encoding='utf-8'
+        with open(load_dir / "config.json", encoding="utf-8") as f:  # FIXED: added encoding='utf-8'
             config_dict = json.load(f)
         config = NovaMindConfig.from_dict(config_dict)
         if device == "auto":
@@ -232,20 +253,22 @@ class NovaMind(nn.Module):
         else:
             config.device = device
         model = cls(config)
-        state = torch.load(load_dir / "model.pt", map_location=config.device, weights_only=True, mmap=True)
-        
+        state = torch.load(
+            load_dir / "model.pt", map_location=config.device, weights_only=True, mmap=True
+        )
+
         # Handle state_dict from old architecture (W_q, W_k, W_v separate)
         keys_to_delete = []
         new_state = {}
         for key in list(state.keys()):
             if key.endswith(".W_q.weight"):
-                prefix = key[:-len("W_q.weight")]
+                prefix = key[: -len("W_q.weight")]
                 q_w = state[key]
                 k_w = state[prefix + "W_k.weight"]
                 v_w = state[prefix + "W_v.weight"]
                 new_state[prefix + "W_qkv.weight"] = torch.cat([q_w, k_w, v_w], dim=0)
                 keys_to_delete.extend([key, prefix + "W_k.weight", prefix + "W_v.weight"])
-                
+
         for key in keys_to_delete:
             if key in state:
                 del state[key]
@@ -255,5 +278,7 @@ class NovaMind(nn.Module):
         model.to(config.device)
         model.eval()
         info = model.count_parameters()
-        print(f"[NovaMind] Loaded from {load_dir} ({info['total_million']}M params, device={config.device})")
+        print(
+            f"[NovaMind] Loaded from {load_dir} ({info['total_million']}M params, device={config.device})"
+        )
         return model

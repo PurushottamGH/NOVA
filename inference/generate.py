@@ -11,13 +11,14 @@ Usage:
     # Streaming generation (yields tokens one at a time)
     for token_text in stream_generate(model, tokenizer, "Hello"):
         print(token_text, end="", flush=True)
-    
+
     # Batch generation (returns full text)
     text = generate_text(model, tokenizer, "Hello", max_tokens=100)
 """
 
+from collections.abc import Generator
+
 import torch
-from typing import Generator
 
 from inference.sampler import combined_sample
 
@@ -35,7 +36,7 @@ def stream_generate(
 ) -> Generator[str, None, None]:
     """
     Generator that yields decoded tokens one at a time for streaming.
-    
+
     Args:
         model: NovaMind model (already on correct device)
         tokenizer: NovaMindTokenizer
@@ -45,7 +46,7 @@ def stream_generate(
         top_k: Top-k filtering
         top_p: Nucleus sampling threshold
         repetition_penalty: Penalty for repeated tokens
-    
+
     Yields:
         Decoded text for each generated token
     """
@@ -113,7 +114,7 @@ def generate_text(
 ) -> str:
     """
     Generate text from a prompt (non-streaming, returns full result).
-    
+
     Args:
         model: NovaMind model
         tokenizer: NovaMindTokenizer
@@ -123,13 +124,15 @@ def generate_text(
         top_k: Top-k filtering
         top_p: Nucleus sampling threshold
         repetition_penalty: Penalty for repeated tokens
-    
+
     Returns:
         Complete generated text string
     """
     tokens = []
     for token_text in stream_generate(
-        model, tokenizer, prompt,
+        model,
+        tokenizer,
+        prompt,
         max_new_tokens=max_new_tokens,
         temperature=temperature,
         top_k=top_k,

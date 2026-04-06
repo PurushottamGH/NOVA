@@ -1,6 +1,8 @@
-import chromadb
-from datetime import datetime, timedelta
 import os
+from datetime import datetime, timedelta
+
+import chromadb
+
 
 class NovaMemory:
     """
@@ -20,8 +22,12 @@ class NovaMemory:
     # Cleanup frequency: run cleanup every N store operations
     CLEANUP_INTERVAL = 50
 
-    def __init__(self, persist_dir: str = "nova_memory", ttl_days: int = None,
-                 max_entries: int = None):
+    def __init__(
+        self,
+        persist_dir: str = "nova_memory",
+        ttl_days: int | None = None,
+        max_entries: int | None = None,
+    ):
         """
         Initialize the memory engine.
 
@@ -32,7 +38,6 @@ class NovaMemory:
         """
         # Step 1: ChromaDB Cache Fix
         # Prevent repetitive 79MB downloads by pinning the cache directory
-        import os
         CHROMA_CACHE = os.path.expanduser("~/.cache/chroma")
         os.makedirs(CHROMA_CACHE, exist_ok=True)
         os.environ["CHROMA_CACHE_DIR"] = CHROMA_CACHE
@@ -47,12 +52,13 @@ class NovaMemory:
             os.makedirs(persist_dir, exist_ok=True)
             self.client = chromadb.PersistentClient(path=persist_dir)
             self.collection = self.client.get_or_create_collection(
-                name="nova_conversations",
-                metadata={"hnsw:space": "cosine"}
+                name="nova_conversations", metadata={"hnsw:space": "cosine"}
             )
             self._available = True
-            print(f"[NovaMemory] Persistent memory connected at {persist_dir} "
-                  f"(TTL={self.ttl_days}d, max={self.max_entries})")
+            print(
+                f"[NovaMemory] Persistent memory connected at {persist_dir} "
+                f"(TTL={self.ttl_days}d, max={self.max_entries})"
+            )
         except Exception as e:
             print(f"[NovaMemory] Warning: ChromaDB unavailable: {e}")
             self._available = False
@@ -120,10 +126,7 @@ class NovaMemory:
         self.collection.add(
             documents=[f"User: {user_msg}\nNova: {nova_response}"],
             ids=[doc_id],
-            metadatas=[{
-                "timestamp": datetime.now().isoformat(),
-                "type": "conversation"
-            }]
+            metadatas=[{"timestamp": datetime.now().isoformat(), "type": "conversation"}],
         )
 
         # Periodic cleanup
@@ -140,11 +143,10 @@ class NovaMemory:
             return []
 
         results = self.collection.query(
-            query_texts=[query],
-            n_results=min(n_results, self.collection.count())
+            query_texts=[query], n_results=min(n_results, self.collection.count())
         )
 
-        return results['documents'][0] if results['documents'] else []
+        return results["documents"][0] if results["documents"] else []
 
     def inject_memory(self, query: str) -> str:
         """

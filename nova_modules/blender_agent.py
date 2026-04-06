@@ -11,12 +11,9 @@ Usage:
 """
 
 import re
-import sys
 import subprocess
 import tempfile
-import time
 from pathlib import Path
-from typing import Dict, Optional, Tuple
 
 
 class NovaBlenderAgent:
@@ -85,17 +82,17 @@ class NovaBlenderAgent:
     def _extract_code(self, text: str) -> str:
         """Extract Python code block from model output."""
         # Try to find code between ```python ... ```
-        match = re.search(r'```python\s*(.*?)```', text, re.DOTALL)
+        match = re.search(r"```python\s*(.*?)```", text, re.DOTALL)
         if match:
             return match.group(1).strip()
 
         # Try ``` ... ```
-        match = re.search(r'```\s*(.*?)```', text, re.DOTALL)
+        match = re.search(r"```\s*(.*?)```", text, re.DOTALL)
         if match:
             return match.group(1).strip()
 
         # Fallback: find everything starting with "import bpy"
-        match = re.search(r'(import bpy.*)', text, re.DOTALL)
+        match = re.search(r"(import bpy.*)", text, re.DOTALL)
         if match:
             return match.group(1).strip()
 
@@ -106,9 +103,7 @@ class NovaBlenderAgent:
     #  Blender execution
     # ------------------------------------------------------------------ #
 
-    def execute_in_blender(
-        self, script: str, blender_path: str = "blender"
-    ) -> Dict:
+    def execute_in_blender(self, script: str, blender_path: str = "blender") -> dict:
         """
         Execute a bpy script in Blender's background mode.
 
@@ -203,7 +198,7 @@ class NovaBlenderAgent:
             return self._template_light(name, loc_str, energy, light_type)
         elif object_type == "material":
             color = params.get("color", (0.8, 0.1, 0.1, 1.0))
-            target = params.get("target", None)
+            target = params.get("target")
             return self._template_material(name, color, target)
         else:
             return f"# Unsupported object type: {object_type}\n# Supported: cube, sphere, plane, camera, light, material"
@@ -252,7 +247,7 @@ class NovaBlenderAgent:
             f"print(f'Created {light_type} light: {name} (energy={energy})')\n"
         )
 
-    def _template_material(self, name: str, color: tuple, target: Optional[str]) -> str:
+    def _template_material(self, name: str, color: tuple, target: str | None) -> str:
         r, g, b = color[0], color[1], color[2]
         a = color[3] if len(color) > 3 else 1.0
         lines = [

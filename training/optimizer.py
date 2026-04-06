@@ -19,6 +19,7 @@ import torch
 
 try:
     import bitsandbytes as bnb
+
     HAS_BNB = True
 except ImportError:
     HAS_BNB = False
@@ -27,19 +28,19 @@ except ImportError:
 def create_optimizer(model, config):
     """
     Create an AdamW optimizer with separate parameter groups for decay/no-decay.
-    
+
     Args:
         model: NovaMind model
         config: NovaMindConfig with learning_rate and weight_decay
-    
+
     Returns:
         Configured AdamW optimizer
     """
     # Separate parameters into decay and no-decay groups
-    decay_params = []     # Parameters that get weight decay (2D weights)
+    decay_params = []  # Parameters that get weight decay (2D weights)
     no_decay_params = []  # Parameters that DON'T get weight decay (1D: biases, norms)
 
-    for name, param in model.named_parameters():
+    for _name, param in model.named_parameters():
         if not param.requires_grad:
             continue  # Skip frozen parameters
 
@@ -65,7 +66,7 @@ def create_optimizer(model, config):
     # Print parameter group info
     num_decay = sum(p.numel() for p in decay_params)
     num_no_decay = sum(p.numel() for p in no_decay_params)
-    print(f"[Optimizer] Decayed params:    {num_decay:,} ({num_decay/1e6:.2f}M)")
+    print(f"[Optimizer] Decayed params:    {num_decay:,} ({num_decay / 1e6:.2f}M)")
     print(f"  Non-decayed params: {num_no_decay:,}")
     print(f"  Learning rate:     {config.learning_rate}")
     print(f"  Weight decay:      {config.weight_decay}")
@@ -75,7 +76,7 @@ def create_optimizer(model, config):
         optimizer = bnb.optim.AdamW8bit(
             param_groups,
             lr=config.learning_rate,
-            betas=(0.9, 0.95),    # Beta1=0.9, Beta2=0.95 (GPT-3 settings)
+            betas=(0.9, 0.95),  # Beta1=0.9, Beta2=0.95 (GPT-3 settings)
             eps=1e-8,
         )
     else:

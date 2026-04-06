@@ -13,23 +13,24 @@ Features:
 
 import json
 from pathlib import Path
-from typing import List, Optional
 
 import torch
 
 from tokenizer.bpe import BPETrainer
 from tokenizer.special_tokens import (
-    PAD_TOKEN, BOS_TOKEN, EOS_TOKEN, UNK_TOKEN,
-    PAD_TOKEN_ID, BOS_TOKEN_ID, EOS_TOKEN_ID, UNK_TOKEN_ID,
-    NUM_SPECIAL_TOKENS, SPECIAL_TOKEN_TO_ID, ID_TO_SPECIAL_TOKEN,
+    BOS_TOKEN_ID,
+    EOS_TOKEN_ID,
+    PAD_TOKEN_ID,
     SPECIAL_TOKEN_IDS,
+    SPECIAL_TOKEN_TO_ID,
+    UNK_TOKEN_ID,
 )
 
 
 class NovaMindTokenizer:
     """
     Tokenizer for NovaMind using custom BPE.
-    
+
     Usage:
         tokenizer = NovaMindTokenizer()
         tokenizer.train(["data/file1.txt", "data/file2.txt"], vocab_size=8000)
@@ -41,15 +42,15 @@ class NovaMindTokenizer:
 
     def __init__(self):
         self.bpe = BPETrainer()
-        self._vocab = {}           # token_str → token_id
-        self._inverse_vocab = {}   # token_id → token_str
-        self._merges = []          # List of (pair_a, pair_b) merge operations
+        self._vocab = {}  # token_str → token_id
+        self._inverse_vocab = {}  # token_id → token_str
+        self._merges = []  # List of (pair_a, pair_b) merge operations
         self._trained = False
 
-    def train(self, text_files: List[str], vocab_size: int = 8000):
+    def train(self, text_files: list[str], vocab_size: int = 8000):
         """
         Train the BPE tokenizer on a list of text files.
-        
+
         Args:
             text_files: List of paths to .txt files
             vocab_size: Target vocabulary size (including special tokens)
@@ -77,7 +78,8 @@ class NovaMindTokenizer:
         # FIXED: was vocab_size - NUM_SPECIAL_TOKENS which double-subtracts
         # because BPETrainer.train() already subtracts NUM_SPECIAL_TOKENS internally (line 141)
         self._merges, self._vocab, self._inverse_vocab = self.bpe.train(
-            combined_text, vocab_size  # FIXED: pass full vocab_size — BPE handles special token offset
+            combined_text,
+            vocab_size,  # FIXED: pass full vocab_size — BPE handles special token offset
         )
 
         # Add special tokens to vocabulary
@@ -93,13 +95,13 @@ class NovaMindTokenizer:
 
         print(f"[Tokenizer] Final vocabulary size: {len(self._vocab)}")
 
-    def encode(self, text: str) -> List[int]:
+    def encode(self, text: str) -> list[int]:
         """
         Encode text to token IDs with BOS and EOS.
-        
+
         Args:
             text: Input text string
-        
+
         Returns:
             List of token IDs: [BOS, token_1, token_2, ..., token_n, EOS]
         """
@@ -119,7 +121,7 @@ class NovaMindTokenizer:
 
         return ids
 
-    def decode(self, ids: List[int]) -> str:
+    def decode(self, ids: list[int]) -> str:
         tokens = []
         for id_ in ids:
             if id_ in SPECIAL_TOKEN_IDS:
@@ -127,38 +129,40 @@ class NovaMindTokenizer:
             if id_ in self._inverse_vocab:
                 tokens.append(self._inverse_vocab[id_])
             else:
-                tokens.append('')
-        
+                tokens.append("")
+
         result = []
         for token in tokens:
-            if token.endswith('</w>'):
+            if token.endswith("</w>"):
                 result.append(token[:-4])
-                result.append(' ')
+                result.append(" ")
             else:
                 result.append(token)
-        
-        return ''.join(result).strip()
 
-    def encode_batch(self, texts: List[str]) -> List[List[int]]:
+        return "".join(result).strip()
+
+    def encode_batch(self, texts: list[str]) -> list[list[int]]:
         """
         Encode multiple texts to lists of token IDs.
-        
+
         Args:
             texts: List of text strings
-        
+
         Returns:
             List of lists of token IDs
         """
         return [self.encode(text) for text in texts]
 
-    def pad_batch(self, encoded_batch: List[List[int]], pad_to_length: int = None) -> torch.Tensor:
+    def pad_batch(
+        self, encoded_batch: list[list[int]], pad_to_length: int | None = None
+    ) -> torch.Tensor:
         """
         Pad a batch of encoded sequences to the same length.
-        
+
         Args:
             encoded_batch: List of lists of token IDs (from encode_batch)
             pad_to_length: Target length. If None, uses the longest sequence.
-        
+
         Returns:
             Padded tensor of shape (batch_size, pad_to_length)
         """
@@ -177,7 +181,7 @@ class NovaMindTokenizer:
     def save(self, path: str):
         """
         Save vocabulary and merges to JSON files.
-        
+
         Creates:
             {path}/vocab.json — token→ID mapping
             {path}/merges.json — ordered merge operations
@@ -194,16 +198,18 @@ class NovaMindTokenizer:
         with open(save_dir / "merges.json", "w", encoding="utf-8") as f:
             json.dump(merges_list, f, ensure_ascii=False, indent=2)
 
-        print(f"[Tokenizer] Saved to {save_dir} (vocab: {len(self._vocab)}, merges: {len(self._merges)})")
+        print(
+            f"[Tokenizer] Saved to {save_dir} (vocab: {len(self._vocab)}, merges: {len(self._merges)})"
+        )
 
     @classmethod
     def load(cls, path: str) -> "NovaMindTokenizer":
         """
         Load a tokenizer from saved JSON files.
-        
+
         Args:
             path: Directory containing vocab.json and merges.json
-        
+
         Returns:
             Loaded NovaMindTokenizer ready for encoding/decoding
         """
@@ -212,11 +218,11 @@ class NovaMindTokenizer:
         tokenizer = cls()
 
         # Load vocabulary
-        with open(load_dir / "vocab.json", "r", encoding="utf-8") as f:
+        with open(load_dir / "vocab.json", encoding="utf-8") as f:
             tokenizer._vocab = json.load(f)
 
         # Load merges
-        with open(load_dir / "merges.json", "r", encoding="utf-8") as f:
+        with open(load_dir / "merges.json", encoding="utf-8") as f:
             merges_list = json.load(f)
         tokenizer._merges = [(a, b) for a, b in merges_list]
 

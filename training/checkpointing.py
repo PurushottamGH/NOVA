@@ -18,9 +18,9 @@ Usage:
 """
 
 import os
-import torch
 from pathlib import Path
-from typing import Optional, List, Tuple
+
+import torch
 
 
 def save_checkpoint(
@@ -31,12 +31,12 @@ def save_checkpoint(
     loss: float,
     config,
     path: str,
-    best_val_loss: float = float('inf'),
+    best_val_loss: float = float("inf"),
     is_best: bool = False,
 ):
     """
     Save a training checkpoint.
-    
+
     Args:
         model: NovaMind model
         optimizer: Optimizer
@@ -87,16 +87,16 @@ def load_checkpoint(
     model,
     optimizer=None,
     scheduler=None,
-) -> Tuple[int, float]:
+) -> tuple[int, float]:
     """
     Load a checkpoint and restore model/optimizer/scheduler states.
-    
+
     Args:
         path: Path to checkpoint file (.pt)
         model: NovaMind model to load weights into
         optimizer: Optimizer to restore state (optional)
         scheduler: Scheduler to restore state (optional)
-    
+
     Returns:
         Tuple of (step, loss) from the checkpoint
     """
@@ -123,20 +123,20 @@ def load_checkpoint(
 
     step = checkpoint.get("step", 0)
     loss = checkpoint.get("loss", 0.0)
-    best_val_loss = checkpoint.get("best_val_loss", float('inf'))
+    best_val_loss = checkpoint.get("best_val_loss", float("inf"))
 
     print(f"[Checkpoint] Restored: step={step}, loss={loss:.4f}, best_val_loss={best_val_loss:.4f}")
 
     return step, loss
 
 
-def list_checkpoints(checkpoint_dir: str) -> List[dict]:
+def list_checkpoints(checkpoint_dir: str) -> list[dict]:
     """
     List all checkpoints in a directory, sorted by step number.
-    
+
     Args:
         checkpoint_dir: Directory containing checkpoint files
-    
+
     Returns:
         Sorted list of dicts with 'path', 'step', 'filename'
     """
@@ -148,12 +148,14 @@ def list_checkpoints(checkpoint_dir: str) -> List[dict]:
     for f in ckpt_dir.glob("step_*.pt"):
         try:
             step = int(f.stem.split("_")[1])
-            checkpoints.append({
-                "path": str(f),
-                "step": step,
-                "filename": f.name,
-                "size_mb": f.stat().st_size / 1e6,
-            })
+            checkpoints.append(
+                {
+                    "path": str(f),
+                    "step": step,
+                    "filename": f.name,
+                    "size_mb": f.stat().st_size / 1e6,
+                }
+            )
         except (ValueError, IndexError):
             continue
 
@@ -164,7 +166,7 @@ def list_checkpoints(checkpoint_dir: str) -> List[dict]:
 def delete_old_checkpoints(checkpoint_dir: str, keep_last_n: int = 3):
     """
     Delete old checkpoints, keeping only the N most recent plus 'best' and 'latest'.
-    
+
     Args:
         checkpoint_dir: Directory containing checkpoints
         keep_last_n: Number of most recent checkpoints to keep
@@ -184,14 +186,14 @@ def delete_old_checkpoints(checkpoint_dir: str, keep_last_n: int = 3):
     print(f"[Checkpoint] Kept {keep_last_n} most recent checkpoints")
 
 
-def find_latest_checkpoint(checkpoint_dir: str) -> Optional[str]:
+def find_latest_checkpoint(checkpoint_dir: str) -> str | None:
     """
     Find the latest checkpoint in a directory.
     Prefers 'latest.pt', falls back to highest step number.
-    
+
     Args:
         checkpoint_dir: Directory to search
-    
+
     Returns:
         Path to latest checkpoint, or None if not found
     """
@@ -201,7 +203,7 @@ def find_latest_checkpoint(checkpoint_dir: str) -> Optional[str]:
     latest = ckpt_dir / "checkpoint"
     if latest.exists():
         return str(latest)
-    
+
     # Check for legacy 'latest.pt'
     legacy_latest = ckpt_dir / "latest.pt"
     if legacy_latest.exists():
@@ -216,45 +218,43 @@ def find_latest_checkpoint(checkpoint_dir: str) -> Optional[str]:
 
 
 def resume_training(
-    checkpoint_dir: str,
-    model,
-    optimizer=None,
-    scheduler=None,
-    device: str = "cpu"
-) -> Tuple[int, float, float]:
+    checkpoint_dir: str, model, optimizer=None, scheduler=None, device: str = "cpu"
+) -> tuple[int, float, float]:
     """
     High-level helper to resume training from the latest checkpoint.
     Handles finding, loading, and restoring RNG state.
-    
+
     Args:
         checkpoint_dir: Directory to search for checkpoints
         model: NovaMind model
         optimizer: Optimizer (optional)
         scheduler: Scheduler (optional)
         device: Device to map tensors to
-        
+
     Returns:
         Tuple of (step, loss, best_val_loss)
     """
     latest = find_latest_checkpoint(checkpoint_dir)
     if not latest:
         print(f"  [Checkpoint] No checkpoint found in '{checkpoint_dir}' — starting fresh")
-        return 0, 0.0, float('inf')
+        return 0, 0.0, float("inf")
 
     # Load states using the existing load_checkpoint helper
     step, loss = load_checkpoint(latest, model, optimizer, scheduler)
-    
+
     # Load extra metadata (best_val_loss and rng_state)
     checkpoint = torch.load(latest, map_location=device, weights_only=False)
-    best_val_loss = checkpoint.get("best_val_loss", float('inf'))
-    
+    best_val_loss = checkpoint.get("best_val_loss", float("inf"))
+
     if "rng_state" in checkpoint:
         torch.set_rng_state(checkpoint["rng_state"])
-        
+
     print(f"  [Checkpoint] Resumed from step {step}, best_val_loss={best_val_loss:.4f}")
     return step, loss, best_val_loss
 
 
 def is_checkpoint_stable(checkpoint_dir: str) -> bool:
     """Check if a valid checkpoint file exists."""
-    return (Path(checkpoint_dir) / "checkpoint").exists() or (Path(checkpoint_dir) / "latest.pt").exists()
+    return (Path(checkpoint_dir) / "checkpoint").exists() or (
+        Path(checkpoint_dir) / "latest.pt"
+    ).exists()

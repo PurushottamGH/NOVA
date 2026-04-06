@@ -13,14 +13,14 @@ Usage:
     python -m data.collector
 """
 
-import os
 import time
-import requests
-import json
 from pathlib import Path
+
+import requests
 
 try:
     from datasets import load_dataset
+
     HAS_DATASETS = True
 except ImportError:
     HAS_DATASETS = False
@@ -32,12 +32,12 @@ OUTPUT_DIR = Path("personal_data")
 def download_with_retry(url, max_retries=3, timeout=30):
     """
     Download content from a URL with automatic retries.
-    
+
     Args:
         url: URL to download
         max_retries: Maximum number of retry attempts
         timeout: Request timeout in seconds
-    
+
     Returns:
         Response text if successful, None otherwise
     """
@@ -50,14 +50,14 @@ def download_with_retry(url, max_retries=3, timeout=30):
         except requests.RequestException as e:
             print(f"  [Retry {attempt + 1}/{max_retries}] Error: {e}")
             if attempt < max_retries - 1:
-                time.sleep(2 ** attempt)  # Exponential backoff
+                time.sleep(2**attempt)  # Exponential backoff
     return None
 
 
 def download_gutenberg_books(output_dir):
     """
     Download classic books from Project Gutenberg.
-    
+
     Includes at least 5 well-known public domain texts.
     """
     # Top 50 most popular books ID → Title mapping (Project Gutenberg)
@@ -111,7 +111,7 @@ def download_gutenberg_books(output_dir):
         "39647": "The Spanish American Reader by Ernesto Nelson",
         "205": "Walden, and On The Duty Of Civil Disobedience by Henry David Thoreau",
         "67792": "A History of Magic and Experimental Science, Volume 1 (of 2) by Lynn Thorndike",
-        "49008": "The Works of William Shakespeare [Cambridge Edition] [Vol. 8 of 9] by William Shakespeare"
+        "49008": "The Works of William Shakespeare [Cambridge Edition] [Vol. 8 of 9] by William Shakespeare",
     }
 
     total_chars = 0
@@ -135,9 +135,9 @@ def download_gutenberg_books(output_dir):
             for marker in start_markers:
                 idx = text.find(marker)
                 if idx != -1:
-                    newline_idx = text.find('\n', idx)
+                    newline_idx = text.find("\n", idx)
                     if newline_idx != -1:
-                        text = text[newline_idx + 1:]
+                        text = text[newline_idx + 1 :]
                     break
 
             for marker in end_markers:
@@ -154,7 +154,7 @@ def download_gutenberg_books(output_dir):
             downloaded += 1
             print(f"    ✓ Saved ({len(text):,} chars)")
         else:
-            print(f"    ✗ Failed to download")
+            print("    ✗ Failed to download")
 
     print(f"  Gutenberg total: {downloaded} books, {total_chars:,} characters")
     return total_chars
@@ -163,7 +163,7 @@ def download_gutenberg_books(output_dir):
 def download_wikipedia_articles(output_dir, num_articles=50000):
     """
     Download simple English Wikipedia articles via the MediaWiki API.
-    
+
     Uses the 'random' API endpoint to get diverse articles.
     """
     print(f"\n=== Downloading Wikipedia Articles ({num_articles}) ===")
@@ -206,16 +206,20 @@ def download_wikipedia_articles(output_dir, num_articles=50000):
             }
 
             try:
-                headers = {"User-Agent": "NovaMindDataBot/1.0 (https://github.com/PurushottamGH/NOVA)"}
+                headers = {
+                    "User-Agent": "NovaMindDataBot/1.0 (https://github.com/PurushottamGH/NOVA)"
+                }
                 resp = requests.get(base_url, params=params, timeout=15, headers=headers)
                 resp.raise_for_status()
                 data = resp.json()
                 pages = data.get("query", {}).get("pages", {})
 
-                for page_id, page_data in pages.items():
+                for _page_id, page_data in pages.items():
                     text = page_data.get("extract", "")
                     if len(text) > 200:  # Skip very short articles
-                        safe_title = "".join(c if c.isalnum() or c == '_' else '_' for c in title)[:50]
+                        safe_title = "".join(c if c.isalnum() or c == "_" else "_" for c in title)[
+                            :50
+                        ]
                         filename = f"wiki_{downloaded:03d}_{safe_title}.txt"
                         filepath = output_dir / filename
                         filepath.write_text(text, encoding="utf-8")
@@ -223,8 +227,10 @@ def download_wikipedia_articles(output_dir, num_articles=50000):
                         downloaded += 1
 
                         if downloaded % 20 == 0:
-                            print(f"  Downloaded {downloaded}/{num_articles} articles ({total_chars:,} chars)")
-            except Exception as e:
+                            print(
+                                f"  Downloaded {downloaded}/{num_articles} articles ({total_chars:,} chars)"
+                            )
+            except Exception:
                 continue
 
             if downloaded >= num_articles:
@@ -241,7 +247,7 @@ def download_arxiv_abstracts(output_dir, max_results=10000):
     Download paper abstracts from arXiv via their API.
     Categories: cs.AI (Artificial Intelligence) and astro-ph (Astrophysics)
     """
-    print(f"\n=== Downloading arXiv Abstracts ===")
+    print("\n=== Downloading arXiv Abstracts ===")
 
     categories = ["cs.AI", "astro-ph"]
     total_chars = 0
@@ -264,6 +270,7 @@ def download_arxiv_abstracts(output_dir, max_results=10000):
 
             # Parse XML to extract titles and abstracts
             import xml.etree.ElementTree as ET
+
             root = ET.fromstring(content)
             ns = {"atom": "http://www.w3.org/2005/Atom"}
 
@@ -273,8 +280,8 @@ def download_arxiv_abstracts(output_dir, max_results=10000):
                 title = entry.find("atom:title", ns)
                 abstract = entry.find("atom:summary", ns)
                 if title is not None and abstract is not None:
-                    title_text = title.text.strip().replace('\n', ' ')
-                    abstract_text = abstract.text.strip().replace('\n', ' ')
+                    title_text = title.text.strip().replace("\n", " ")
+                    abstract_text = abstract.text.strip().replace("\n", " ")
                     texts.append(f"Title: {title_text}\nAbstract: {abstract_text}\n")
 
             if texts:
@@ -293,23 +300,23 @@ def download_arxiv_abstracts(output_dir, max_results=10000):
 
     print(f"  arXiv total: {total_chars:,} characters")
     return total_chars
+
+
 def download_gsm8k(output_dir):
     """Math word problems — 8.5K train examples"""
     if not HAS_DATASETS:
         print("\n[Skip] GSM8K: 'datasets' library not installed.")
         return 0
     from datasets import load_dataset
+
     print("\n=== Downloading GSM8K ===")
     try:
         ds = load_dataset("gsm8k", "main", split="train")
-        
+
         texts = []
         for item in ds:
-            texts.append(
-                f"<|user|>\n{item['question']}\n"
-                f"<|assistant|>\n{item['answer']}\n"
-            )
-        
+            texts.append(f"<|user|>\n{item['question']}\n<|assistant|>\n{item['answer']}\n")
+
         out = Path(output_dir) / "gsm8k_math.txt"
         out.write_text("\n".join(texts), encoding="utf-8")
         print(f"  ✓ GSM8K: {len(texts)} math problems saved")
@@ -325,20 +332,18 @@ def download_alpaca(output_dir):
         print("\n[Skip] Alpaca: 'datasets' library not installed.")
         return 0
     from datasets import load_dataset
+
     print("\n=== Downloading Alpaca ===")
     try:
         ds = load_dataset("tatsu-lab/alpaca", split="train")
-        
+
         texts = []
         for item in ds:
-            instruction = item['instruction']
-            if item.get('input'):
+            instruction = item["instruction"]
+            if item.get("input"):
                 instruction += f"\n{item['input']}"
-            texts.append(
-                f"<|user|>\n{instruction}\n"
-                f"<|assistant|>\n{item['output']}\n"
-            )
-        
+            texts.append(f"<|user|>\n{instruction}\n<|assistant|>\n{item['output']}\n")
+
         out = Path(output_dir) / "alpaca_sft.txt"
         out.write_text("\n".join(texts), encoding="utf-8")
         print(f"  ✓ Alpaca: {len(texts)} instruction pairs saved")
@@ -354,16 +359,17 @@ def download_openassistant(output_dir):
         print("\n[Skip] OpenAssistant: 'datasets' library not installed.")
         return 0
     from datasets import load_dataset
+
     print("\n=== Downloading OpenAssistant ===")
     try:
         ds = load_dataset("OpenAssistant/oasst1", split="train")
-        
+
         # Filter to only assistant messages with high quality
         texts = []
         for item in ds:
-            if item['role'] == 'assistant' and item.get('rank', 1) == 0:
-                texts.append(item['text'])
-        
+            if item["role"] == "assistant" and item.get("rank", 1) == 0:
+                texts.append(item["text"])
+
         out = Path(output_dir) / "openassistant_sft.txt"
         out.write_text("\n".join(texts), encoding="utf-8")
         print(f"  ✓ OpenAssistant: {len(texts)} responses saved")
@@ -376,10 +382,10 @@ def download_openassistant(output_dir):
 def collect_all(output_dir=None):
     """
     Run all data collection pipelines.
-    
+
     Args:
         output_dir: Directory to save text files (default: ./personal_data/)
-    
+
     Returns:
         Total characters collected
     """
@@ -396,22 +402,22 @@ def collect_all(output_dir=None):
     total += download_gutenberg_books(output_dir)
     total += download_wikipedia_articles(output_dir, num_articles=50000)
     total += download_arxiv_abstracts(output_dir, max_results=10000)
-    
+
     # 200M Config Additions: Math, Code, SFT
     total += download_gsm8k(output_dir)
     total += download_alpaca(output_dir)
     total += download_openassistant(output_dir)
 
     # FIXED: Count files and estimate tokens
-    file_count = len(list(output_dir.glob('*.txt')))
+    file_count = len(list(output_dir.glob("*.txt")))
     estimated_tokens = total // 4  # FIXED: rough estimate — ~4 chars per token for English
 
-    print(f"\n{'='*50}")
-    print(f"  TOTAL COLLECTED: {total:,} characters ({total/1e6:.1f}M)")
+    print(f"\n{'=' * 50}")
+    print(f"  TOTAL COLLECTED: {total:,} characters ({total / 1e6:.1f}M)")
     print(f"  Files saved: {file_count}")  # FIXED: show file count
     print(f"  Estimated training tokens: {estimated_tokens:,}")  # FIXED: show token estimate
     print(f"  Directory: {output_dir.resolve()}")
-    print(f"{'='*50}")
+    print(f"{'=' * 50}")
 
     return total
 

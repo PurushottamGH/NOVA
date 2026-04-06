@@ -11,16 +11,16 @@ This includes:
 - Device selection with auto-detection
 """
 
+from dataclasses import asdict, dataclass
+
 import torch
-from dataclasses import dataclass, field, asdict
-from typing import Optional
 
 
 @dataclass
 class NovaMindConfig:
     """
     Complete hyperparameter configuration for the NovaMind language model.
-    
+
     Architecture Parameters:
         vocab_size: Size of the token vocabulary (default: 8000 for BPE)
         embed_dim: Dimensionality of token embeddings and hidden states
@@ -33,12 +33,12 @@ class NovaMindConfig:
         weight_tying: Whether to share weights between token embedding and output projection
         norm_eps: Epsilon for LayerNorm numerical stability
         initializer_range: Standard deviation for weight initialization
-    
+
     Special Token IDs:
         pad_token_id: ID for padding token
         bos_token_id: ID for beginning-of-sequence token
         eos_token_id: ID for end-of-sequence token
-    
+
     Training Parameters:
         learning_rate: Peak learning rate for AdamW optimizer
         weight_decay: L2 regularization coefficient
@@ -48,11 +48,11 @@ class NovaMindConfig:
         grad_clip: Maximum gradient norm for gradient clipping
         save_every: Save checkpoint every N steps
         eval_every: Run evaluation every N steps
-    
+
     Device:
         device: Compute device — "auto" detects cuda > mps > cpu
     """
-    
+
     # === Model Architecture ===
     vocab_size: int = 32000
     embed_dim: int = 1024
@@ -65,12 +65,12 @@ class NovaMindConfig:
     weight_tying: bool = True
     norm_eps: float = 1e-5
     initializer_range: float = 0.02
-    
+
     # === Special Token IDs ===
     pad_token_id: int = 0
     bos_token_id: int = 1
     eos_token_id: int = 2
-    
+
     # === Training Hyperparameters ===
     gradient_checkpointing: bool = False  # FIXED: added to reduce VRAM footprint
     learning_rate: float = 3e-4
@@ -79,14 +79,14 @@ class NovaMindConfig:
     max_steps: int = 5000
     batch_size: int = 4
     grad_clip: float = 1.0
-    accumulation_steps: int = 16    # FIXED: added for gradient accumulation support
+    accumulation_steps: int = 16  # FIXED: added for gradient accumulation support
     save_every: int = 500
     eval_every: int = 100
     sample_every: int = 1000  # FIXED: added to track generation quality during training
-    
+
     # === Device ===
     device: str = "auto"
-    
+
     def __post_init__(self):
         """Validate configuration and resolve device."""
         assert self.embed_dim % self.num_heads == 0, (
@@ -96,8 +96,10 @@ class NovaMindConfig:
             f"dropout must be in [0, 1), got {self.dropout}"
         )
         assert self.vocab_size > 0, f"vocab_size must be positive, got {self.vocab_size}"
-        assert self.context_length > 0, f"context_length must be positive, got {self.context_length}"
-        
+        assert self.context_length > 0, (
+            f"context_length must be positive, got {self.context_length}"
+        )
+
         # Auto-detect device if set to "auto"
         if self.device == "auto":
             if torch.cuda.is_available():
@@ -106,20 +108,20 @@ class NovaMindConfig:
                 self.device = "mps"
             else:
                 self.device = "cpu"
-    
+
     @property
     def head_dim(self) -> int:
         """Dimension of each attention head: embed_dim // num_heads."""
         return self.embed_dim // self.num_heads
-    
+
     def to_dict(self) -> dict:
         """Serialize config to a plain dictionary for saving."""
         return asdict(self)
-    
+
     @classmethod
     def from_dict(cls, d: dict) -> "NovaMindConfig":
         """Create a NovaMindConfig from a dictionary.
-        
+
         Ignores unknown keys so configs saved from future versions
         don't crash older code.
         """
@@ -175,7 +177,7 @@ class NovaMindConfig:
             learning_rate=2e-4,
             gradient_checkpointing=True,
             weight_tying=True,
-            device="cuda"
+            device="cuda",
         )
 
     @classmethod
@@ -195,9 +197,9 @@ class NovaMindConfig:
             warmup_steps=200,
             learning_rate=3e-4,
             gradient_checkpointing=False,
-            device="cuda"
+            device="cuda",
         )
-    
+
     def __repr__(self) -> str:
         """Pretty-print the configuration as a readable summary."""
         lines = [
@@ -213,7 +215,7 @@ class NovaMindConfig:
             f"║  feedforward_dim  : {self.feedforward_dim:<20} ║",
             f"║  dropout          : {self.dropout:<20} ║",
             f"║  activation       : {self.activation:<20} ║",
-            f"║  weight_tying     : {str(self.weight_tying):<20} ║",
+            f"║  weight_tying     : {self.weight_tying!s:<20} ║",
             f"║  norm_eps         : {self.norm_eps:<20} ║",
             f"║  init_range       : {self.initializer_range:<20} ║",
             "╠══════════════════════════════════════════╣",

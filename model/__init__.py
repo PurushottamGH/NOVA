@@ -11,5 +11,5 @@ Contains all model architecture components for the NovaMind LLM:
 - utils: Weight initialization, model summary, FLOP estimation
 """
 
-from model.config import NovaMindConfig
 from model.architecture import NovaMind
+from model.config import NovaMindConfig

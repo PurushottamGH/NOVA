@@ -13,14 +13,13 @@ Usage:
 """
 
 import re
-import time
 import xml.etree.ElementTree as ET
-from typing import List, Dict, Optional
-from urllib.parse import quote_plus, urljoin
+from urllib.parse import quote_plus
 
 try:
     import requests
     from bs4 import BeautifulSoup
+
     HAS_DEPS = True
 except ImportError:
     HAS_DEPS = False
@@ -64,7 +63,7 @@ class NovaWebSearch:
     #  DuckDuckGo search
     # ------------------------------------------------------------------ #
 
-    def search(self, query: str, num_results: int = 5) -> List[Dict]:
+    def search(self, query: str, num_results: int = 5) -> list[dict]:
         """
         Search the web using DuckDuckGo HTML interface.
 
@@ -105,18 +104,21 @@ class NovaWebSearch:
             href = title_tag.get("href", "")
             if "uddg=" in href:
                 # Extract actual URL from redirect parameter
-                match = re.search(r'uddg=([^&]+)', href)
+                match = re.search(r"uddg=([^&]+)", href)
                 if match:
                     from urllib.parse import unquote
+
                     href = unquote(match.group(1))
 
             snippet = snippet_tag.get_text(strip=True) if snippet_tag else ""
 
-            results.append({
-                "title": title,
-                "url": href,
-                "snippet": snippet,
-            })
+            results.append(
+                {
+                    "title": title,
+                    "url": href,
+                    "snippet": snippet,
+                }
+            )
 
         return results
 
@@ -199,7 +201,7 @@ class NovaWebSearch:
     #  arXiv search
     # ------------------------------------------------------------------ #
 
-    def search_arxiv(self, query: str, max_results: int = 5) -> List[Dict]:
+    def search_arxiv(self, query: str, max_results: int = 5) -> list[dict]:
         """
         Search arXiv for academic papers.
 
@@ -257,19 +259,25 @@ class NovaWebSearch:
 
             title = title_el.text.strip() if title_el is not None and title_el.text else ""
             # Clean up multiline titles/abstracts
-            title = re.sub(r'\s+', ' ', title)
+            title = re.sub(r"\s+", " ", title)
 
             abstract = summary_el.text.strip() if summary_el is not None and summary_el.text else ""
-            abstract = re.sub(r'\s+', ' ', abstract)
+            abstract = re.sub(r"\s+", " ", abstract)
 
-            date = published_el.text.strip()[:10] if published_el is not None and published_el.text else ""
+            date = (
+                published_el.text.strip()[:10]
+                if published_el is not None and published_el.text
+                else ""
+            )
 
-            papers.append({
-                "title": title,
-                "abstract": abstract,
-                "authors": authors,
-                "url": paper_url,
-                "date": date,
-            })
+            papers.append(
+                {
+                    "title": title,
+                    "abstract": abstract,
+                    "authors": authors,
+                    "url": paper_url,
+                    "date": date,
+                }
+            )
 
         return papers

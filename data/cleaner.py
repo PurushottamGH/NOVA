@@ -18,7 +18,6 @@ Usage:
 import re
 import unicodedata
 from pathlib import Path
-from typing import List
 
 
 def normalize_unicode(text: str) -> str:
@@ -31,13 +30,16 @@ def normalize_unicode(text: str) -> str:
 
     # Replace common special characters
     replacements = {
-        '\u2018': "'", '\u2019': "'",  # Smart single quotes → apostrophe
-        '\u201c': '"', '\u201d': '"',  # Smart double quotes → double quote
-        '\u2014': ' — ', '\u2013': ' - ',  # Em/en dashes
-        '\u2026': '...',              # Ellipsis
-        '\u00a0': ' ',               # Non-breaking space
-        '\u200b': '',                # Zero-width space
-        '\ufeff': '',                # BOM
+        "\u2018": "'",
+        "\u2019": "'",  # Smart single quotes → apostrophe
+        "\u201c": '"',
+        "\u201d": '"',  # Smart double quotes → double quote
+        "\u2014": " — ",
+        "\u2013": " - ",  # Em/en dashes
+        "\u2026": "...",  # Ellipsis
+        "\u00a0": " ",  # Non-breaking space
+        "\u200b": "",  # Zero-width space
+        "\ufeff": "",  # BOM
     }
     for old, new in replacements.items():
         text = text.replace(old, new)
@@ -49,13 +51,13 @@ def remove_control_chars(text: str) -> str:
     """Remove non-printable control characters except newlines and tabs."""
     cleaned = []
     for char in text:
-        if char in ('\n', '\t', '\r'):
+        if char in ("\n", "\t", "\r"):
             cleaned.append(char)
-        elif unicodedata.category(char) in ('Cc', 'Cf'):
+        elif unicodedata.category(char) in ("Cc", "Cf"):
             continue  # Skip control and format characters
         else:
             cleaned.append(char)
-    return ''.join(cleaned)
+    return "".join(cleaned)
 
 
 def normalize_whitespace(text: str) -> str:
@@ -66,17 +68,17 @@ def normalize_whitespace(text: str) -> str:
     - Trim trailing whitespace on each line
     """
     # Replace tabs with spaces
-    text = text.replace('\t', '    ')
+    text = text.replace("\t", "    ")
 
     # Collapse multiple spaces on the same line
-    text = re.sub(r'[^\S\n]+', ' ', text)
+    text = re.sub(r"[^\S\n]+", " ", text)
 
     # Collapse 3+ consecutive newlines to 2 (paragraph break)
-    text = re.sub(r'\n{3,}', '\n\n', text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
 
     # Trim trailing whitespace on each line
-    lines = [line.rstrip() for line in text.split('\n')]
-    text = '\n'.join(lines)
+    lines = [line.rstrip() for line in text.split("\n")]
+    text = "\n".join(lines)
 
     return text
 
@@ -86,35 +88,35 @@ def remove_short_lines(text: str, min_length: int = 10) -> str:
     Remove lines that are too short to be meaningful content.
     These are usually headers, page numbers, or formatting artifacts.
     """
-    lines = text.split('\n')
+    lines = text.split("\n")
     filtered = []
     for line in lines:
         stripped = line.strip()
         if len(stripped) == 0:
-            filtered.append('')  # Keep empty lines for paragraph breaks
+            filtered.append("")  # Keep empty lines for paragraph breaks
         elif len(stripped) >= min_length:
             filtered.append(line)
         # Skip lines with < min_length non-empty chars (noise)
-    return '\n'.join(filtered)
+    return "\n".join(filtered)
 
 
 def remove_duplicate_lines(text: str) -> str:
     """Remove consecutive duplicate lines."""
-    lines = text.split('\n')
+    lines = text.split("\n")
     if not lines:
         return text
 
     filtered = [lines[0]]
     for line in lines[1:]:
-        if line.strip() != filtered[-1].strip() or line.strip() == '':
+        if line.strip() != filtered[-1].strip() or line.strip() == "":
             filtered.append(line)
-    return '\n'.join(filtered)
+    return "\n".join(filtered)
 
 
 def clean_text(text: str, min_line_length: int = 10) -> str:
     """
     Apply the full cleaning pipeline to a text string.
-    
+
     Pipeline:
     1. Unicode normalization
     2. Remove control characters
@@ -122,11 +124,11 @@ def clean_text(text: str, min_line_length: int = 10) -> str:
     4. Remove short lines
     5. Remove duplicate lines
     6. Final strip
-    
+
     Args:
         text: Raw input text
         min_line_length: Minimum line length to keep
-    
+
     Returns:
         Cleaned text string
     """
@@ -139,14 +141,14 @@ def clean_text(text: str, min_line_length: int = 10) -> str:
     return text
 
 
-def clean_file(input_path: str, output_path: str = None) -> str:
+def clean_file(input_path: str, output_path: str | None = None) -> str:
     """
     Clean a single text file.
-    
+
     Args:
         input_path: Path to the raw text file
         output_path: Path to save cleaned text (if None, overwrites input)
-    
+
     Returns:
         Cleaned text
     """
@@ -163,24 +165,23 @@ def clean_file(input_path: str, output_path: str = None) -> str:
     Path(output_path).write_text(cleaned, encoding="utf-8")
 
     reduction = (1 - cleaned_len / original_len) * 100 if original_len > 0 else 0
-    print(f"  Cleaned {path.name}: {original_len:,} → {cleaned_len:,} chars ({reduction:.1f}% reduction)")
+    print(
+        f"  Cleaned {path.name}: {original_len:,} → {cleaned_len:,} chars ({reduction:.1f}% reduction)"
+    )
 
     return cleaned
 
 
-def clean_directory(input_dir: str, output_dir: str = None):
+def clean_directory(input_dir: str, output_dir: str | None = None):
     """
     Clean all .txt files in a directory.
-    
+
     Args:
         input_dir: Directory with raw text files
         output_dir: Directory for cleaned files (if None, creates 'cleaned/' subdir)
     """
     input_path = Path(input_dir)
-    if output_dir is None:
-        output_path = input_path / "cleaned"
-    else:
-        output_path = Path(output_dir)
+    output_path = input_path / "cleaned" if output_dir is None else Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
 
     txt_files = list(input_path.glob("*.txt"))
@@ -210,6 +211,7 @@ def clean_directory(input_dir: str, output_dir: str = None):
 
 if __name__ == "__main__":
     import sys
+
     input_dir = sys.argv[1] if len(sys.argv) > 1 else "personal_data"
     output_dir = sys.argv[2] if len(sys.argv) > 2 else None
     clean_directory(input_dir, output_dir)

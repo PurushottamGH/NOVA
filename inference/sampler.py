@@ -26,10 +26,10 @@ import torch.nn.functional as F
 def greedy_sample(logits: torch.Tensor) -> torch.Tensor:
     """
     Greedy sampling: always select the token with highest probability.
-    
+
     Args:
         logits: (vocab_size,) unnormalized log-probabilities
-    
+
     Returns:
         Single token ID (scalar tensor)
     """
@@ -39,17 +39,17 @@ def greedy_sample(logits: torch.Tensor) -> torch.Tensor:
 def temperature_sample(logits: torch.Tensor, temperature: float = 1.0) -> torch.Tensor:
     """
     Sample from logits scaled by temperature.
-    
+
     temperature < 1.0: Sharper distribution (more confident, less random)
     temperature = 1.0: No change (standard sampling)
     temperature > 1.0: Flatter distribution (more random, more creative)
-    
+
     Math: P(token) = softmax(logits / temperature)
-    
+
     Args:
         logits: (vocab_size,) unnormalized log-probabilities
         temperature: Scaling factor (must be > 0)
-    
+
     Returns:
         Sampled token ID (scalar tensor)
     """
@@ -62,14 +62,14 @@ def temperature_sample(logits: torch.Tensor, temperature: float = 1.0) -> torch.
 def top_k_sample(logits: torch.Tensor, k: int = 50) -> torch.Tensor:
     """
     Top-k sampling: keep only the k most probable tokens.
-    
+
     All tokens outside the top-k have their logits set to -inf,
     which gives them zero probability after softmax.
-    
+
     Args:
         logits: (vocab_size,) unnormalized log-probabilities
         k: Number of top tokens to keep
-    
+
     Returns:
         Filtered logits (vocab_size,) with non-top-k set to -inf
     """
@@ -82,7 +82,7 @@ def top_k_sample(logits: torch.Tensor, k: int = 50) -> torch.Tensor:
 
     # Set all values below threshold to -inf
     filtered = logits.clone()
-    filtered[filtered < threshold] = float('-inf')
+    filtered[filtered < threshold] = float("-inf")
     return filtered  # (vocab_size,)
 
 
@@ -90,15 +90,15 @@ def top_p_sample(logits: torch.Tensor, p: float = 0.9) -> torch.Tensor:
     """
     Nucleus (top-p) sampling: keep the smallest set of tokens
     whose cumulative probability mass >= p.
-    
+
     This adaptively adjusts the number of tokens considered:
     - When the model is confident, fewer tokens are kept
     - When uncertain, more tokens are kept
-    
+
     Args:
         logits: (vocab_size,) unnormalized log-probabilities
         p: Cumulative probability threshold (0.0 to 1.0)
-    
+
     Returns:
         Filtered logits (vocab_size,) with low-prob tokens set to -inf
     """
@@ -124,29 +124,27 @@ def top_p_sample(logits: torch.Tensor, p: float = 0.9) -> torch.Tensor:
 
     # Set removed tokens to -inf
     filtered = logits.clone()
-    filtered[indices_to_remove] = float('-inf')
+    filtered[indices_to_remove] = float("-inf")
     return filtered  # (vocab_size,)
 
 
 def apply_repetition_penalty(
-    logits: torch.Tensor,
-    generated_ids: list,
-    penalty: float = 1.1
+    logits: torch.Tensor, generated_ids: list, penalty: float = 1.1
 ) -> torch.Tensor:
     """
     Reduce the probability of tokens that have already been generated.
-    
+
     For each previously generated token:
     - If its logit is positive: divide by penalty (reduce probability)
     - If its logit is negative: multiply by penalty (make more negative)
-    
+
     This discourages the model from repeating itself.
-    
+
     Args:
         logits: (vocab_size,) unnormalized log-probabilities
         generated_ids: List of previously generated token IDs
         penalty: Repetition penalty factor (1.0 = no penalty)
-    
+
     Returns:
         Modified logits (vocab_size,)
     """
@@ -172,18 +170,18 @@ def combined_sample(
     top_k: int = 40,
     top_p: float = 0.9,
     repetition_penalty: float = 1.3,
-    generated_ids: list = None,
+    generated_ids: list | None = None,
 ) -> torch.Tensor:
     """
     Apply all sampling strategies in the correct order and sample a token.
-    
+
     Pipeline:
     1. Repetition penalty (on raw logits)
     2. Temperature scaling
     3. Top-k filtering
     4. Top-p filtering
     5. Sample from the resulting distribution
-    
+
     Args:
         logits: (vocab_size,) unnormalized log-probabilities
         temperature: Sampling temperature
@@ -191,7 +189,7 @@ def combined_sample(
         top_p: Nucleus sampling threshold (1.0 = disabled)
         repetition_penalty: Penalty for repeated tokens (1.0 = disabled)
         generated_ids: List of previously generated token IDs
-    
+
     Returns:
         Sampled token ID (scalar tensor)
     """

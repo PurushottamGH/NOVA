@@ -18,8 +18,8 @@ References:
 - Sennrich et al., 2016: "Neural Machine Translation of Rare Words with Subword Units"
 """
 
-import re
-from collections import Counter, defaultdict
+from collections import Counter
+
 from tqdm import tqdm
 
 from tokenizer.special_tokens import NUM_SPECIAL_TOKENS
@@ -28,26 +28,26 @@ from tokenizer.special_tokens import NUM_SPECIAL_TOKENS
 class BPETrainer:
     """
     Trains a BPE vocabulary from raw text.
-    
+
     The trainer learns a list of merge operations that define how to
     split text into subword tokens. These merges are then used by the
     tokenizer to encode new text.
     """
 
     def __init__(self):
-        self.merges = []         # Ordered list of (pair_a, pair_b) merges
-        self.vocab = {}          # token → ID mapping
+        self.merges = []  # Ordered list of (pair_a, pair_b) merges
+        self.vocab = {}  # token → ID mapping
         self.inverse_vocab = {}  # ID → token mapping
 
     @staticmethod
     def get_stats(word_freqs):
         """
         Count frequency of all adjacent symbol pairs across the vocabulary.
-        
+
         Args:
             word_freqs: dict mapping tuple-of-symbols → frequency
                         e.g., {('l', 'o', 'w'): 5, ('l', 'o', 'w', 'e', 'r'): 2}
-        
+
         Returns:
             Counter of (symbol_a, symbol_b) → total frequency
         """
@@ -64,11 +64,11 @@ class BPETrainer:
     def merge_vocab(pair, word_freqs):
         """
         Merge all occurrences of `pair` into a single symbol in the vocabulary.
-        
+
         Args:
             pair: Tuple (symbol_a, symbol_b) to merge
             word_freqs: dict mapping tuple-of-symbols → frequency
-        
+
         Returns:
             New word_freqs dict with the pair merged everywhere
         """
@@ -94,11 +94,11 @@ class BPETrainer:
     def train(self, text, vocab_size):
         """
         Train BPE on the given text until vocab_size is reached.
-        
+
         Args:
             text: Raw training text (string)
             vocab_size: Target vocabulary size (including special tokens)
-        
+
         Returns:
             Tuple of (merges_list, vocab_dict, inverse_vocab_dict)
         """
@@ -109,7 +109,7 @@ class BPETrainer:
         # Step 1: Tokenize text into words (split on whitespace, keep the space as prefix)
         # We use a simple whitespace-based pre-tokenization
         words = text.split()
-        
+
         # Count word frequencies
         word_freq_counter = Counter(words)
 
@@ -118,12 +118,12 @@ class BPETrainer:
         word_freqs = {}
         for word, freq in word_freq_counter.items():
             # Convert word to tuple of characters with end-of-word marker '▁'
-            char_tuple = tuple(word) + ('</w>',)
+            char_tuple = (*tuple(word), "</w>")
             word_freqs[char_tuple] = freq
 
         # Collect all unique characters as initial vocabulary
         char_vocab = set()
-        for word_tuple in word_freqs.keys():
+        for word_tuple in word_freqs:
             for char in word_tuple:
                 char_vocab.add(char)
 
@@ -186,15 +186,15 @@ class BPETrainer:
     def apply_merges(self, word):
         """
         Apply learned BPE merges to tokenize a single word.
-        
+
         Args:
             word: String to tokenize
-        
+
         Returns:
             List of subword token strings
         """
         # Start with character-level split with end-of-word marker
-        symbols = list(word) + ['</w>']
+        symbols = [*list(word), "</w>"]
 
         # Apply each merge operation in order
         for pair in self.merges:
@@ -211,10 +211,10 @@ class BPETrainer:
     def tokenize(self, text):
         """
         Tokenize a full text string using learned BPE merges.
-        
+
         Args:
             text: Input text string
-        
+
         Returns:
             List of subword token strings
         """
@@ -235,14 +235,15 @@ class BPETrainer:
     def encode_tokens(self, tokens):
         """
         Convert token strings to integer IDs.
-        
+
         Args:
             tokens: List of token strings from tokenize()
-        
+
         Returns:
             List of integer token IDs
         """
         from tokenizer.special_tokens import UNK_TOKEN_ID
+
         ids = []
         for token in tokens:
             if token in self.vocab:
@@ -254,14 +255,15 @@ class BPETrainer:
     def decode_ids(self, ids):
         """
         Convert integer IDs back to text.
-        
+
         Args:
             ids: List of integer token IDs
-        
+
         Returns:
             Decoded text string
         """
         from tokenizer.special_tokens import SPECIAL_TOKEN_IDS
+
         tokens = []
         for id_ in ids:
             if id_ in SPECIAL_TOKEN_IDS:
@@ -269,8 +271,8 @@ class BPETrainer:
             if id_ in self.inverse_vocab:
                 tokens.append(self.inverse_vocab[id_])
             else:
-                tokens.append('')
-        text = ''.join(tokens)
+                tokens.append("")
+        text = "".join(tokens)
         # Remove end-of-word markers and add spaces
-        text = text.replace('</w>', ' ')
+        text = text.replace("</w>", " ")
         return text.strip()

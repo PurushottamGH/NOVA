@@ -16,20 +16,20 @@ The sliding window with configurable stride controls overlap:
 - stride == 1: maximum overlap (each token is a new sample)
 """
 
+from pathlib import Path
+
 import torch
 from torch.utils.data import Dataset
-from pathlib import Path
-from typing import List
 from tqdm import tqdm
 
 
 class NovaMindDataset(Dataset):
     """
     PyTorch Dataset for NovaMind training.
-    
+
     Loads text files, tokenizes them, and creates overlapping chunks
     using a sliding window for next-token prediction training.
-    
+
     Args:
         text_files: List of paths to .txt files
         tokenizer: NovaMindTokenizer instance (already trained)
@@ -37,8 +37,9 @@ class NovaMindDataset(Dataset):
         stride: Step size for the sliding window (controls overlap)
     """
 
-    def __init__(self, text_files: List[str], tokenizer, context_length: int = 512,
-                 stride: int = None):
+    def __init__(
+        self, text_files: list[str], tokenizer, context_length: int = 512, stride: int | None = None
+    ):
         super().__init__()
 
         self.context_length = context_length
@@ -75,18 +76,20 @@ class NovaMindDataset(Dataset):
         # Each chunk needs context_length + 1 tokens (input + 1 shifted target)
         chunk_size = context_length + 1
 
-        print(f"[Dataset] Creating chunks (context_length={context_length}, stride={self.stride})...")
+        print(
+            f"[Dataset] Creating chunks (context_length={context_length}, stride={self.stride})..."
+        )
         for start in range(0, len(token_tensor) - chunk_size + 1, self.stride):
-            chunk = token_tensor[start: start + chunk_size]  # (context_length + 1,)
+            chunk = token_tensor[start : start + chunk_size]  # (context_length + 1,)
 
-            input_ids = chunk[:-1]   # First context_length tokens: (context_length,)
-            target_ids = chunk[1:]   # Last context_length tokens: (context_length,)
+            input_ids = chunk[:-1]  # First context_length tokens: (context_length,)
+            target_ids = chunk[1:]  # Last context_length tokens: (context_length,)
 
             self.chunks.append((input_ids, target_ids))
 
         # Print dataset statistics
         coverage = (len(self.chunks) * self.stride) / max(total_tokens, 1) * 100
-        print(f"\n[Dataset] Statistics:")
+        print("\n[Dataset] Statistics:")
         print(f"  Total tokens:     {total_tokens:,}")
         print(f"  Total chunks:     {len(self.chunks):,}")
         print(f"  Context length:   {context_length}")
@@ -100,7 +103,7 @@ class NovaMindDataset(Dataset):
     def __getitem__(self, idx: int):
         """
         Get a single training sample.
-        
+
         Returns:
             Tuple of (input_ids, target_ids), each of shape (context_length,)
         """

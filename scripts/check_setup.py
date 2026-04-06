@@ -7,8 +7,8 @@ Usage:
     python scripts/check_setup.py
 """
 
-import sys
 import importlib
+import sys
 from pathlib import Path
 
 
@@ -19,7 +19,7 @@ def check_python_version():
     status = "OK" if ok else "FAIL"
     print(f"  [{status}] Python version: {version.major}.{version.minor}.{version.micro}", end="")
     if not ok:
-        print(f" (need >= 3.9)")
+        print(" (need >= 3.9)")
     else:
         print()
     return ok
@@ -29,14 +29,15 @@ def check_pytorch():
     """Check PyTorch is installed and report version + CUDA."""
     try:
         import torch
+
         print(f"  [OK]   PyTorch version: {torch.__version__}")
         if torch.cuda.is_available():
             print(f"  [OK]   CUDA available: {torch.cuda.get_device_name(0)}")
         else:
-            print(f"  [WARN] CUDA not available — training will be slow on CPU")
+            print("  [WARN] CUDA not available — training will be slow on CPU")
         return True
     except ImportError:
-        print(f"  [FAIL] PyTorch not installed — run: pip install torch")
+        print("  [FAIL] PyTorch not installed — run: pip install torch")
         return False
 
 
@@ -44,17 +45,29 @@ def check_dependencies():
     """Check all required and optional packages."""
     # Core requirements
     required = [
-        "numpy", "tqdm", "matplotlib", "requests", "colorama", "psutil",
-        "sentence_transformers", "faiss", "rich", "prompt_toolkit",
-        "bitsandbytes", "datasets", "huggingface_hub", "sympy", "chromadb"
+        "numpy",
+        "tqdm",
+        "matplotlib",
+        "requests",
+        "colorama",
+        "psutil",
+        "sentence_transformers",
+        "faiss",
+        "rich",
+        "prompt_toolkit",
+        "bitsandbytes",
+        "datasets",
+        "huggingface_hub",
+        "sympy",
+        "chromadb",
     ]
-    
+
     # Optional dependencies for NovaFileParser
     optional = {
         "fitz": "PyMuPDF (required for PDF parsing)",
-        "docx": "python-docx (required for Word parsing)"
+        "docx": "python-docx (required for Word parsing)",
     }
-    
+
     all_ok = True
     print("\n  [Core Dependencies]")
     for dep in required:
@@ -83,19 +96,39 @@ def check_project_files():
     project_root = Path(__file__).resolve().parent.parent
 
     required_files = [
-        "model/__init__.py", "model/config.py", "model/attention.py",
-        "model/positional.py", "model/feedforward.py", "model/block.py",
-        "model/architecture.py", "model/utils.py",
-        "tokenizer/__init__.py", "tokenizer/bpe.py", "tokenizer/special_tokens.py",
+        "model/__init__.py",
+        "model/config.py",
+        "model/attention.py",
+        "model/positional.py",
+        "model/feedforward.py",
+        "model/block.py",
+        "model/architecture.py",
+        "model/utils.py",
+        "tokenizer/__init__.py",
+        "tokenizer/bpe.py",
+        "tokenizer/special_tokens.py",
         "tokenizer/tokenizer.py",
-        "data/__init__.py", "data/collector.py", "data/cleaner.py",
-        "data/dataset.py", "data/dataloader.py",
-        "training/__init__.py", "training/optimizer.py", "training/scheduler.py",
-        "training/loss.py", "training/trainer.py", "training/checkpointing.py",
+        "data/__init__.py",
+        "data/collector.py",
+        "data/cleaner.py",
+        "data/dataset.py",
+        "data/dataloader.py",
+        "training/__init__.py",
+        "training/optimizer.py",
+        "training/scheduler.py",
+        "training/loss.py",
+        "training/trainer.py",
+        "training/checkpointing.py",
         "training/train.py",
-        "inference/__init__.py", "inference/sampler.py", "inference/generate.py",
-        "inference/chat.py", "inference/evaluate.py",
-        "main.py", "requirements.txt", "setup.py", "test_all.py",
+        "inference/__init__.py",
+        "inference/sampler.py",
+        "inference/generate.py",
+        "inference/chat.py",
+        "inference/evaluate.py",
+        "main.py",
+        "requirements.txt",
+        "setup.py",
+        "test_all.py",
     ]
 
     missing = []
@@ -118,12 +151,12 @@ def check_data_dir():
     data_dir = project_root / "personal_data"
 
     if not data_dir.exists():
-        print(f"  [WARN] personal_data/ directory not found — run: python -m data.collector")
+        print("  [WARN] personal_data/ directory not found — run: python -m data.collector")
         return False
 
     txt_files = list(data_dir.glob("*.txt"))
     if not txt_files:
-        print(f"  [WARN] No .txt files in personal_data/ — run: python -m data.collector")
+        print("  [WARN] No .txt files in personal_data/ — run: python -m data.collector")
         return False
 
     total_chars = sum(f.stat().st_size for f in txt_files)

@@ -10,7 +10,7 @@ and provides both blocking and streaming chat interfaces.
 Drop-in replacement for Groq:
     # Before (Groq):
     # response = groq_client.chat.completions.create(messages=messages)
-    
+
     # After (NovaMind):
     engine = NovaChatEngine("weights/final_model", "weights/tokenizer")
     response = engine.chat("Hello!", history=[])
@@ -18,25 +18,24 @@ Drop-in replacement for Groq:
 System prompt is hardcoded for Nova's personality.
 """
 
+from collections.abc import Generator
+
 import torch
-from pathlib import Path
-from typing import List, Dict, Generator
 
 # 1. Use all CPU cores for maximum inference speed
 torch.set_num_threads(torch.get_num_threads())
 torch.set_num_interop_threads(2)
 
+
 # 2. Dynamic Quantization + 3. Compilation
 def optimize_model(model):
     model.eval()
     device = next(model.parameters()).device
-    
+
     # 1. Quantization only works on CPU
     if device.type == "cpu":
         print("[NovaChatEngine] Applying dynamic quantization for CPU speedup...")
-        model = torch.quantization.quantize_dynamic(
-            model, {torch.nn.Linear}, dtype=torch.qint8
-        )
+        model = torch.quantization.quantize_dynamic(model, {torch.nn.Linear}, dtype=torch.qint8)
     else:
         # On GPU, we use Half Precision (FP16) for a 2x speed boost instead
         print(f"[NovaChatEngine] Using FP16 acceleration on {device}")
@@ -55,15 +54,16 @@ def optimize_model(model):
             return compiled_model
         return base_model
     except Exception as e:
-        print(f"[NovaChatEngine] Running without compile (Compiler not available: {type(e).__name__})")
+        print(
+            f"[NovaChatEngine] Running without compile (Compiler not available: {type(e).__name__})"
+        )
         return base_model
 
-from model.architecture import NovaMind
-from model.config import NovaMindConfig
-from tokenizer.tokenizer import NovaMindTokenizer
-from inference.generate import stream_generate, generate_text
-from nova_modules.math_engine import NovaMathEngine  # FIXED: added for symbolic math support
 
+from inference.generate import generate_text, stream_generate
+from model.architecture import NovaMind
+from nova_modules.math_engine import NovaMathEngine  # FIXED: added for symbolic math support
+from tokenizer.tokenizer import NovaMindTokenizer
 
 # Nova's system prompt — defines the AI personality
 NOVA_SYSTEM_PROMPT = (
@@ -76,15 +76,15 @@ NOVA_SYSTEM_PROMPT = (
 class NovaChatEngine:
     """
     Conversational AI engine for Nova — drop-in replacement for Groq API.
-    
+
     Usage in FastAPI:
         engine = NovaChatEngine("weights/final_model", "weights/tokenizer")
-        
+
         @app.post("/chat")
         async def chat(request: ChatRequest):
             response = engine.chat(request.message, request.history)
             return {"response": response}
-    
+
     Args:
         model_path: Path to saved NovaMind model directory
         tokenizer_path: Path to saved tokenizer directory
@@ -122,39 +122,40 @@ class NovaChatEngine:
         self.tokenizer = NovaMindTokenizer.load(tokenizer_path)
 
         # Conversation history
-        self._history: List[Dict[str, str]] = []
+        self._history: list[dict[str, str]] = []
 
         # Specialized Engines
         self.math_engine = NovaMathEngine()  # FIXED: added to handle exact math tasks
 
         from nova_modules.memory import NovaMemory
+
         self.memory = NovaMemory()
 
         print(f"[NovaChatEngine] Ready on {device}")
 
-    def _format_prompt(self, user_message: str, history: List[Dict[str, str]] = None) -> str:
+    def _format_prompt(self, user_message: str, history: list[dict[str, str]] | None = None) -> str:
         """
         Format conversation history + new message into a prompt string.
-        
+
         FIXED: System prompt is ALWAYS first. Context overflow drops oldest turns.
-        
+
         Format:
             System: {NOVA_SYSTEM_PROMPT}
             User: {message_1}
             Nova: {response_1}
             User: {message_2}
             Nova:
-        
+
         Args:
             user_message: The new user message
             history: List of {"role": "user"/"nova", "content": "..."} dicts
-        
+
         Returns:
             Formatted prompt string
         """
         if history is None:
             history = []
-        
+
         # Limiting history to last 6 turns (3 pairs) for focused context
         if len(history) > 6:
             history = history[-6:]
@@ -204,17 +205,17 @@ class NovaChatEngine:
 
         return prompt
 
-    def chat(self, user_message: str, history: List[Dict[str, str]] = None) -> str:
+    def chat(self, user_message: str, history: list[dict[str, str]] | None = None) -> str:
         """
         Generate a response to the user's message.
-        
+
         This is the main chat interface — a drop-in replacement for Groq API.
-        
+
         Args:
             user_message: The user's message text
             history: Conversation history as list of {"role": ..., "content": ...}
                      If None, uses internal history
-        
+
         Returns:
             Nova's response text
         """
@@ -227,10 +228,7 @@ class NovaChatEngine:
         if math_result:
             # Still pass through NovaMind for explanation/context
             print(f"  [Chat] Math detected: {math_result}")
-            processed_message = (
-                f"{user_message}\n"
-                f"[Math Engine Result: {math_result}]"
-            )
+            processed_message = f"{user_message}\n[Math Engine Result: {math_result}]"
 
         # Inject memory context
         memory_ctx = self.memory.inject_memory(processed_message)
@@ -270,12 +268,20 @@ class NovaChatEngine:
                 nova_response = nova_response.split("<|user|>")[0].strip()
 
             # FIXED: check if response is actually meaningful
-            if nova_response.strip() and nova_response.strip() not in ("", "[EOS]", "[PAD]", "<EOS>", "<PAD>"):
+            if nova_response.strip() and nova_response.strip() not in (
+                "",
+                "[EOS]",
+                "[PAD]",
+                "<EOS>",
+                "<PAD>",
+            ):
                 break  # Got a valid response
 
             # Retry with higher temperature
             temperature = min(temperature + 0.3, 2.0)  # FIXED: increase randomness on retry
-            print(f"  [Chat] Empty response, retrying with temperature={temperature:.1f} (attempt {attempt + 1}/3)")
+            print(
+                f"  [Chat] Empty response, retrying with temperature={temperature:.1f} (attempt {attempt + 1}/3)"
+            )
         else:
             # FIXED: all retries failed — return a fallback message
             nova_response = "I need more training data to answer that."
@@ -290,18 +296,18 @@ class NovaChatEngine:
         return nova_response
 
     def stream_chat(
-        self, user_message: str, history: List[Dict[str, str]] = None
+        self, user_message: str, history: list[dict[str, str]] | None = None
     ) -> Generator[str, None, None]:
         """
         Stream a response token by token (generator interface).
-        
+
         Yields individual tokens as they are generated, enabling
         real-time streaming in a FastAPI endpoint.
-        
+
         Args:
             user_message: The user's message
             history: Conversation history
-        
+
         Yields:
             Individual token strings as they are generated
         """
@@ -345,6 +351,6 @@ class NovaChatEngine:
         print("[NovaChatEngine] History cleared")
 
     @property
-    def history(self) -> List[Dict[str, str]]:
+    def history(self) -> list[dict[str, str]]:
         """Get current conversation history."""
         return self._history.copy()

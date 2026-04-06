@@ -12,12 +12,10 @@ Usage:
     results = fs.search_in_files("training/", "learning_rate")
 """
 
-import os
-import sys
 import subprocess
+import sys
 import time
 from pathlib import Path
-from typing import Dict, List, Optional
 
 
 class NovaFileSystem:
@@ -37,7 +35,7 @@ class NovaFileSystem:
     #  Read
     # ------------------------------------------------------------------ #
 
-    def read_file(self, path: str) -> Dict:
+    def read_file(self, path: str) -> dict:
         """
         Read a text file and return its content with metadata.
 
@@ -86,7 +84,7 @@ class NovaFileSystem:
     #  Write
     # ------------------------------------------------------------------ #
 
-    def write_file(self, path: str, content: str) -> Dict:
+    def write_file(self, path: str, content: str) -> dict:
         """
         Write content to a file, creating parent directories if needed.
 
@@ -117,7 +115,7 @@ class NovaFileSystem:
     #  Edit (search and replace)
     # ------------------------------------------------------------------ #
 
-    def edit_file(self, path: str, old_text: str, new_text: str) -> Dict:
+    def edit_file(self, path: str, old_text: str, new_text: str) -> dict:
         """
         Find old_text in a file and replace it with new_text.
 
@@ -167,7 +165,7 @@ class NovaFileSystem:
     #  List directory
     # ------------------------------------------------------------------ #
 
-    def list_directory(self, path: str) -> Dict:
+    def list_directory(self, path: str) -> dict:
         """
         List files and folders in a directory with sizes.
 
@@ -200,21 +198,25 @@ class NovaFileSystem:
             for entry in sorted(p.iterdir()):
                 if entry.is_file():
                     size = entry.stat().st_size
-                    files.append({
-                        "name": entry.name,
-                        "size_bytes": size,
-                        "size_human": self._human_size(size),
-                    })
+                    files.append(
+                        {
+                            "name": entry.name,
+                            "size_bytes": size,
+                            "size_human": self._human_size(size),
+                        }
+                    )
                 elif entry.is_dir():
                     # Count children for context
                     try:
                         child_count = sum(1 for _ in entry.iterdir())
                     except PermissionError:
                         child_count = -1
-                    folders.append({
-                        "name": entry.name,
-                        "children": child_count,
-                    })
+                    folders.append(
+                        {
+                            "name": entry.name,
+                            "children": child_count,
+                        }
+                    )
 
             return {
                 "files": files,
@@ -233,7 +235,7 @@ class NovaFileSystem:
     #  Run script
     # ------------------------------------------------------------------ #
 
-    def run_script(self, path: str) -> Dict:
+    def run_script(self, path: str) -> dict:
         """
         Execute a .py or .sh script file.
 
@@ -302,9 +304,7 @@ class NovaFileSystem:
     #  Search in files
     # ------------------------------------------------------------------ #
 
-    def search_in_files(
-        self, directory: str, query: str, extension: str = ".py"
-    ) -> List[Dict]:
+    def search_in_files(self, directory: str, query: str, extension: str = ".py") -> list[dict]:
         """
         Search for a query string across all files with a given extension.
 
@@ -332,19 +332,19 @@ class NovaFileSystem:
                     continue
 
                 try:
-                    lines = filepath.read_text(
-                        encoding="utf-8", errors="replace"
-                    ).splitlines()
+                    lines = filepath.read_text(encoding="utf-8", errors="replace").splitlines()
                 except Exception:
                     continue
 
                 for line_num, line in enumerate(lines, start=1):
                     if query in line:
-                        results.append({
-                            "file": str(filepath),
-                            "line_number": line_num,
-                            "line_content": line.strip(),
-                        })
+                        results.append(
+                            {
+                                "file": str(filepath),
+                                "line_number": line_num,
+                                "line_content": line.strip(),
+                            }
+                        )
 
         except Exception:
             pass

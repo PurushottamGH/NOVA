@@ -4,10 +4,9 @@ NovaMind Chat UI — Premium Terminal Interface
 A beautiful, Claude Code-inspired chat interface for Nova.
 """
 
-import sys
-import time
 import argparse
 import os
+import sys
 from pathlib import Path
 
 # Add project root to path
@@ -15,60 +14,65 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import torch
 
-# Rich for UI rendering
-from rich.console import Console
-from rich.text import Text
-from rich.panel import Panel
-from rich.columns import Columns
-from rich.markdown import Markdown
-from rich.theme import Theme
-from rich.live import Live
-from rich.spinner import Spinner
-from rich.table import Table
-
 # Prompt Toolkit for input
 from prompt_toolkit import PromptSession
-from prompt_toolkit.styles import Style
 from prompt_toolkit.formatted_text import HTML
+from prompt_toolkit.styles import Style
+from rich.columns import Columns
+
+# Rich for UI rendering
+from rich.console import Console
+from rich.markdown import Markdown
+from rich.table import Table
+from rich.text import Text
+from rich.theme import Theme
+
+from inference.generate import generate_text
+from model.architecture import NovaMind
 
 # Nova logic
 from model.config import NovaMindConfig
-from model.architecture import NovaMind
 from tokenizer.tokenizer import NovaMindTokenizer
-from inference.generate import generate_text
 
 # Setup Rich Console
-custom_theme = Theme({
-    "nova.name": "bold white",
-    "nova.version": "dim white",
-    "nova.model": "dim white",
-    "nova.path": "dim",
-    "nova.logo": "bold #e06c75", # Salmon pink
-    "nova.bullet": "bold white",
-})
+custom_theme = Theme(
+    {
+        "nova.name": "bold white",
+        "nova.version": "dim white",
+        "nova.model": "dim white",
+        "nova.path": "dim",
+        "nova.logo": "bold #e06c75",  # Salmon pink
+        "nova.bullet": "bold white",
+    }
+)
 console = Console(theme=custom_theme)
 
 # Setup Prompt Toolkit
-prompt_style = Style.from_dict({
-    'prompt': 'bg:#444444 fg:#ffffff bold',
-    'bottom-toolbar': 'fg:#aaaaaa bg:#222222',
-    'line': 'fg:#444444',
-})
+prompt_style = Style.from_dict(
+    {
+        "prompt": "bg:#444444 fg:#ffffff bold",
+        "bottom-toolbar": "fg:#aaaaaa bg:#222222",
+        "line": "fg:#444444",
+    }
+)
+
 
 def bottom_toolbar():
-    return HTML(' <b>?</b> for shortcuts <style fg="#444444">|</style> <style fg="white">Thinking off</style> (type /think to toggle) ')
+    return HTML(
+        ' <b>?</b> for shortcuts <style fg="#444444">|</style> <style fg="white">Thinking off</style> (type /think to toggle) '
+    )
+
 
 # Optimizations
 torch.set_num_threads(torch.get_num_threads())
 torch.set_num_interop_threads(2)
 
+
 def optimize_model(model):
     model.eval()
     device = next(model.parameters()).device
     if device.type == "cpu":
-        model = torch.quantization.quantize_dynamic(
-            model, {torch.nn.Linear}, dtype=torch.qint8
-        )
+        model = torch.quantization.quantize_dynamic(model, {torch.nn.Linear}, dtype=torch.qint8)
     else:
         model = model.half()
 
@@ -83,10 +87,12 @@ def optimize_model(model):
         pass
     return model
 
+
 SYSTEM_PROMPT = (
     "You are Nova, an intelligent personal AI assistant built for Purushottam. "
     "You are knowledgeable in AI, space, astronomy, data science, and software engineering."
 )
+
 
 def format_prompt(user_message: str, history: list) -> str:
     parts = [f"<|system|>\n{SYSTEM_PROMPT}\n"]
@@ -100,14 +106,14 @@ def format_prompt(user_message: str, history: list) -> str:
 
 def print_header(model_name="weights/best.pt", version="v2.0.24"):
     logo = """
- ▄▄        ▄▄ 
+ ▄▄        ▄▄
 ██████████████
 ██  ██  ██  ██
 ██████████████
-   ██    ██   
+   ██    ██
 """
     logo_text = Text(logo.strip("\n"), style="nova.logo")
-    
+
     info_text = Text()
     info_text.append("Nova Code ", style="nova.name")
     info_text.append(version, style="nova.version")
@@ -116,9 +122,9 @@ def print_header(model_name="weights/best.pt", version="v2.0.24"):
     info_text.append(model_name, style="nova.model")
     info_text.append("\n")
     info_text.append(os.getcwd(), style="nova.path")
-    
+
     col = Columns([logo_text, info_text], expand=False, padding=(0, 2))
-    
+
     console.print()
     console.print(col)
     console.print()
@@ -136,10 +142,18 @@ def print_nova_message(response):
 
 def main():
     parser = argparse.ArgumentParser(description="Nova Chat UI")
-    parser.add_argument("--model_path", type=str, default="weights/final_model",
-                        help="Path to saved model directory")
-    parser.add_argument("--tokenizer_path", type=str, default="weights/tokenizer",
-                        help="Path to saved tokenizer directory")
+    parser.add_argument(
+        "--model_path",
+        type=str,
+        default="weights/final_model",
+        help="Path to saved model directory",
+    )
+    parser.add_argument(
+        "--tokenizer_path",
+        type=str,
+        default="weights/tokenizer",
+        help="Path to saved tokenizer directory",
+    )
     parser.add_argument("--device", type=str, default="auto", help="Device: auto/cuda/cpu")
     args = parser.parse_args()
 
@@ -182,7 +196,10 @@ def main():
         console.rule(style="dim #444444")
         try:
             # We add a little space before the input prompt to match the design
-            user_input = session.prompt(HTML('<style bg="#444444" fg="#ffffff"> &gt; </style> '), bottom_toolbar=bottom_toolbar)
+            user_input = session.prompt(
+                HTML('<style bg="#444444" fg="#ffffff"> &gt; </style> '),
+                bottom_toolbar=bottom_toolbar,
+            )
             user_input = user_input.strip()
         except (EOFError, KeyboardInterrupt):
             console.print("\n[dim]Nova is going to sleep. Goodbye![/dim]")
@@ -191,7 +208,7 @@ def main():
         if user_input.lower() in ("/quit", "/exit", "quit", "exit"):
             console.print("\n[dim]Nova is going to sleep. Goodbye![/dim]")
             break
-            
+
         if user_input.lower() == "/think":
             console.print("\n[dim italic]Thinking mode toggled (mock functionality).[/dim]\n")
             continue
@@ -203,15 +220,21 @@ def main():
         prompt = format_prompt(user_input, history)
 
         nova_response = ""
-        with console.status("[dim white]Nova is typing...[/dim white]", spinner="dots", spinner_style="white"):
+        with console.status(
+            "[dim white]Nova is typing...[/dim white]", spinner="dots", spinner_style="white"
+        ):
             try:
                 response = generate_text(
-                    model, tokenizer, prompt,
+                    model,
+                    tokenizer,
+                    prompt,
                     max_new_tokens=200,
-                    temperature=0.8, top_k=50, top_p=0.9,
+                    temperature=0.8,
+                    top_k=50,
+                    top_p=0.9,
                     repetition_penalty=1.15,
                 )
-                
+
                 nova_response = response
                 if "<|assistant|>" in nova_response:
                     parts = nova_response.rsplit("<|assistant|>", 1)

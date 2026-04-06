@@ -18,30 +18,35 @@ Usage:
     trainer.train()
 """
 
-import time
-import math
 import datetime
+import math
+import time
+
+import matplotlib
 import torch
 import torch.nn as nn
-import matplotlib
-matplotlib.use('Agg')  # Non-interactive backend for servers/Colab
-import matplotlib.pyplot as plt
+
+matplotlib.use("Agg")  # Non-interactive backend for servers/Colab
 from pathlib import Path
+
+import matplotlib.pyplot as plt
 from tqdm import tqdm
 
+from training.checkpoint import (
+    delete_old_checkpoints,
+    load_checkpoint,
+    resume_training,
+    save_checkpoint,
+)
+from training.loss import compute_perplexity, create_loss_fn
 from training.optimizer import create_optimizer
 from training.scheduler import create_scheduler
-from training.loss import create_loss_fn, compute_perplexity
-from training.checkpoint import (
-    save_checkpoint, load_checkpoint, find_latest_checkpoint,
-    delete_old_checkpoints, resume_training
-)
 
 
 class Trainer:
     """
     Complete training loop for the NovaMind model.
-    
+
     Args:
         model: NovaMind model instance
         config: NovaMindConfig with all training hyperparameters
@@ -53,8 +58,17 @@ class Trainer:
         resume: Whether to resume from latest checkpoint
     """
 
-    def __init__(self, model, config, train_loader, val_loader, tokenizer,
-                 checkpoint_dir="weights", log_dir="logs", resume=True):
+    def __init__(
+        self,
+        model,
+        config,
+        train_loader,
+        val_loader,
+        tokenizer,
+        checkpoint_dir="weights",
+        log_dir="logs",
+        resume=True,
+    ):
         self.model = model.to(config.device)
         self.config = config
         self.train_loader = train_loader
@@ -73,15 +87,15 @@ class Trainer:
         # Training state
         self.global_step = 0
         self.start_step = 0  # FIXED: track where training started for accurate ETA
-        self.best_val_loss = float('inf')
+        self.best_val_loss = float("inf")
         self.train_losses = []
         self.val_losses = []
         self.learning_rates = []
         self.prev_loss = None  # FIXED: track previous loss for spike detection
-        
+
         # Mixed Precision (FP16) setup
         self.use_amp = config.device == "cuda"
-        self.scaler = torch.amp.GradScaler('cuda') if self.use_amp else None
+        self.scaler = torch.amp.GradScaler("cuda") if self.use_amp else None
         # Fixed set of prompts to evaluate generation quality
         self.sample_prompts = [
             "The universe is",
@@ -94,8 +108,7 @@ class Trainer:
         # Resume from checkpoint if available
         if resume:
             self.global_step, _, self.best_val_loss = resume_training(
-                str(self.checkpoint_dir), self.model, self.optimizer, 
-                self.scheduler, config.device
+                str(self.checkpoint_dir), self.model, self.optimizer, self.scheduler, config.device
             )
             self.start_step = self.global_step
         else:
@@ -115,7 +128,9 @@ class Trainer:
         print(f"  Device: {self.config.device}")
         print(f"  Max steps: {self.config.max_steps}")
         print(f"  Starting from step: {self.global_step}")
-        print(f"  Gradient accumulation steps: {self.config.accumulation_steps}")  # FIXED: show accum steps
+        print(
+            f"  Gradient accumulation steps: {self.config.accumulation_steps}"
+        )  # FIXED: show accum steps
         if self.global_step == 0 and self.config.warmup_steps < 100:
             print("[Trainer] Warning: warmup_steps < 100 may cause instability")
         print("=" * 60)
@@ -146,23 +161,19 @@ class Trainer:
 
             # Get next batch
             input_ids, target_ids = next(data_iter)
-            input_ids = input_ids.to(self.config.device)   # (batch, context_length)
+            input_ids = input_ids.to(self.config.device)  # (batch, context_length)
             target_ids = target_ids.to(self.config.device)  # (batch, context_length)
 
             # Forward pass with Mixed Precision (FP16)
             if self.use_amp:
-                with torch.amp.autocast('cuda'):
+                with torch.amp.autocast("cuda"):
                     logits, _ = self.model(input_ids)
                     loss = self.loss_fn(
-                        logits.view(-1, self.config.vocab_size),
-                        target_ids.view(-1)
+                        logits.view(-1, self.config.vocab_size), target_ids.view(-1)
                     )
             else:
                 logits, _ = self.model(input_ids)
-                loss = self.loss_fn(
-                    logits.view(-1, self.config.vocab_size),
-                    target_ids.view(-1)
-                )
+                loss = self.loss_fn(logits.view(-1, self.config.vocab_size), target_ids.view(-1))
 
             # Scale loss for gradient accumulation
             loss = loss / self.config.accumulation_steps
@@ -183,7 +194,9 @@ class Trainer:
             # ============================================================
             loss_val = loss.item()
             if self.prev_loss is not None and loss_val > 10 * self.prev_loss and self.prev_loss > 0:
-                print(f"\n  WARNING: Loss spike at step {step}: {loss_val:.4f} vs prev {self.prev_loss:.4f}")
+                print(
+                    f"\n  WARNING: Loss spike at step {step}: {loss_val:.4f} vs prev {self.prev_loss:.4f}"
+                )
                 # Try to recover from best checkpoint
                 best_ckpt = self.checkpoint_dir / "best.pt"
                 if best_ckpt.exists():
@@ -193,7 +206,7 @@ class Trainer:
                     self.prev_loss = None
                     continue
                 else:
-                    print(f"  No best checkpoint found — continuing with caution")
+                    print("  No best checkpoint found — continuing with caution")
 
             self.prev_loss = loss_val
 
@@ -217,7 +230,7 @@ class Trainer:
                 else:
                     nn.utils.clip_grad_norm_(self.model.parameters(), self.config.grad_clip)
                     self.optimizer.step()
-                
+
                 self.scheduler.step()
                 self.optimizer.zero_grad()
 
@@ -245,12 +258,14 @@ class Trainer:
             tokens_per_sec = input_ids.numel() / max(step_time, 1e-6)
 
             # Update progress bar
-            pbar.set_postfix({
-                "loss": f"{loss_val:.4f}",
-                "lr": f"{current_lr:.2e}",
-                "tok/s": f"{tokens_per_sec:.0f}",
-                "ETA": eta_str,
-            })
+            pbar.set_postfix(
+                {
+                    "loss": f"{loss_val:.4f}",
+                    "lr": f"{current_lr:.2e}",
+                    "tok/s": f"{tokens_per_sec:.0f}",
+                    "ETA": eta_str,
+                }
+            )
 
             # ============================================================
             # FIXED: Memory cleanup after each batch (FIX 6)
@@ -264,11 +279,15 @@ class Trainer:
             if (step + 1) % self.config.eval_every == 0:
                 val_loss = self.evaluate()
                 self.val_losses.append(val_loss)
-                perplexity = compute_perplexity(torch.tensor(val_loss))  # FIXED: use compute_perplexity helper
+                perplexity = compute_perplexity(
+                    torch.tensor(val_loss)
+                )  # FIXED: use compute_perplexity helper
 
                 avg_train = running_loss / max(num_batches, 1)
-                print(f"\n  Step {step+1}/{self.config.max_steps}")
-                print(f"  Train Loss: {avg_train:.4f} | Val Loss: {val_loss:.4f} | PPL: {perplexity:.2f}")
+                print(f"\n  Step {step + 1}/{self.config.max_steps}")
+                print(
+                    f"  Train Loss: {avg_train:.4f} | Val Loss: {val_loss:.4f} | PPL: {perplexity:.2f}"
+                )
                 print(f"  LR: {current_lr:.2e} | Tokens/s: {tokens_per_sec:.0f} | ETA: {eta_str}")
 
                 # FIXED: Generate a sample during training (FIX 10)
@@ -282,8 +301,13 @@ class Trainer:
                     self.best_val_loss = val_loss
                     # Save best model as a separate checkpoint
                     save_checkpoint(
-                        self.model, self.optimizer, self.scheduler,
-                        step + 1, val_loss, self.config, str(self.checkpoint_dir),
+                        self.model,
+                        self.optimizer,
+                        self.scheduler,
+                        step + 1,
+                        val_loss,
+                        self.config,
+                        str(self.checkpoint_dir),
                         best_val_loss=self.best_val_loss,
                         is_best=True,  # FIXED: triggers best.pt save in checkpointing.py
                     )
@@ -296,8 +320,13 @@ class Trainer:
             # === Periodic Checkpoint ===
             if (step + 1) % self.config.save_every == 0:
                 save_checkpoint(
-                    self.model, self.optimizer, self.scheduler,
-                    step + 1, loss_val, self.config, str(self.checkpoint_dir),
+                    self.model,
+                    self.optimizer,
+                    self.scheduler,
+                    step + 1,
+                    loss_val,
+                    self.config,
+                    str(self.checkpoint_dir),
                     best_val_loss=self.best_val_loss,
                     is_best=False,
                 )
@@ -305,12 +334,17 @@ class Trainer:
 
             # === Periodic Quality Evaluation (Samples) ===
             if (step + 1) % self.config.sample_every == 0:
-                self.generate_samples(step=step+1)
+                self.generate_samples(step=step + 1)
 
         # Final save
         save_checkpoint(
-            self.model, self.optimizer, self.scheduler,
-            self.config.max_steps, self.prev_loss or 0.0, self.config, str(self.checkpoint_dir),
+            self.model,
+            self.optimizer,
+            self.scheduler,
+            self.config.max_steps,
+            self.prev_loss or 0.0,
+            self.config,
+            str(self.checkpoint_dir),
             best_val_loss=self.best_val_loss,
         )
 
@@ -318,12 +352,12 @@ class Trainer:
         self.plot_losses()
 
         total_time = time.time() - train_start_time
-        print(f"\n{'='*60}")
-        print(f"  Training Complete!")
-        print(f"  Total time: {total_time/60:.1f} minutes")
+        print(f"\n{'=' * 60}")
+        print("  Training Complete!")
+        print(f"  Total time: {total_time / 60:.1f} minutes")
         print(f"  Best val loss: {self.best_val_loss:.4f}")
         print(f"  Best perplexity: {compute_perplexity(torch.tensor(self.best_val_loss)):.2f}")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
 
     @torch.no_grad()
     def evaluate(self) -> float:
@@ -340,10 +374,7 @@ class Trainer:
             target_ids = target_ids.to(self.config.device)
 
             logits, _ = self.model(input_ids)
-            loss = self.loss_fn(
-                logits.view(-1, self.config.vocab_size),
-                target_ids.view(-1)
-            )
+            loss = self.loss_fn(logits.view(-1, self.config.vocab_size), target_ids.view(-1))
             total_loss += loss.item()
             num_batches += 1
 
@@ -364,31 +395,30 @@ class Trainer:
 
             # Generate
             output_ids = self.model.generate(
-                input_ids, max_new_tokens=max_tokens,
-                temperature=0.8, top_k=40, top_p=0.9
+                input_ids, max_new_tokens=max_tokens, temperature=0.8, top_k=40, top_p=0.9
             )
 
             generated_text = self.tokenizer.decode(output_ids[0].tolist())
-            cleaned = generated_text.replace('\n', ' ')[:150]
-            print(f"{prefix}📝 \"{cleaned}...\"")
+            cleaned = generated_text.replace("\n", " ")[:150]
+            print(f'{prefix}📝 "{cleaned}..."')
         except Exception as e:
             print(f"{prefix}📝 Sample generation failed: {e}")
 
     @torch.no_grad()
     def generate_samples(self, step: int):
         """Generate and print multiple fixed samples."""
-        print(f"\n╔══════════════════════════════════════════╗")
+        print("\n╔══════════════════════════════════════════╗")
         print(f"║   Quality Evaluation at Step {step:<11} ║")
-        print(f"╚══════════════════════════════════════════╝")
-        
+        print("╚══════════════════════════════════════════╝")
+
         for i, prompt in enumerate(self.sample_prompts):
-            print(f"  [{i+1}] Prompt: {prompt}")
+            print(f"  [{i + 1}] Prompt: {prompt}")
             self.generate_sample(prompt_text=prompt, prefix="      ")
-        print(f"╚══════════════════════════════════════════╝\n")
+        print("╚══════════════════════════════════════════╝\n")
 
     def plot_losses(self):
         """Save a loss curve plot to the logs directory."""
-        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+        _fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
 
         # Training loss
         if self.train_losses:
@@ -398,7 +428,7 @@ class Trainer:
                 smoothed = []
                 for i in range(len(self.train_losses)):
                     start = max(0, i - window)
-                    smoothed.append(sum(self.train_losses[start:i+1]) / (i - start + 1))
+                    smoothed.append(sum(self.train_losses[start : i + 1]) / (i - start + 1))
                 ax1.plot(smoothed, label="Train Loss (smoothed)", color="#4ECDC4", linewidth=1.5)
             ax1.plot(self.train_losses, alpha=0.2, color="#4ECDC4", linewidth=0.5)
             ax1.set_xlabel("Step")
@@ -417,12 +447,11 @@ class Trainer:
 
         plt.tight_layout()
         plot_path = self.log_dir / "loss_curve.png"
-        plt.savefig(plot_path, dpi=150, bbox_inches='tight')
+        plt.savefig(plot_path, dpi=150, bbox_inches="tight")
         plt.close()
         print(f"[Trainer] Loss curve saved to {plot_path}")
 
     def _infinite_iterator(self):
         """Create an infinite iterator over the training DataLoader."""
         while True:
-            for batch in self.train_loader:
-                yield batch
+            yield from self.train_loader

@@ -21,8 +21,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import torch
-from model.config import NovaMindConfig
+
 from model.architecture import NovaMind
+from model.config import NovaMindConfig
 
 
 def main():
@@ -32,13 +33,18 @@ def main():
 
     # Step 1: Load config
     print("\n[Step 1] Loading config...")
-    config = NovaMindConfig(vocab_size=200, context_length=64, num_layers=2, embed_dim=64, num_heads=4)
-    print(f"  Config loaded - embed_dim={config.embed_dim}, heads={config.num_heads}, layers={config.num_layers}")
+    config = NovaMindConfig(
+        vocab_size=200, context_length=64, num_layers=2, embed_dim=64, num_heads=4
+    )
+    print(
+        f"  Config loaded - embed_dim={config.embed_dim}, heads={config.num_heads}, layers={config.num_layers}"
+    )
     print("  OK")
 
     # Step 2: Create and train tokenizer
     print("\n[Step 2] Training tokenizer on sample text...")
     from tokenizer.tokenizer import NovaMindTokenizer
+
     tokenizer = NovaMindTokenizer()
     sample_text = (
         "Hello Nova is a personal AI assistant built by Purushottam. "
@@ -78,7 +84,7 @@ def main():
     assert not torch.isnan(logits).any(), "NaN detected in logits!"
     print(f"  Input shape:  {tuple(x.shape)}")
     print(f"  Output shape: {tuple(logits.shape)}")
-    print(f"  No NaN: OK")
+    print("  No NaN: OK")
     print("  OK")
 
     # Step 5: Forward with targets
@@ -86,7 +92,7 @@ def main():
     targets = torch.randint(0, config.vocab_size, (2, 16))
     logits, loss = model(x, targets)
     assert loss is not None, "Loss should not be None with targets"
-    assert not torch.isnan(loss), f"NaN loss detected!"
+    assert not torch.isnan(loss), "NaN loss detected!"
     print(f"  Loss: {loss.item():.4f}")
     print("  OK")
 

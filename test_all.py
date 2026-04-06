@@ -9,7 +9,6 @@ Usage:
 """
 
 import sys
-import os
 import tempfile
 from pathlib import Path
 
@@ -20,6 +19,7 @@ import torch
 
 try:
     import pytest
+
     HAS_PYTEST = True
 except ImportError:
     HAS_PYTEST = False
@@ -31,6 +31,7 @@ except ImportError:
 def test_config():
     """Test that config loads correctly and all fields have right types."""
     from model.config import NovaMindConfig
+
     config = NovaMindConfig()
     assert isinstance(config.vocab_size, int), "vocab_size should be int"
     assert isinstance(config.embed_dim, int), "embed_dim should be int"
@@ -56,7 +57,7 @@ def test_tokenizer():
     temp_file.write_text(
         "Hello Nova is a personal AI assistant. Nova answers questions about AI and space. "
         "Nova was built by Purushottam using PyTorch. Nova is learning every day.",
-        encoding="utf-8"
+        encoding="utf-8",
     )
 
     tokenizer.train([str(temp_file)], vocab_size=100)
@@ -80,13 +81,14 @@ def test_tokenizer():
 
     # Cleanup
     import shutil
+
     shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 def test_attention():
     """Test attention forward pass, check shape and no NaN."""
-    from model.config import NovaMindConfig
     from model.attention import MultiHeadCausalSelfAttention
+    from model.config import NovaMindConfig
 
     config = NovaMindConfig(embed_dim=64, num_heads=4, context_length=32)
     attn = MultiHeadCausalSelfAttention(config)
@@ -98,18 +100,19 @@ def test_attention():
     assert kv_cache is None, "KV cache should be None when use_cache=False"
 
     # Test with KV cache
-    output2, kv = attn(x, use_cache=True)
+    _output2, kv = attn(x, use_cache=True)
     assert kv is not None, "KV cache should not be None when use_cache=True"
     assert len(kv) == 2, "KV cache should be a tuple of (K, V)"
 
 
 def test_model():
     """Test full model forward pass with targets."""
-    from model.config import NovaMindConfig
     from model.architecture import NovaMind
+    from model.config import NovaMindConfig
 
-    config = NovaMindConfig(vocab_size=100, embed_dim=64, num_heads=4,
-                            num_layers=2, context_length=32)
+    config = NovaMindConfig(
+        vocab_size=100, embed_dim=64, num_heads=4, num_layers=2, context_length=32
+    )
     model = NovaMind(config)
 
     x = torch.randint(0, config.vocab_size, (2, 16))
@@ -124,11 +127,12 @@ def test_model():
 
 def test_generate():
     """Test autoregressive generation produces tokens."""
-    from model.config import NovaMindConfig
     from model.architecture import NovaMind
+    from model.config import NovaMindConfig
 
-    config = NovaMindConfig(vocab_size=100, embed_dim=64, num_heads=4,
-                            num_layers=2, context_length=32)
+    config = NovaMindConfig(
+        vocab_size=100, embed_dim=64, num_heads=4, num_layers=2, context_length=32
+    )
     model = NovaMind(config)
     model.eval()
 
@@ -144,7 +148,7 @@ def test_generate():
 def test_loss_fn():
     """Test loss function with label smoothing."""
     from model.config import NovaMindConfig
-    from training.loss import create_loss_fn, compute_perplexity
+    from training.loss import compute_perplexity, create_loss_fn
 
     config = NovaMindConfig(vocab_size=100)
     loss_fn = create_loss_fn(config, smoothing=0.05)
@@ -164,19 +168,25 @@ def test_loss_fn():
 
 def test_checkpointing():
     """Test save/load checkpoint round-trip."""
-    from model.config import NovaMindConfig
     from model.architecture import NovaMind
-    from training.checkpoint import save_checkpoint, load_checkpoint
+    from model.config import NovaMindConfig
+    from training.checkpoint import load_checkpoint, save_checkpoint
 
-    config = NovaMindConfig(vocab_size=100, embed_dim=64, num_heads=4,
-                            num_layers=2, context_length=32)
+    config = NovaMindConfig(
+        vocab_size=100, embed_dim=64, num_heads=4, num_layers=2, context_length=32
+    )
     model = NovaMind(config)
 
     with tempfile.TemporaryDirectory() as tmpdir:
         save_checkpoint(
-            model, None, None,
-            step=42, loss=1.23, config=config,
-            path=tmpdir, best_val_loss=0.99,
+            model,
+            None,
+            None,
+            step=42,
+            loss=1.23,
+            config=config,
+            path=tmpdir,
+            best_val_loss=0.99,
         )
 
         # Check files exist
@@ -184,9 +194,7 @@ def test_checkpointing():
         assert (Path(tmpdir) / "latest.pt").exists(), "Latest checkpoint not saved"
 
         # Load and verify step
-        step, loss = load_checkpoint(
-            str(Path(tmpdir) / "step_42.pt"), model
-        )
+        step, loss = load_checkpoint(str(Path(tmpdir) / "step_42.pt"), model)
         assert step == 42, f"Step mismatch: expected 42, got {step}"
         assert abs(loss - 1.23) < 0.01, f"Loss mismatch: expected 1.23, got {loss}"
 
@@ -201,6 +209,7 @@ def test_sampler():
 
     # Test greedy
     from inference.sampler import greedy_sample
+
     greedy_token = greedy_sample(logits)
     assert greedy_token.item() == logits.argmax().item(), "Greedy sample should pick argmax"
 

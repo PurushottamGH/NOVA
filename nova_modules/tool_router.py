@@ -25,7 +25,6 @@ Usage:
 """
 
 import re
-from typing import Dict, Optional, List, Tuple
 from collections import Counter
 
 
@@ -38,30 +37,69 @@ class NovaToolRouter:
     # Keyword -> intent mapping with weights (higher = stronger signal)
     INTENT_KEYWORDS = {
         "code": [
-            ("write code", 3), ("python", 1), ("script", 2), ("function", 1),
-            ("debug", 2), ("error", 1), ("fix", 1), ("run this", 3),
-            ("execute", 2), ("def ", 3), ("class ", 3), ("import ", 2),
-            ("how to build", 2), ("how to make", 2), ("code snippet", 2),
-            ("implement", 2), ("algorithm", 1), ("program", 1),
+            ("write code", 3),
+            ("python", 1),
+            ("script", 2),
+            ("function", 1),
+            ("debug", 2),
+            ("error", 1),
+            ("fix", 1),
+            ("run this", 3),
+            ("execute", 2),
+            ("def ", 3),
+            ("class ", 3),
+            ("import ", 2),
+            ("how to build", 2),
+            ("how to make", 2),
+            ("code snippet", 2),
+            ("implement", 2),
+            ("algorithm", 1),
+            ("program", 1),
         ],
         "math": [
-            ("solve", 2), ("calculate", 3), ("integrate", 3), ("derivative", 3),
-            ("equation", 2), ("differentiate", 3), ("factor", 2), ("simplify", 2),
-            ("integral", 3), ("what is", 0),  # "what is" removed from math
+            ("solve", 2),
+            ("calculate", 3),
+            ("integrate", 3),
+            ("derivative", 3),
+            ("equation", 2),
+            ("differentiate", 3),
+            ("factor", 2),
+            ("simplify", 2),
+            ("integral", 3),
+            ("what is", 0),  # "what is" removed from math
         ],
         "search": [
-            ("search for", 3), ("find online", 3), ("latest news", 2),
-            ("research", 2), ("look up", 3), ("google", 3), ("who is", 2),
-            ("current", 1), ("recent", 1), ("today", 1),
+            ("search for", 3),
+            ("find online", 3),
+            ("latest news", 2),
+            ("research", 2),
+            ("look up", 3),
+            ("google", 3),
+            ("who is", 2),
+            ("current", 1),
+            ("recent", 1),
+            ("today", 1),
         ],
         "file": [
-            ("read file", 3), ("edit file", 3), ("open file", 3),
-            ("save file", 3), ("directory", 2), ("folder", 2),
-            ("list files", 3), ("write file", 3), ("file path", 2),
+            ("read file", 3),
+            ("edit file", 3),
+            ("open file", 3),
+            ("save file", 3),
+            ("directory", 2),
+            ("folder", 2),
+            ("list files", 3),
+            ("write file", 3),
+            ("file path", 2),
         ],
         "blender": [
-            ("blender", 3), ("3d", 2), ("render", 2), ("mesh", 2),
-            ("material", 1), ("animation", 2), ("bpy", 3), ("3d model", 3),
+            ("blender", 3),
+            ("3d", 2),
+            ("render", 2),
+            ("mesh", 2),
+            ("material", 1),
+            ("animation", 2),
+            ("bpy", 3),
+            ("3d model", 3),
         ],
     }
 
@@ -79,14 +117,14 @@ class NovaToolRouter:
     # Regex patterns that strongly indicate an intent (high confidence)
     INTENT_PATTERNS = {
         "math": [
-            r'[a-zA-Z]\s*\^?\d*\s*[+\-]\s*\d*\s*[a-zA-Z]',  # e.g. "x^2 + 3x"
-            r'[a-zA-Z]\s*=\s*[a-zA-Z0-9\.\+\-\*/\^]+',        # e.g. "y = x^2 + 1"
-            r'\d+\s*[+\-*/]\s*\d+\s*=\s*\?',                   # e.g. "5 + 3 = ?"
+            r"[a-zA-Z]\s*\^?\d*\s*[+\-]\s*\d*\s*[a-zA-Z]",  # e.g. "x^2 + 3x"
+            r"[a-zA-Z]\s*=\s*[a-zA-Z0-9\.\+\-\*/\^]+",  # e.g. "y = x^2 + 1"
+            r"\d+\s*[+\-*/]\s*\d+\s*=\s*\?",  # e.g. "5 + 3 = ?"
         ],
         "code": [
-            r'```[a-zA-Z]*\n',                                  # code blocks
-            r'\bdef\s+\w+\s*\(',                                # function definitions
-            r'\bclass\s+\w+',                                   # class definitions
+            r"```[a-zA-Z]*\n",  # code blocks
+            r"\bdef\s+\w+\s*\(",  # function definitions
+            r"\bclass\s+\w+",  # class definitions
         ],
     }
 
@@ -99,10 +137,10 @@ class NovaToolRouter:
         self.config = config
 
         # Lazy-import and initialise each tool
-        from nova_modules.code_executor import NovaCodeExecutor
-        from nova_modules.math_engine import NovaMathEngine
-        from nova_modules.file_system import NovaFileSystem
         from nova_modules.blender_agent import NovaBlenderAgent
+        from nova_modules.code_executor import NovaCodeExecutor
+        from nova_modules.file_system import NovaFileSystem
+        from nova_modules.math_engine import NovaMathEngine
 
         self.code_executor = NovaCodeExecutor()
         self.math_engine = NovaMathEngine()
@@ -112,6 +150,7 @@ class NovaToolRouter:
         # Web search is optional (needs requests + bs4)
         try:
             from nova_modules.web_search import NovaWebSearch
+
             self.web_search = NovaWebSearch()
         except ImportError:
             self.web_search = None
@@ -139,7 +178,7 @@ class NovaToolRouter:
             One of: "code", "math", "search", "file", "blender", "chat"
         """
         text_lower = user_message.lower()
-        scores: Dict[str, float] = {intent: 0.0 for intent in self.INTENT_KEYWORDS}
+        scores: dict[str, float] = {intent: 0.0 for intent in self.INTENT_KEYWORDS}
 
         # 1. Keyword scoring
         for intent, weighted_keywords in self.INTENT_KEYWORDS.items():
@@ -198,16 +237,13 @@ class NovaToolRouter:
             return True
 
         # 3. Dense text without whitespace
-        if len(text) > 80 and text.count(' ') < 8:
-            return True
-
-        return False
+        return bool(len(text) > 80 and text.count(" ") < 8)
 
     def _code_template_response(self, message: str) -> str:
         """Provide a hardcoded high-quality code template for common tasks."""
         msg_lower = message.lower()
         if "calculator" in msg_lower:
-            return '''Here is a Python calculator:
+            return """Here is a Python calculator:
 
 ```python
 def calculator():
@@ -235,7 +271,7 @@ def calculator():
             break
 
 calculator()
-```'''
+```"""
         return (
             "I can help with that. Could you be more specific?\n"
             "Example: 'write a Python function that sorts a list'"
@@ -245,7 +281,7 @@ calculator()
     #  Main router
     # ------------------------------------------------------------------ #
 
-    def route(self, user_message: str, response: Optional[str] = None) -> Dict:
+    def route(self, user_message: str, response: str | None = None) -> dict:
         """
         Detect intent and dispatch to the appropriate tool.
         If a response is provided, it validates it for 'garbage' loops.
@@ -265,18 +301,13 @@ calculator()
                         "My training is still in progress for this query.\n"
                         "Try: /search " + user_message + " for web results."
                     )
-            return {
-                "intent": intent,
-                "result": response,
-                "tool_output": {"validated": True}
-            }
+            return {"intent": intent, "result": response, "tool_output": {"validated": True}}
 
         # Otherwise, standard tool routing
         if intent == "code":
             # Check for "how to build/make" templates
             build_match = re.search(
-                r'how (?:to|can i) (?:build|make|create|write|code) (?:a |an )?(.+)',
-                text_lower
+                r"how (?:to|can i) (?:build|make|create|write|code) (?:a |an )?(.+)", text_lower
             )
             if build_match:
                 topic = build_match.group(1).strip()
@@ -329,7 +360,7 @@ calculator()
     #  Code execution
     # ------------------------------------------------------------------ #
 
-    def execute_code_request(self, message: str) -> Dict:
+    def execute_code_request(self, message: str) -> dict:
         """
         Extract or generate code from the message and run it.
 
@@ -353,26 +384,26 @@ calculator()
                 "runtime_ms": 0.0,
             }
 
-    def _extract_code_from_message(self, message: str) -> Optional[str]:
+    def _extract_code_from_message(self, message: str) -> str | None:
         """Extract code block from user message."""
         # Try ```python ... ```
-        match = re.search(r'```python\s*(.*?)```', message, re.DOTALL)
+        match = re.search(r"```python\s*(.*?)```", message, re.DOTALL)
         if match:
             return match.group(1).strip()
 
         # Try ``` ... ```
-        match = re.search(r'```\s*(.*?)```', message, re.DOTALL)
+        match = re.search(r"```\s*(.*?)```", message, re.DOTALL)
         if match:
             return match.group(1).strip()
 
         # Single-line: "run: print('hello')" or "execute: 2+2"
-        match = re.search(r'(?:run|execute)\s*:\s*(.+)', message, re.IGNORECASE)
+        match = re.search(r"(?:run|execute)\s*:\s*(.+)", message, re.IGNORECASE)
         if match:
             return match.group(1).strip()
 
         return None
 
-    def _format_code_result(self, result: Dict) -> str:
+    def _format_code_result(self, result: dict) -> str:
         """Format code execution result for display."""
         if result.get("success"):
             output = result.get("output", "").strip()
@@ -386,7 +417,7 @@ calculator()
     #  Web search
     # ------------------------------------------------------------------ #
 
-    def execute_search_request(self, message: str) -> Dict:
+    def execute_search_request(self, message: str) -> dict:
         """
         Search the web and return summarised context.
 
@@ -403,8 +434,10 @@ calculator()
 
         # Strip common prefix words to get a cleaner query
         query = re.sub(
-            r'^(search for|search|look up|find|what is|who is|research)\s+',
-            '', message, flags=re.IGNORECASE,
+            r"^(search for|search|look up|find|what is|who is|research)\s+",
+            "",
+            message,
+            flags=re.IGNORECASE,
         ).strip()
 
         if not query:
@@ -417,7 +450,7 @@ calculator()
     #  File operations
     # ------------------------------------------------------------------ #
 
-    def execute_file_request(self, message: str) -> Dict:
+    def execute_file_request(self, message: str) -> dict:
         """
         Parse and execute a file operation from the user message.
 
@@ -430,9 +463,7 @@ calculator()
         text_lower = message.lower()
 
         # Try to extract a file path from the message
-        path_match = re.search(
-            r'["\']([^"\']+)["\']|(\S+\.\w{1,5})', message
-        )
+        path_match = re.search(r'["\']([^"\']+)["\']|(\S+\.\w{1,5})', message)
         path = path_match.group(1) or path_match.group(2) if path_match else None
 
         if "read" in text_lower and path:
@@ -441,13 +472,19 @@ calculator()
             target = path or "."
             return self.file_system.list_directory(target)
         elif "edit" in text_lower and path:
-            return {"action": "edit", "path": path, "note": "Specify old_text and new_text for editing."}
+            return {
+                "action": "edit",
+                "path": path,
+                "note": "Specify old_text and new_text for editing.",
+            }
         elif "write" in text_lower or "save" in text_lower:
             return {"action": "write", "path": path, "note": "Provide content to write."}
         else:
-            return {"error": "Could not determine file operation. Try: read file 'path', list directory, etc."}
+            return {
+                "error": "Could not determine file operation. Try: read file 'path', list directory, etc."
+            }
 
-    def _format_file_result(self, result: Dict) -> str:
+    def _format_file_result(self, result: dict) -> str:
         """Format file operation result for display."""
         if "content" in result:
             lines = result.get("lines", 0)
@@ -474,7 +511,7 @@ calculator()
     #  Blender
     # ------------------------------------------------------------------ #
 
-    def execute_blender_request(self, message: str) -> Dict:
+    def execute_blender_request(self, message: str) -> dict:
         """
         Parse and execute a Blender request.
 
@@ -500,9 +537,7 @@ calculator()
 
         # Fall back to AI generation
         try:
-            script = self.blender_agent.generate_script(
-                message, self.tokenizer, self.model
-            )
+            script = self.blender_agent.generate_script(message, self.tokenizer, self.model)
             return {"script": script, "type": "generated"}
         except Exception as e:
             return {"script": "", "type": "error", "error": str(e)}

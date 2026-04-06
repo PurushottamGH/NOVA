@@ -8,9 +8,9 @@ Usage:
     python scripts/quick_chat.py --model_path weights/best.pt --tokenizer_path tokenizer_data
 """
 
+import argparse
 import sys
 import time
-import argparse
 from pathlib import Path
 
 # Add project root to path
@@ -22,17 +22,16 @@ import torch
 torch.set_num_threads(torch.get_num_threads())
 torch.set_num_interop_threads(2)
 
+
 # 2. INT8 Quantization + 3. Compilation functions
 def optimize_model(model):
     model.eval()
     device = next(model.parameters()).device
-    
+
     # 1. Quantization only works on CPU
     if device.type == "cpu":
         print("[Nova] Applying dynamic quantization for CPU speedup...")
-        model = torch.quantization.quantize_dynamic(
-            model, {torch.nn.Linear}, dtype=torch.qint8
-        )
+        model = torch.quantization.quantize_dynamic(model, {torch.nn.Linear}, dtype=torch.qint8)
     else:
         # On GPU, we use Half Precision (FP16) for a speed boost instead
         print(f"[Nova] Using FP16 acceleration on {device}")
@@ -55,11 +54,11 @@ def optimize_model(model):
         print(f"[Nova] Running without compile (Compiler not available: {type(e).__name__})")
         return base_model
 
-from model.config import NovaMindConfig
-from model.architecture import NovaMind
-from tokenizer.tokenizer import NovaMindTokenizer
-from inference.generate import generate_text
 
+from inference.generate import generate_text
+from model.architecture import NovaMind
+from model.config import NovaMindConfig
+from tokenizer.tokenizer import NovaMindTokenizer
 
 # Nova's system prompt
 SYSTEM_PROMPT = (
@@ -81,10 +80,18 @@ def format_prompt(user_message: str, history: list) -> str:
 
 def main():
     parser = argparse.ArgumentParser(description="Chat with Nova in the terminal")
-    parser.add_argument("--model_path", type=str, default="weights/final_model",
-                        help="Path to saved model directory")
-    parser.add_argument("--tokenizer_path", type=str, default="weights/tokenizer",
-                        help="Path to saved tokenizer directory")
+    parser.add_argument(
+        "--model_path",
+        type=str,
+        default="weights/final_model",
+        help="Path to saved model directory",
+    )
+    parser.add_argument(
+        "--tokenizer_path",
+        type=str,
+        default="weights/tokenizer",
+        help="Path to saved tokenizer directory",
+    )
     parser.add_argument("--device", type=str, default="auto", help="Device: auto/cuda/cpu")
     args = parser.parse_args()
 
@@ -150,9 +157,13 @@ def main():
         try:
             start_time = time.time()
             response = generate_text(
-                model, tokenizer, prompt,
+                model,
+                tokenizer,
+                prompt,
                 max_new_tokens=200,
-                temperature=0.8, top_k=50, top_p=0.9,
+                temperature=0.8,
+                top_k=50,
+                top_p=0.9,
                 repetition_penalty=1.15,
             )
             elapsed = time.time() - start_time
@@ -178,7 +189,7 @@ def main():
         print(f"Nova: {nova_response}\n")
         if elapsed > 0:
             print(f"[Nova] Response generated in {elapsed:.1f} seconds\n")
-            
+
         history.append({"user": user_input, "nova": nova_response})
 
 

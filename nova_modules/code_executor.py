@@ -20,24 +20,24 @@ Usage:
     print(result["output"])
 """
 
-import subprocess
-import tempfile
-import re
-import time
-import sys
 import os
+import re
+import subprocess
+import sys
+import tempfile
+import time
 from pathlib import Path
-from typing import Dict, List
 
 try:
     import resource
+
     HAS_RESOURCE = True
 except ImportError:
     HAS_RESOURCE = False  # Windows doesn't support resource module
 
 
 # Regex to strip ANSI escape codes from subprocess output
-ANSI_ESCAPE = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+ANSI_ESCAPE = re.compile(r"\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])")
 
 
 class NovaCodeExecutor:
@@ -54,7 +54,7 @@ class NovaCodeExecutor:
     # Regex patterns for dangerous code — checked before execution
     DANGEROUS_PATTERNS = [
         # Filesystem destruction
-        r'\b(shutil|rmtree|os\.system|os\.popen)\s*\(',
+        r"\b(shutil|rmtree|os\.system|os\.popen)\s*\(",
         r'__import__\s*\(\s*["\']os["\']',
         r'__import__\s*\(\s*["\']subprocess["\']',
         r'__import__\s*\(\s*["\']sys["\']',
@@ -63,43 +63,59 @@ class NovaCodeExecutor:
         r'__import__\s*\(\s*["\']urllib["\']',
         r'__import__\s*\(\s*["\']requests["\']',
         r'__import__\s*\(\s*["\']http["\']',
-        r'import\s+socket',
-        r'import\s+urllib',
-        r'import\s+requests\b',
-        r'import\s+http\b',
-        r'socket\.\w+\(',
-        r'urllib\.\w+\(',
+        r"import\s+socket",
+        r"import\s+urllib",
+        r"import\s+requests\b",
+        r"import\s+http\b",
+        r"socket\.\w+\(",
+        r"urllib\.\w+\(",
         # Process manipulation
-        r'os\.fork\s*\(',
-        r'os\.exec',
-        r'os\.spawn',
-        r'subprocess\.\w+\(',
-        r'pty\.\w+',
-        r'ctypes\.\w+',
+        r"os\.fork\s*\(",
+        r"os\.exec",
+        r"os\.spawn",
+        r"subprocess\.\w+\(",
+        r"pty\.\w+",
+        r"ctypes\.\w+",
         # Eval/exec variants
-        r'\beval\s*\(',
-        r'\bexec\s*\(',
-        r'compile\s*\(',
+        r"\beval\s*\(",
+        r"\bexec\s*\(",
+        r"compile\s*\(",
         # System-level
-        r'os\.chmod\s*\(',
-        r'os\.chown\s*\(',
-        r'os\.setuid\s*\(',
-        r'os\.setgid\s*\(',
-        r'os\.unlink\s*\(',
+        r"os\.chmod\s*\(",
+        r"os\.chown\s*\(",
+        r"os\.setuid\s*\(",
+        r"os\.setgid\s*\(",
+        r"os\.unlink\s*\(",
         # Signal manipulation
-        r'signal\.\w+\(',
+        r"signal\.\w+\(",
         # Thread/process spawning
-        r'threading\.\w+',
-        r'multiprocessing\.\w+',
-        r'concurrent\.\w+',
+        r"threading\.\w+",
+        r"multiprocessing\.\w+",
+        r"concurrent\.\w+",
     ]
 
     # Commands that should never be run from the assistant
     BASH_BLOCKLIST = [
-        "rm -rf", "rm -r /", "rm /*", "format", "mkfs", "dd if=",
-        "sudo", "su ", "chmod", "chown", "mkfifo", "mknod",
-        "wget ", "curl ", "nc ", "netcat", "nmap",
-        "kill ", "killall", "pkill",
+        "rm -rf",
+        "rm -r /",
+        "rm /*",
+        "format",
+        "mkfs",
+        "dd if=",
+        "sudo",
+        "su ",
+        "chmod",
+        "chown",
+        "mkfifo",
+        "mknod",
+        "wget ",
+        "curl ",
+        "nc ",
+        "netcat",
+        "nmap",
+        "kill ",
+        "killall",
+        "pkill",
     ]
 
     def __init__(self, timeout: int = 30, max_memory_mb: int = 256):
@@ -109,7 +125,7 @@ class NovaCodeExecutor:
     @staticmethod
     def _strip_ansi(text: str) -> str:
         """Remove ANSI escape codes from a string."""
-        return ANSI_ESCAPE.sub('', text)
+        return ANSI_ESCAPE.sub("", text)
 
     def _is_safe_code(self, code: str) -> tuple:
         """
@@ -163,7 +179,7 @@ class NovaCodeExecutor:
     #  Python execution
     # ------------------------------------------------------------------ #
 
-    def execute_python(self, code: str) -> Dict:
+    def execute_python(self, code: str) -> dict:
         """
         Run Python code in a subprocess with safety checks and timeouts.
 
@@ -200,7 +216,7 @@ class NovaCodeExecutor:
                     f"import resource, sys\n"
                     f"resource.setrlimit(resource.RLIMIT_AS, ({self.max_memory_mb * 1024 * 1024}, {self.max_memory_mb * 1024 * 1024}))\n"
                     f"resource.setrlimit(resource.RLIMIT_CPU, ({self.timeout}, {self.timeout}))\n"
-                    f"exec(open({repr(str(temp_path))}).read())\n"
+                    f"exec(open({str(temp_path)!r}).read())\n"
                 )
                 cmd = [sys.executable, "-c", wrapper_code]
             else:
@@ -256,7 +272,7 @@ class NovaCodeExecutor:
     #  Shell / Bash execution
     # ------------------------------------------------------------------ #
 
-    def execute_bash(self, command: str) -> Dict:
+    def execute_bash(self, command: str) -> dict:
         """
         Run a shell command in a subprocess with safety checks.
 
@@ -311,7 +327,7 @@ class NovaCodeExecutor:
     #  Write-and-run (temp file approach)
     # ------------------------------------------------------------------ #
 
-    def write_and_run(self, code: str, filename: str = "nova_temp.py") -> Dict:
+    def write_and_run(self, code: str, filename: str = "nova_temp.py") -> dict:
         """
         Write code to a temporary file, execute it, then clean up.
 
@@ -392,7 +408,7 @@ class NovaCodeExecutor:
     #  Package installation
     # ------------------------------------------------------------------ #
 
-    def install_package(self, package: str) -> Dict:
+    def install_package(self, package: str) -> dict:
         """
         Install a Python package via pip.
 
@@ -403,7 +419,7 @@ class NovaCodeExecutor:
             dict with keys: output, error, success
         """
         # Strict validation: only allow package names with optional version specifiers
-        if not re.match(r'^[a-zA-Z0-9_\-\.]+(\s*[><=!~]+\s*[a-zA-Z0-9_\-\.]+)?$', package.strip()):
+        if not re.match(r"^[a-zA-Z0-9_\-\.]+(\s*[><=!~]+\s*[a-zA-Z0-9_\-\.]+)?$", package.strip()):
             return {
                 "output": "",
                 "error": f"Rejected: package name '{package}' contains unsafe characters",

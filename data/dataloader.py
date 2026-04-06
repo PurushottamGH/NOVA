@@ -19,7 +19,6 @@ Usage:
 """
 
 import math
-from typing import List, Tuple
 from pathlib import Path
 
 from torch.utils.data import DataLoader, random_split
@@ -28,16 +27,16 @@ from data.dataset import NovaMindDataset
 
 
 def create_dataloaders(
-    text_files: List[str],
+    text_files: list[str],
     tokenizer,
     config,
     train_split: float = 0.9,
-    stride: int = None,
+    stride: int | None = None,
     num_workers: int = 0,
-) -> Tuple[DataLoader, DataLoader]:
+) -> tuple[DataLoader, DataLoader]:
     """
     Create training and validation DataLoaders.
-    
+
     Args:
         text_files: List of paths to text files
         tokenizer: Trained NovaMindTokenizer instance
@@ -45,7 +44,7 @@ def create_dataloaders(
         train_split: Fraction of data for training (rest is validation)
         stride: Sliding window stride (default: context_length // 2)
         num_workers: Number of data loading workers (0 = main process)
-    
+
     Returns:
         Tuple of (train_loader, val_loader)
     """
@@ -64,7 +63,9 @@ def create_dataloaders(
 
     if val_size == 0:
         # If dataset is too small for a split, use the same data for both
-        print("[DataLoader] Warning: Dataset too small for split, using same data for train and val")
+        print(
+            "[DataLoader] Warning: Dataset too small for split, using same data for train and val"
+        )
         train_dataset = dataset
         val_dataset = dataset
     else:
@@ -79,19 +80,19 @@ def create_dataloaders(
     train_loader = DataLoader(
         train_dataset,
         batch_size=config.batch_size,
-        shuffle=True,           # Shuffle training data for better generalization
+        shuffle=True,  # Shuffle training data for better generalization
         num_workers=num_workers,
         pin_memory=pin_memory,  # Speed up CPU→GPU transfer
-        drop_last=True,         # Drop incomplete last batch for consistent batch size
+        drop_last=True,  # Drop incomplete last batch for consistent batch size
     )
 
     val_loader = DataLoader(
         val_dataset,
         batch_size=config.batch_size,
-        shuffle=False,          # Don't shuffle validation data
+        shuffle=False,  # Don't shuffle validation data
         num_workers=num_workers,
         pin_memory=pin_memory,
-        drop_last=False,        # Keep all validation samples
+        drop_last=False,  # Keep all validation samples
     )
 
     print(f"[DataLoader] Train batches: {len(train_loader)}, Val batches: {len(val_loader)}")
@@ -100,13 +101,13 @@ def create_dataloaders(
     return train_loader, val_loader
 
 
-def get_text_files(data_dir: str = "personal_data") -> List[str]:
+def get_text_files(data_dir: str = "personal_data") -> list[str]:
     """
     Get all .txt files from a directory.
-    
+
     Args:
         data_dir: Directory to search for .txt files
-    
+
     Returns:
         Sorted list of .txt file paths as strings
     """

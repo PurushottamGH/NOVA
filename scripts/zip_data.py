@@ -1,8 +1,9 @@
-import zipfile
 import os
+import zipfile
 from pathlib import Path
 
-def zip_personal_data(output_filename='personal_data.zip', source_dir='personal_data'):
+
+def zip_personal_data(output_filename="personal_data.zip", source_dir="personal_data"):
     """
     Zips the personal_data directory for easy upload to Google Colab.
     """
@@ -12,9 +13,9 @@ def zip_personal_data(output_filename='personal_data.zip', source_dir='personal_
         return
 
     print(f"Zipping {source_dir} into {output_filename}...")
-    
-    with zipfile.ZipFile(output_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, dirs, files in os.walk(source_path):
+
+    with zipfile.ZipFile(output_filename, "w", zipfile.ZIP_DEFLATED) as zipf:
+        for root, _dirs, files in os.walk(source_path):
             for file in files:
                 file_path = Path(root) / file
                 # Don't zip the zipped file if it's in the same dir
@@ -28,5 +29,6 @@ def zip_personal_data(output_filename='personal_data.zip', source_dir='personal_
     print(f"\nSuccessfully created {output_filename}!")
     print("You can now upload this file to Google Colab's /content/ directory.")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     zip_personal_data()

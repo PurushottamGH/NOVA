@@ -24,25 +24,23 @@ Run:
     python main.py --host 127.0.0.1 --port 8000 --api-key your-secret-key
 """
 
-import sys
-import os
-import json
-import time
 import argparse
+import json
 import secrets
-from pathlib import Path
+import sys
+import time
 from collections import defaultdict
+from pathlib import Path
 from threading import Lock
 
 # Ensure the novamind package is importable
 sys.path.insert(0, str(Path(__file__).parent))
 
+
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, HTMLResponse, JSONResponse
-from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel
-from typing import List, Dict, Optional
 
 from inference.chat import NovaChatEngine
 
@@ -53,6 +51,7 @@ from inference.chat import NovaChatEngine
 MODEL_PATH = str(Path(__file__).parent / "weights" / "final_model")
 TOKENIZER_PATH = str(Path(__file__).parent / "weights" / "tokenizer")
 
+
 # Rate limiter: track request timestamps per client IP
 class RateLimiter:
     """Simple in-memory rate limiter using a sliding window."""
@@ -60,7 +59,7 @@ class RateLimiter:
     def __init__(self, max_requests: int = 60, window_seconds: int = 60):
         self.max_requests = max_requests
         self.window_seconds = window_seconds
-        self._requests: Dict[str, List[float]] = defaultdict(list)
+        self._requests: dict[str, list[float]] = defaultdict(list)
         self._lock = Lock()
 
     def is_allowed(self, client_ip: str) -> bool:
@@ -68,9 +67,7 @@ class RateLimiter:
             now = time.time()
             cutoff = now - self.window_seconds
             # Remove old timestamps
-            self._requests[client_ip] = [
-                ts for ts in self._requests[client_ip] if ts > cutoff
-            ]
+            self._requests[client_ip] = [ts for ts in self._requests[client_ip] if ts > cutoff]
             if len(self._requests[client_ip]) >= self.max_requests:
                 return False
             self._requests[client_ip].append(now)
@@ -95,7 +92,7 @@ print("=" * 60)
 engine = NovaChatEngine(
     model_path=MODEL_PATH,
     tokenizer_path=TOKENIZER_PATH,
-    device="auto",           # Will use GPU if available, else CPU
+    device="auto",  # Will use GPU if available, else CPU
     max_response_tokens=300,
 )
 
@@ -126,23 +123,27 @@ app.add_middleware(
 #  Request / Response Models
 # ═══════════════════════════════════════════════════════════
 
+
 class ChatRequest(BaseModel):
     message: str
-    history: Optional[List[Dict[str, str]]] = None
+    history: list[dict[str, str]] | None = None
+
 
 class ChatResponse(BaseModel):
     response: str
     tokens_generated: int
     time_ms: float
 
+
 # ═══════════════════════════════════════════════════════════
 #  Security Middleware
 # ═══════════════════════════════════════════════════════════
 
 # These are set at runtime via CLI args
-_api_key: Optional[str] = None
+_api_key: str | None = None
 _rate_limiter = RateLimiter(max_requests=60, window_seconds=60)
 _MAX_MESSAGE_LENGTH = 4096  # characters
+
 
 @app.middleware("http")
 async def security_middleware(request: Request, call_next):
@@ -183,12 +184,14 @@ async def security_middleware(request: Request, call_next):
     response.headers["X-RateLimit-Remaining"] = str(_rate_limiter.remaining(client_ip))
     return response
 
+
 # Import JSONResponse for the middleware
 # (already imported from fastapi.responses above)
 
 # ═══════════════════════════════════════════════════════════
 #  Endpoints
 # ═══════════════════════════════════════════════════════════
+
 
 @app.get("/", response_class=HTMLResponse)
 async def landing_page():
@@ -345,8 +348,7 @@ async def chat(request: ChatRequest):
     # Request size limit
     if len(request.message) > _MAX_MESSAGE_LENGTH:
         raise HTTPException(
-            status_code=413,
-            detail=f"Message too long (max {_MAX_MESSAGE_LENGTH} characters)"
+            status_code=413, detail=f"Message too long (max {_MAX_MESSAGE_LENGTH} characters)"
         )
 
     try:
@@ -360,7 +362,7 @@ async def chat(request: ChatRequest):
             time_ms=round(elapsed, 1),
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e)) from e
 
 
 @app.get("/stream")
@@ -373,8 +375,7 @@ async def stream_chat(message: str):
     # Request size limit
     if len(message) > _MAX_MESSAGE_LENGTH:
         raise HTTPException(
-            status_code=413,
-            detail=f"Message too long (max {_MAX_MESSAGE_LENGTH} characters)"
+            status_code=413, detail=f"Message too long (max {_MAX_MESSAGE_LENGTH} characters)"
         )
 
     async def generate():
@@ -400,16 +401,25 @@ if __name__ == "__main__":
     import uvicorn
 
     parser = argparse.ArgumentParser(description="NovaMind API Server")
-    parser.add_argument("--host", type=str, default="127.0.0.1",
-                        help="Host to bind (default: 127.0.0.1 for localhost-only)")
-    parser.add_argument("--port", type=int, default=8000,
-                        help="Port to bind (default: 8000)")
-    parser.add_argument("--api-key", type=str, default=None,
-                        help="API key for authentication (optional)")
-    parser.add_argument("--rate-limit", type=int, default=60,
-                        help="Max requests per minute per IP (default: 60)")
-    parser.add_argument("--max-message-length", type=int, default=4096,
-                        help="Max message length in characters (default: 4096)")
+    parser.add_argument(
+        "--host",
+        type=str,
+        default="127.0.0.1",
+        help="Host to bind (default: 127.0.0.1 for localhost-only)",
+    )
+    parser.add_argument("--port", type=int, default=8000, help="Port to bind (default: 8000)")
+    parser.add_argument(
+        "--api-key", type=str, default=None, help="API key for authentication (optional)"
+    )
+    parser.add_argument(
+        "--rate-limit", type=int, default=60, help="Max requests per minute per IP (default: 60)"
+    )
+    parser.add_argument(
+        "--max-message-length",
+        type=int,
+        default=4096,
+        help="Max message length in characters (default: 4096)",
+    )
     args = parser.parse_args()
 
     # Apply runtime configuration
@@ -418,9 +428,9 @@ if __name__ == "__main__":
     _MAX_MESSAGE_LENGTH = args.max_message_length
 
     if _api_key:
-        print(f"  API key authentication: ENABLED")
+        print("  API key authentication: ENABLED")
     else:
-        print(f"  API key authentication: DISABLED (localhost only)")
+        print("  API key authentication: DISABLED (localhost only)")
 
     print(f"  Rate limit: {args.rate_limit} req/min per IP")
     print(f"  Max message length: {args.max_message_length} chars")
