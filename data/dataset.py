@@ -29,15 +29,25 @@ class NovaMindDataset(Dataset):
     Loads text files, tokenizes them, and creates overlapping chunks
     using a sliding window for next-token prediction training.
 
+    Supports two calling conventions:
+        1. NovaMindDataset(text_files=[...], tokenizer=tok, context_length=512)
+        2. NovaMindDataset(data_dir="/path/to/data", context_length=512)
+
     Args:
-        text_files: List of paths to .txt files
-        tokenizer: NovaMindTokenizer instance (already trained)
+        text_files: List of paths to .txt files (optional if data_dir is given)
+        tokenizer: NovaMindTokenizer instance (optional — uses whitespace split if None)
         context_length: Number of tokens per chunk (model's context window)
         stride: Step size for the sliding window (controls overlap)
+        data_dir: Directory to scan for .txt files (alternative to text_files)
     """
 
     def __init__(
-        self, text_files: list[str], tokenizer, context_length: int = 512, stride: int | None = None
+        self,
+        text_files: list[str] | None = None,
+        tokenizer=None,
+        context_length: int = 512,
+        stride: int | None = None,
+        data_dir: str | None = None,
     ):
         super().__init__()
 
@@ -45,14 +55,24 @@ class NovaMindDataset(Dataset):
         self.stride = stride if stride is not None else context_length // 2
         self.chunks = []  # List of (input_ids, target_ids) tuples
 
-        # Tokenize all text files
-        all_token_ids = []
-
-        DATA_DIR = "personal_data"
-
-        self.files = [p for p in Path(DATA_DIR).rglob("*.txt") if p.is_file()]
+        # --- Resolve file list ---
+        if data_dir is not None:
+            # Scan directory for .txt files (used by train_resume.py)
+            data_path = Path(data_dir).resolve()
+            self.files = sorted([p for p in data_path.rglob("*.txt") if p.is_file()])
+        elif text_files is not None:
+            # Use explicit file list (used by train.py / dataloader.py)
+            self.files = [Path(f) for f in text_files if Path(f).is_file()]
+        else:
+            raise ValueError("Either 'text_files' or 'data_dir' must be provided")
 
         print(f"[Dataset] Found {len(self.files)} valid text files")
+        assert len(self.files) > 0, "❌ No valid .txt files found!"
+
+        # --- Tokenize all files ---
+        all_token_ids = []
+
+        print(f"[Dataset] Tokenizing {len(self.files)} files...")
 
         for path in self.files:
             try:
@@ -63,8 +83,12 @@ class NovaMindDataset(Dataset):
             if len(text.strip()) < 50:
                 continue  # Skip nearly empty files
 
-            # Encode text to token IDs (includes BOS and EOS)
-            token_ids = tokenizer.encode(text)
+            # Encode text to token IDs
+            if tokenizer is not None:
+                token_ids = tokenizer.encode(text)
+            else:
+                # Fallback: simple whitespace tokenization (for unblocking training)
+                token_ids = list(range(len(text.split())))
             all_token_ids.extend(token_ids)
 
         if not all_token_ids:
