@@ -43,11 +43,11 @@ class NovaMindDataset(Dataset):
 
     def __init__(
         self,
-        text_files: list[str] | None = None,
-        tokenizer=None,
-        context_length: int = 512,
-        stride: int | None = None,
         data_dir: str | None = None,
+        context_length: int = 512,
+        tokenizer=None,
+        stride: int | None = None,
+        text_files: list[str] | None = None,
     ):
         super().__init__()
 
