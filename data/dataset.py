@@ -50,10 +50,7 @@ class NovaMindDataset(Dataset):
 
         DATA_DIR = "personal_data"
 
-        self.files = [
-            p for p in Path(DATA_DIR).rglob("*.txt")
-            if p.is_file()
-        ]
+        self.files = [p for p in Path(DATA_DIR).rglob("*.txt") if p.is_file()]
 
         print(f"[Dataset] Found {len(self.files)} valid text files")
 
