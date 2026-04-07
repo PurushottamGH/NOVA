@@ -22,7 +22,6 @@ import torch
 from torch.utils.data import Dataset
 
 
-
 class NovaMindDataset(Dataset):
     """
     PyTorch Dataset for NovaMind training.
