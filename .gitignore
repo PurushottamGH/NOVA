@@ -35,8 +35,6 @@ ipython_config.py
 weights/
 logs/
 personal_data/
-tokenizer_data/*.json
-!tokenizer_data/config.json
 *.pt
 *.pth
 *.png
