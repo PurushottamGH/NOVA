@@ -20,7 +20,7 @@ from pathlib import Path
 
 import torch
 from torch.utils.data import Dataset
-from tqdm import tqdm
+
 
 
 class NovaMindDataset(Dataset):
@@ -50,7 +50,6 @@ class NovaMindDataset(Dataset):
         all_token_ids = []
 
         DATA_DIR = "personal_data"
-        from pathlib import Path
 
         self.files = [
             p for p in Path(DATA_DIR).rglob("*.txt")
