@@ -49,14 +49,22 @@ class NovaMindDataset(Dataset):
         # Tokenize all text files
         all_token_ids = []
 
-        print(f"\n[Dataset] Loading and tokenizing {len(text_files)} files...")
-        for file_path in tqdm(text_files, desc="[Dataset] Tokenizing"):
-            path = Path(file_path)
-            if not path.exists():
-                print(f"  Warning: {file_path} not found, skipping")
-                continue
+        DATA_DIR = "personal_data"
+        from pathlib import Path
 
-            text = path.read_text(encoding="utf-8", errors="ignore")
+        self.files = [
+            p for p in Path(DATA_DIR).rglob("*.txt")
+            if p.is_file()
+        ]
+
+        print(f"[Dataset] Found {len(self.files)} valid text files")
+
+        for path in self.files:
+            try:
+                text = path.read_text(encoding="utf-8", errors="ignore")
+            except Exception as e:
+                print(f"⚠️ Skipping {path}: {e}")
+                continue
             if len(text.strip()) < 50:
                 continue  # Skip nearly empty files
 
