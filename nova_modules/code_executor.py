@@ -92,6 +92,23 @@ class NovaCodeExecutor:
         r"threading\.\w+",
         r"multiprocessing\.\w+",
         r"concurrent\.\w+",
+        # Deserialization / injection attacks
+        r"pickle\.\w+\(",
+        r"marshal\.\w+\(",
+        r"importlib\.\w+\(",
+        # Builtins override
+        r"__builtins__",
+        # Scope access
+        r"globals\s*\(\s*\)",
+        r"locals\s*\(\s*\)",
+        r"vars\s*\(\s*\)",
+        # Attribute manipulation bypass
+        r"getattr\s*\(",
+        r"setattr\s*\(",
+        r"delattr\s*\(",
+        # File I/O
+        r"open\s*\(",
+        r"print\s*\(\s*open",
     ]
 
     # Commands that should never be run from the assistant
@@ -419,7 +436,7 @@ class NovaCodeExecutor:
             dict with keys: output, error, success
         """
         # Strict validation: only allow package names with optional version specifiers
-        if not re.match(r"^[a-zA-Z0-9_\-\.]+(\s*[><=!~]+\s*[a-zA-Z0-9_\-\.]+)?$", package.strip()):
+        if not re.match(r"^[a-zA-Z0-9_\-\.]+(\\s*[><!=~]+\\s*[a-zA-Z0-9_\-\\.]+)?$", package.strip()):
             return {
                 "output": "",
                 "error": f"Rejected: package name '{package}' contains unsafe characters",
@@ -455,3 +472,297 @@ class NovaCodeExecutor:
                 "error": f"pip install failed: {e}",
                 "success": False,
             }
+
+    # ------------------------------------------------------------------ #
+    #  Execute with context
+    # ------------------------------------------------------------------ #
+
+    def execute_with_context(self, code: str, context_vars: dict) -> dict:
+        """
+        Execute Python code with pre-injected context variables.
+
+        Serializes context_vars using repr() and prepends them as
+        variable assignments before the user code.
+
+        Args:
+            code: Python source code to execute.
+            context_vars: Dictionary of variable names to values to inject.
+                Example: {"x": 5, "data": [1, 2, 3]}
+
+        Returns:
+            Same dict as execute_python (output, error, success, runtime_ms).
+        """
+        try:
+            preamble_lines = []
+            for var_name, var_value in context_vars.items():
+                preamble_lines.append(f"{var_name} = {repr(var_value)}")
+            preamble = "\n".join(preamble_lines) + "\n"
+            full_code = preamble + code
+            return self.execute_python(full_code)
+        except Exception as e:
+            return {
+                "output": "",
+                "error": f"Context injection failed: {e}",
+                "success": False,
+                "runtime_ms": 0.0,
+            }
+
+    # ------------------------------------------------------------------ #
+    #  Test suite runner
+    # ------------------------------------------------------------------ #
+
+    def run_test_suite(self, code: str, test_cases: list[dict]) -> dict:
+        """
+        Run a series of test cases against a piece of code.
+
+        Each test case appends a print() call with the input and compares
+        the stripped output to the expected output. Each test runs in its
+        own subprocess via execute_python() (no shared state).
+
+        Args:
+            code: Python source code containing the function(s) to test.
+            test_cases: List of dicts with "input" and "expected_output" keys.
+                Example: [{"input": "func(5)", "expected_output": "25"}]
+
+        Returns:
+            dict with keys: total, passed, failed, results.
+            results is a list of dicts with: input, expected, got, passed.
+        """
+        try:
+            results = []
+            passed = 0
+            failed = 0
+
+            for tc in test_cases:
+                tc_input = tc.get("input", "")
+                expected = tc.get("expected_output", "")
+
+                # Build test code: user code + print(input_expression)
+                test_code = code + f"\nprint({tc_input})\n"
+                result = self.execute_python(test_code)
+
+                got = result["output"].strip()
+                is_pass = got == expected.strip()
+
+                if is_pass:
+                    passed += 1
+                else:
+                    failed += 1
+
+                results.append({
+                    "input": tc_input,
+                    "expected": expected,
+                    "got": got,
+                    "passed": is_pass,
+                })
+
+            return {
+                "total": len(test_cases),
+                "passed": passed,
+                "failed": failed,
+                "results": results,
+            }
+        except Exception as e:
+            return {
+                "total": len(test_cases),
+                "passed": 0,
+                "failed": len(test_cases),
+                "results": [],
+                "error": f"Test suite failed: {e}",
+            }
+
+    # ------------------------------------------------------------------ #
+    #  Code profiler
+    # ------------------------------------------------------------------ #
+
+    def profile_code(self, code: str) -> dict:
+        """
+        Profile Python code using cProfile and return timing statistics.
+
+        Wraps the user code with cProfile instrumentation, runs it via
+        execute_python(), and parses the profiler output from stdout.
+
+        Args:
+            code: Python source code to profile.
+
+        Returns:
+            dict with keys: output, profile, success, runtime_ms.
+            output = the code's actual stdout.
+            profile = cProfile stats as string.
+        """
+        try:
+            # Indent user code for inclusion in the wrapper
+            indented_code = "\n".join("    " + line for line in code.split("\n"))
+
+            profiled_code = (
+                "import cProfile, pstats, io, sys\n"
+                "pr = cProfile.Profile()\n"
+                "pr.enable()\n"
+                "try:\n"
+                f"{indented_code}\n"
+                "finally:\n"
+                "    pr.disable()\n"
+                "    s = io.StringIO()\n"
+                "    ps = pstats.Stats(pr, stream=s).sort_stats('cumulative')\n"
+                "    ps.print_stats(10)\n"
+                "    print('__PROFILE__:' + s.getvalue())\n"
+            )
+
+            result = self.execute_python(profiled_code)
+
+            # Parse output to split code output from profiler output
+            raw_output = result.get("output", "")
+            if "__PROFILE__:" in raw_output:
+                parts = raw_output.split("__PROFILE__:", 1)
+                code_output = parts[0].rstrip()
+                profile_output = parts[1].strip()
+            else:
+                code_output = raw_output
+                profile_output = ""
+
+            return {
+                "output": code_output,
+                "profile": profile_output,
+                "success": result.get("success", False),
+                "runtime_ms": result.get("runtime_ms", 0.0),
+            }
+        except Exception as e:
+            return {
+                "output": "",
+                "profile": "",
+                "success": False,
+                "runtime_ms": 0.0,
+                "error": f"Profiling failed: {e}",
+            }
+
+    # ------------------------------------------------------------------ #
+    #  Error explainer
+    # ------------------------------------------------------------------ #
+
+    def explain_error(self, error_output: str) -> str:
+        """
+        Explain a Python traceback in plain English.
+
+        Uses regex pattern matching to identify common error types and
+        provide human-readable explanations with suggested fixes.
+
+        Args:
+            error_output: Python traceback/error string.
+
+        Returns:
+            Plain English explanation of the error with a suggested fix.
+        """
+        try:
+            error_output = error_output.strip()
+            if not error_output:
+                return "No error output provided."
+
+            # NameError
+            match = re.search(r"NameError: name '(.+?)' is not defined", error_output)
+            if match:
+                name = match.group(1)
+                return (
+                    f"NameError: Variable '{name}' was used before being assigned or defined.\n"
+                    f"Fix: Make sure '{name}' is defined before this line. Check for typos in "
+                    f"variable names, or import the module if '{name}' is from an external library."
+                )
+
+            # IndexError
+            if re.search(r"IndexError: list index out of range", error_output):
+                return (
+                    "IndexError: You tried to access an index that doesn't exist in the list.\n"
+                    "Fix: Check the length of your list with len() before accessing indices. "
+                    "Remember that Python lists are 0-indexed, so a list of length N has "
+                    "valid indices 0 to N-1."
+                )
+
+            # TypeError
+            match = re.search(r"TypeError: (.+)", error_output)
+            if match:
+                msg = match.group(1)
+                return (
+                    f"TypeError: Type mismatch — {msg}\n"
+                    "Fix: Check that you're passing the correct types to functions and operators. "
+                    "Use type() to inspect variables and convert types with int(), str(), float(), etc."
+                )
+
+            # ZeroDivisionError
+            if re.search(r"ZeroDivisionError", error_output):
+                return (
+                    "ZeroDivisionError: Division by zero detected.\n"
+                    "Fix: Add a check before dividing: 'if denominator != 0: result = a / denominator'. "
+                    "Verify that your denominator variable isn't accidentally set to zero."
+                )
+
+            # IndentationError
+            if re.search(r"IndentationError", error_output):
+                return (
+                    "IndentationError: Check your indentation.\n"
+                    "Fix: Python requires consistent indentation (use 4 spaces per level). "
+                    "Make sure you're not mixing tabs and spaces. Verify that all blocks "
+                    "(if/for/while/def/class) have properly indented bodies."
+                )
+
+            # SyntaxError
+            if re.search(r"SyntaxError", error_output):
+                return (
+                    "SyntaxError: Syntax error — missing bracket, colon, or quote.\n"
+                    "Fix: Check for missing colons after if/for/def/class statements, "
+                    "unmatched parentheses/brackets/braces, and unclosed string quotes. "
+                    "Look at the line number in the traceback for the exact location."
+                )
+
+            # KeyError
+            match = re.search(r"KeyError: (.+)", error_output)
+            if match:
+                key = match.group(1)
+                return (
+                    f"KeyError: The key {key} was not found in the dictionary.\n"
+                    "Fix: Use dict.get(key, default) to safely access keys, or check "
+                    "with 'if key in my_dict' before accessing."
+                )
+
+            # AttributeError
+            match = re.search(r"AttributeError: (.+)", error_output)
+            if match:
+                msg = match.group(1)
+                return (
+                    f"AttributeError: {msg}\n"
+                    "Fix: Check that the object has the attribute/method you're trying to access. "
+                    "Use dir(obj) to list available attributes, or check the object's type with type()."
+                )
+
+            # ValueError
+            match = re.search(r"ValueError: (.+)", error_output)
+            if match:
+                msg = match.group(1)
+                return (
+                    f"ValueError: {msg}\n"
+                    "Fix: The function received a value of correct type but inappropriate value. "
+                    "Validate your inputs before passing them to functions."
+                )
+
+            # ImportError / ModuleNotFoundError
+            match = re.search(r"(?:ImportError|ModuleNotFoundError): (.+)", error_output)
+            if match:
+                msg = match.group(1)
+                return (
+                    f"ImportError: {msg}\n"
+                    "Fix: Install the missing module with 'pip install <module_name>'. "
+                    "Check that the module name is spelled correctly."
+                )
+
+            # FileNotFoundError
+            match = re.search(r"FileNotFoundError: (.+)", error_output)
+            if match:
+                msg = match.group(1)
+                return (
+                    f"FileNotFoundError: {msg}\n"
+                    "Fix: Verify the file path exists. Use os.path.exists() to check "
+                    "before accessing. Check for typos in the filename."
+                )
+
+            # Fallback
+            return f"Unknown error. Check the traceback above.\n\n{error_output}"
+        except Exception:
+            return f"Could not analyze error. Raw output:\n{error_output}"
