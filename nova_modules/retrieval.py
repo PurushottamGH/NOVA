@@ -197,7 +197,7 @@ class NovaRetriever:
         try:
             self.index = faiss.read_index(faiss_path)
 
-            with open(docs_path, "r", encoding="utf-8") as f:
+            with open(docs_path, encoding="utf-8") as f:
                 self.documents = json.load(f)
 
             self.index_path = path

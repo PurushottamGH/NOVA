@@ -205,22 +205,22 @@ class BPETrainer:
         while True:
             if len(symbols) < 2:
                 break
-            
+
             # Find pair with lowest rank (highest priority)
             lowest_rank = float('inf')
             best_pair = None
-            
+
             for i in range(len(symbols) - 1):
                 pair = (symbols[i], symbols[i + 1])
                 rank = self.bpe_ranks.get(pair, float('inf'))
                 if rank < lowest_rank:
                     lowest_rank = rank
                     best_pair = pair
-                    
+
             # Stop if no more valid pairs found
             if lowest_rank == float('inf'):
                 break
-                
+
             # Apply merge across all occurrences cleanly
             new_symbols = []
             i = 0

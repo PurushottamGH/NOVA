@@ -206,17 +206,17 @@ class NovaMathEngine:
 
             if problem_type == "differentiate":
                 steps.append(f"1. Parse expression: {expr}")
-                steps.append(f"2. Identify variable of differentiation: x")
+                steps.append("2. Identify variable of differentiation: x")
                 result = diff(expr, x)
-                steps.append(f"3. Apply differentiation rules (power rule, chain rule, etc.)")
+                steps.append("3. Apply differentiation rules (power rule, chain rule, etc.)")
                 steps.append(f"4. Compute derivative: d/dx({expr}) = {result}")
                 steps.append(f"5. Simplify result: {result}")
 
             elif problem_type == "integrate":
                 steps.append(f"1. Parse expression: {expr}")
-                steps.append(f"2. Identify variable of integration: x")
+                steps.append("2. Identify variable of integration: x")
                 result = integrate(expr, x)
-                steps.append(f"3. Apply integration rules (power rule, substitution, etc.)")
+                steps.append("3. Apply integration rules (power rule, substitution, etc.)")
                 steps.append(f"4. Compute integral: ∫({expr})dx = {result}")
                 steps.append(f"5. Add constant of integration: {result} + C")
 
@@ -224,22 +224,22 @@ class NovaMathEngine:
                 steps.append(f"1. Parse expression: {expr}")
                 steps.append(f"2. Set expression equal to zero: {expr} = 0")
                 result = solve(expr, x)
-                steps.append(f"3. Factor or apply quadratic formula / root-finding")
+                steps.append("3. Factor or apply quadratic formula / root-finding")
                 steps.append(f"4. Solve for x: solutions = {result}")
-                steps.append(f"5. Verify each solution satisfies the original equation")
+                steps.append("5. Verify each solution satisfies the original equation")
 
             elif problem_type == "limit":
                 steps.append(f"1. Parse expression: {expr}")
-                steps.append(f"2. Identify limit variable: x, approaching 0")
+                steps.append("2. Identify limit variable: x, approaching 0")
                 result = limit(expr, x, 0)
-                steps.append(f"3. Evaluate limit using L'Hôpital's rule or direct substitution")
+                steps.append("3. Evaluate limit using L'Hôpital's rule or direct substitution")
                 steps.append(f"4. Compute: lim(x→0) {expr} = {result}")
 
             elif problem_type == "series":
                 steps.append(f"1. Parse expression: {expr}")
-                steps.append(f"2. Identify expansion point: x = 0, order = 6")
+                steps.append("2. Identify expansion point: x = 0, order = 6")
                 result = series(expr, x, 0, 6)
-                steps.append(f"3. Compute Taylor coefficients using derivatives at expansion point")
+                steps.append("3. Compute Taylor coefficients using derivatives at expansion point")
                 steps.append(f"4. Series expansion: {result}")
 
             else:

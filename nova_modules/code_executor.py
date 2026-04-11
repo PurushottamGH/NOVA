@@ -495,7 +495,7 @@ class NovaCodeExecutor:
         try:
             preamble_lines = []
             for var_name, var_value in context_vars.items():
-                preamble_lines.append(f"{var_name} = {repr(var_value)}")
+                preamble_lines.append(f"{var_name} = {var_value!r}")
             preamble = "\n".join(preamble_lines) + "\n"
             full_code = preamble + code
             return self.execute_python(full_code)
