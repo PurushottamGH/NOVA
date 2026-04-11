@@ -125,29 +125,40 @@ class NovaStreamDataset(Dataset):
         random.shuffle(all_files)
         split_idx = max(1, int(len(all_files) * (1 - val_fraction)))
         self.files = all_files[:split_idx] if split == "train" else all_files[split_idx:]
-        if is_master:
-            print("Tokenizing " + str(len(self.files)) + " files [" + split + "]...", flush=True)
+        cache_path = os.path.join(data_dir, f"tokens_{split}.pt")
 
-        def tok_file(path):
-            try:
-                with open(path, encoding="utf-8", errors="ignore") as f:
-                    text = f.read()
-                ids = tok.encode(text)
-                return ids
-            except Exception as e:
-                print("Error tokenizing " + path + ": " + str(e), flush=True)
-                return []
+        if rank == 0:
+            if is_master:
+                print(
+                    "Tokenizing " + str(len(self.files)) + " files [" + split + "]...", flush=True
+                )
 
-        # tokenize all files in parallel
-        with ThreadPoolExecutor(max_workers=8) as ex:
-            results = list(ex.map(tok_file, self.files))
+            def tok_file(path):
+                try:
+                    with open(path, encoding="utf-8", errors="ignore") as f:
+                        text = f.read()
+                    ids = tok.encode(text)
+                    return ids
+                except Exception as e:
+                    print("Error tokenizing " + path + ": " + str(e), flush=True)
+                    return []
 
-        self.token_ids = []
-        for r in results:
-            self.token_ids.extend(r)
+            with ThreadPoolExecutor(max_workers=4) as ex:
+                results = list(ex.map(tok_file, self.files))
 
-        if is_master:
-            print("Tokens [" + split + "]: " + str(len(self.token_ids)), flush=True)
+            self.token_ids = []
+            for r in results:
+                self.token_ids.extend(r)
+
+            if is_master:
+                print("Tokens [" + split + "]: " + str(len(self.token_ids)), flush=True)
+
+            torch.save(self.token_ids, cache_path)
+
+        dist.barrier()  # ranks wait here until rank 0 finishes tokenizing and saving
+
+        if rank != 0:
+            self.token_ids = torch.load(cache_path, weights_only=False)
 
         if len(self.token_ids) == 0:
             raise RuntimeError("0 tokens after tokenizing [" + split + "] — check tokenizer path")
