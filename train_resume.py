@@ -145,7 +145,7 @@ class NovaStreamDataset(Dataset):
         split_idx = max(1, int(len(all_files) * (1 - val_fraction)))
         self.files = all_files[:split_idx] if split == "train" else all_files[split_idx:]
 
-        cache_path = os.path.join(data_dir, f"tokens_{split}.pt")
+        cache_path = "/kaggle/working/nova_tokens_" + split + ".pt"
 
         # Only rank 0 tokenizes to avoid disk I/O contention
         if rank == 0:
