@@ -436,7 +436,9 @@ class NovaCodeExecutor:
             dict with keys: output, error, success
         """
         # Strict validation: only allow package names with optional version specifiers
-        if not re.match(r"^[a-zA-Z0-9_\-\.]+(\\s*[><!=~]+\\s*[a-zA-Z0-9_\-\\.]+)?$", package.strip()):
+        if not re.match(
+            r"^[a-zA-Z0-9_\-\.]+(\\s*[><!=~]+\\s*[a-zA-Z0-9_\-\\.]+)?$", package.strip()
+        ):
             return {
                 "output": "",
                 "error": f"Rejected: package name '{package}' contains unsafe characters",
@@ -549,12 +551,14 @@ class NovaCodeExecutor:
                 else:
                     failed += 1
 
-                results.append({
-                    "input": tc_input,
-                    "expected": expected,
-                    "got": got,
-                    "passed": is_pass,
-                })
+                results.append(
+                    {
+                        "input": tc_input,
+                        "expected": expected,
+                        "got": got,
+                        "passed": is_pass,
+                    }
+                )
 
             return {
                 "total": len(test_cases),

@@ -54,14 +54,16 @@ class NovaBlenderAgent:
             "```python\nimport bpy\n"
         )
         import torch
+
         input_ids = tokenizer.encode(prompt)
         input_tensor = torch.tensor([input_ids], dtype=torch.long)
         device = next(model.parameters()).device
         input_tensor = input_tensor.to(device)
         model.eval()
         with torch.inference_mode():
-            output_ids = model.generate(input_tensor, max_new_tokens=500,
-                                         temperature=0.4, top_k=50, top_p=0.9)
+            output_ids = model.generate(
+                input_tensor, max_new_tokens=500, temperature=0.4, top_k=50, top_p=0.9
+            )
         generated = tokenizer.decode(output_ids[0].tolist())
         script = self._extract_code(generated)
         return script
@@ -121,19 +123,29 @@ class NovaBlenderAgent:
             temp_path.write_text(script, encoding="utf-8")
             result = subprocess.run(
                 [blender_path, "--background", "--python", str(temp_path)],
-                capture_output=True, text=True, timeout=self.timeout,
+                capture_output=True,
+                text=True,
+                timeout=self.timeout,
             )
-            return {"success": result.returncode == 0,
-                    "output": result.stdout, "error": result.stderr}
+            return {
+                "success": result.returncode == 0,
+                "output": result.stdout,
+                "error": result.stderr,
+            }
         except FileNotFoundError:
-            return {"success": False, "output": "",
-                    "error": f"Blender not found at '{blender_path}'."}
+            return {
+                "success": False,
+                "output": "",
+                "error": f"Blender not found at '{blender_path}'.",
+            }
         except subprocess.TimeoutExpired:
-            return {"success": False, "output": "",
-                    "error": f"Blender script timed out after {self.timeout}s"}
+            return {
+                "success": False,
+                "output": "",
+                "error": f"Blender script timed out after {self.timeout}s",
+            }
         except Exception as e:
-            return {"success": False, "output": "",
-                    "error": f"Execution failed: {e}"}
+            return {"success": False, "output": "", "error": f"Execution failed: {e}"}
         finally:
             if temp_path.exists():
                 temp_path.unlink()
@@ -142,9 +154,9 @@ class NovaBlenderAgent:
     #  Execute with retry
     # ------------------------------------------------------------------ #
 
-    def execute_with_retry(self, script: str, blender_path: str,
-                           model=None, tokenizer=None,
-                           max_retries: int = 3) -> dict:
+    def execute_with_retry(
+        self, script: str, blender_path: str, model=None, tokenizer=None, max_retries: int = 3
+    ) -> dict:
         """
         Execute a script with validation and retry logic.
 
@@ -164,30 +176,44 @@ class NovaBlenderAgent:
                 is_valid, reason = self.validate_script(current_script)
                 if not is_valid:
                     if model is not None and tokenizer is not None:
-                        repair_prompt = (f"Fix this Blender script. Error: {reason}\n"
-                                         f"Original script:\n{current_script}")
+                        repair_prompt = (
+                            f"Fix this Blender script. Error: {reason}\n"
+                            f"Original script:\n{current_script}"
+                        )
                         current_script = self.generate_script(repair_prompt, tokenizer, model)
                         continue
-                    return {"success": False, "output": "",
-                            "error": f"Script invalid: {reason}. No model for repair.",
-                            "attempts": attempt}
+                    return {
+                        "success": False,
+                        "output": "",
+                        "error": f"Script invalid: {reason}. No model for repair.",
+                        "attempts": attempt,
+                    }
                 result = self.execute_in_blender(current_script, blender_path)
                 if result["success"]:
                     result["attempts"] = attempt
                     return result
                 if model is not None and tokenizer is not None and attempt < max_retries:
-                    repair_prompt = (f"Fix this Blender script. Error: {result['error']}\n"
-                                     f"Original script:\n{current_script}")
+                    repair_prompt = (
+                        f"Fix this Blender script. Error: {result['error']}\n"
+                        f"Original script:\n{current_script}"
+                    )
                     current_script = self.generate_script(repair_prompt, tokenizer, model)
                 else:
                     result["attempts"] = attempt
                     return result
-            return {"success": False, "output": "",
-                    "error": f"Failed after {max_retries} attempts",
-                    "attempts": max_retries}
+            return {
+                "success": False,
+                "output": "",
+                "error": f"Failed after {max_retries} attempts",
+                "attempts": max_retries,
+            }
         except Exception as e:
-            return {"success": False, "output": "",
-                    "error": f"Execute with retry failed: {e}", "attempts": 0}
+            return {
+                "success": False,
+                "output": "",
+                "error": f"Execute with retry failed: {e}",
+                "attempts": 0,
+            }
 
     # ------------------------------------------------------------------ #
     #  Scene builder
@@ -204,10 +230,15 @@ class NovaBlenderAgent:
             Complete runnable bpy Python script as string.
         """
         try:
-            lines = ["import bpy", "import math", "",
-                      "# === Clear Scene ===",
-                      "bpy.ops.object.select_all(action='SELECT')",
-                      "bpy.ops.object.delete(use_global=False)", ""]
+            lines = [
+                "import bpy",
+                "import math",
+                "",
+                "# === Clear Scene ===",
+                "bpy.ops.object.select_all(action='SELECT')",
+                "bpy.ops.object.delete(use_global=False)",
+                "",
+            ]
             for obj in config.get("objects", []):
                 obj_type = obj.get("type", "cube")
                 loc = obj.get("location", (0, 0, 0))
@@ -238,7 +269,9 @@ class NovaBlenderAgent:
             if cam:
                 cl = cam.get("location", (7, -6, 5))
                 cr = cam.get("rotation", (1.1, 0, 0.8))
-                lines.append(f"bpy.ops.object.camera_add(location={tuple(cl)}, rotation={tuple(cr)})")
+                lines.append(
+                    f"bpy.ops.object.camera_add(location={tuple(cl)}, rotation={tuple(cr)})"
+                )
                 lines.append("bpy.context.active_object.name = 'SceneCamera'")
                 lines.append("bpy.context.scene.camera = bpy.context.active_object")
                 lines.append("")
@@ -328,11 +361,13 @@ class NovaBlenderAgent:
             rot = params.get("rotation", (1.1, 0, 0.8))
             return self._template_camera(name, loc_str, f"({rot[0]}, {rot[1]}, {rot[2]})")
         elif object_type == "light":
-            return self._template_light(name, loc_str, params.get("energy", 1000),
-                                         params.get("light_type", "POINT"))
+            return self._template_light(
+                name, loc_str, params.get("energy", 1000), params.get("light_type", "POINT")
+            )
         elif object_type == "material":
-            return self._template_material(name, params.get("color", (0.8, 0.1, 0.1, 1.0)),
-                                            params.get("target"))
+            return self._template_material(
+                name, params.get("color", (0.8, 0.1, 0.1, 1.0)), params.get("target")
+            )
         elif object_type == "cylinder":
             return self._template_cylinder(name, loc_str, scale_str)
         elif object_type == "cone":
@@ -344,35 +379,47 @@ class NovaBlenderAgent:
         elif object_type == "empty":
             return self._template_empty(name, loc_str, scale_str)
         else:
-            return (f"# Unsupported object type: {object_type}\n"
-                    f"# Supported: cube, sphere, plane, camera, light, material, "
-                    f"cylinder, cone, torus, text, empty\n")
+            return (
+                f"# Unsupported object type: {object_type}\n"
+                f"# Supported: cube, sphere, plane, camera, light, material, "
+                f"cylinder, cone, torus, text, empty\n"
+            )
 
     def _template_cube(self, name, loc, scale):
-        return (f"import bpy\n\nbpy.ops.mesh.primitive_cube_add(location={loc}, scale={scale})\n"
-                f"bpy.context.active_object.name = '{name}'\nprint(f'Created cube: {name}')\n")
+        return (
+            f"import bpy\n\nbpy.ops.mesh.primitive_cube_add(location={loc}, scale={scale})\n"
+            f"bpy.context.active_object.name = '{name}'\nprint(f'Created cube: {name}')\n"
+        )
 
     def _template_sphere(self, name, loc, scale, segments):
-        return (f"import bpy\n\nbpy.ops.mesh.primitive_uv_sphere_add(segments={segments}, "
-                f"ring_count=16, location={loc}, scale={scale})\n"
-                f"bpy.context.active_object.name = '{name}'\nbpy.ops.object.shade_smooth()\n"
-                f"print(f'Created sphere: {name}')\n")
+        return (
+            f"import bpy\n\nbpy.ops.mesh.primitive_uv_sphere_add(segments={segments}, "
+            f"ring_count=16, location={loc}, scale={scale})\n"
+            f"bpy.context.active_object.name = '{name}'\nbpy.ops.object.shade_smooth()\n"
+            f"print(f'Created sphere: {name}')\n"
+        )
 
     def _template_plane(self, name, loc, scale):
-        return (f"import bpy\n\nbpy.ops.mesh.primitive_plane_add(location={loc}, scale={scale})\n"
-                f"bpy.context.active_object.name = '{name}'\nprint(f'Created plane: {name}')\n")
+        return (
+            f"import bpy\n\nbpy.ops.mesh.primitive_plane_add(location={loc}, scale={scale})\n"
+            f"bpy.context.active_object.name = '{name}'\nprint(f'Created plane: {name}')\n"
+        )
 
     def _template_camera(self, name, loc, rot):
-        return (f"import bpy\nimport math\n\nbpy.ops.object.camera_add(location={loc}, rotation={rot})\n"
-                f"bpy.context.active_object.name = '{name}'\n"
-                f"bpy.context.scene.camera = bpy.context.active_object\n"
-                f"print(f'Created camera: {name}')\n")
+        return (
+            f"import bpy\nimport math\n\nbpy.ops.object.camera_add(location={loc}, rotation={rot})\n"
+            f"bpy.context.active_object.name = '{name}'\n"
+            f"bpy.context.scene.camera = bpy.context.active_object\n"
+            f"print(f'Created camera: {name}')\n"
+        )
 
     def _template_light(self, name, loc, energy, light_type):
-        return (f"import bpy\n\nbpy.ops.object.light_add(type='{light_type}', location={loc})\n"
-                f"bpy.context.active_object.name = '{name}'\n"
-                f"bpy.context.active_object.data.energy = {energy}\n"
-                f"print(f'Created {light_type} light: {name} (energy={energy})')\n")
+        return (
+            f"import bpy\n\nbpy.ops.object.light_add(type='{light_type}', location={loc})\n"
+            f"bpy.context.active_object.name = '{name}'\n"
+            f"bpy.context.active_object.data.energy = {energy}\n"
+            f"print(f'Created {light_type} light: {name} (energy={energy})')\n"
+        )
 
     def _template_material(self, name, color, target=None):
         """Generate bpy script to create and optionally apply a material.
@@ -395,47 +442,59 @@ class NovaBlenderAgent:
             f"bsdf.inputs['Base Color'].default_value = ({r}, {g}, {b}, {a})",
         ]
         if target:
-            lines += [f"\nobj = bpy.data.objects.get('{target}')",
-                      "if obj and obj.data:",
-                      "    if not obj.data.materials:",
-                      "        obj.data.materials.append(mat)",
-                      "    else:",
-                      "        obj.data.materials[0] = mat",
-                      f"    print(f'Applied material {name} to {target}')"]
+            lines += [
+                f"\nobj = bpy.data.objects.get('{target}')",
+                "if obj and obj.data:",
+                "    if not obj.data.materials:",
+                "        obj.data.materials.append(mat)",
+                "    else:",
+                "        obj.data.materials[0] = mat",
+                f"    print(f'Applied material {name} to {target}')",
+            ]
         else:
             lines.append(f"\nprint(f'Created material: {name} with color ({r}, {g}, {b})')")
         return "\n".join(lines) + "\n"
 
     def _template_cylinder(self, name, loc, scale):
         """Generate bpy script to create a cylinder."""
-        return (f"import bpy\n\nbpy.ops.mesh.primitive_cylinder_add(location={loc}, scale={scale})\n"
-                f"bpy.context.active_object.name = '{name}'\nprint(f'Created cylinder: {name}')\n")
+        return (
+            f"import bpy\n\nbpy.ops.mesh.primitive_cylinder_add(location={loc}, scale={scale})\n"
+            f"bpy.context.active_object.name = '{name}'\nprint(f'Created cylinder: {name}')\n"
+        )
 
     def _template_cone(self, name, loc, scale):
         """Generate bpy script to create a cone."""
-        return (f"import bpy\n\nbpy.ops.mesh.primitive_cone_add(location={loc}, scale={scale})\n"
-                f"bpy.context.active_object.name = '{name}'\nprint(f'Created cone: {name}')\n")
+        return (
+            f"import bpy\n\nbpy.ops.mesh.primitive_cone_add(location={loc}, scale={scale})\n"
+            f"bpy.context.active_object.name = '{name}'\nprint(f'Created cone: {name}')\n"
+        )
 
     def _template_torus(self, name, loc, scale):
         """Generate bpy script to create a torus."""
-        return (f"import bpy\n\nbpy.ops.mesh.primitive_torus_add(location={loc})\n"
-                f"bpy.context.active_object.scale = {scale}\n"
-                f"bpy.context.active_object.name = '{name}'\nprint(f'Created torus: {name}')\n")
+        return (
+            f"import bpy\n\nbpy.ops.mesh.primitive_torus_add(location={loc})\n"
+            f"bpy.context.active_object.scale = {scale}\n"
+            f"bpy.context.active_object.name = '{name}'\nprint(f'Created torus: {name}')\n"
+        )
 
     def _template_text(self, name, loc, scale, text):
         """Generate bpy script to create a text object."""
-        return (f"import bpy\n\nbpy.ops.object.text_add(location={loc})\n"
-                f"bpy.context.active_object.name = '{name}'\n"
-                f"bpy.context.object.data.body = '{text}'\n"
-                f"bpy.context.active_object.scale = {scale}\n"
-                f"print(f'Created text: {name}')\n")
+        return (
+            f"import bpy\n\nbpy.ops.object.text_add(location={loc})\n"
+            f"bpy.context.active_object.name = '{name}'\n"
+            f"bpy.context.object.data.body = '{text}'\n"
+            f"bpy.context.active_object.scale = {scale}\n"
+            f"print(f'Created text: {name}')\n"
+        )
 
     def _template_empty(self, name, loc, scale):
         """Generate bpy script to create an empty object."""
-        return (f"import bpy\n\nbpy.ops.object.empty_add(location={loc})\n"
-                f"bpy.context.active_object.name = '{name}'\n"
-                f"bpy.context.active_object.scale = {scale}\n"
-                f"print(f'Created empty: {name}')\n")
+        return (
+            f"import bpy\n\nbpy.ops.object.empty_add(location={loc})\n"
+            f"bpy.context.active_object.name = '{name}'\n"
+            f"bpy.context.active_object.scale = {scale}\n"
+            f"print(f'Created empty: {name}')\n"
+        )
 
     # ------------------------------------------------------------------ #
     #  Visual effect snippets
@@ -466,99 +525,116 @@ class NovaBlenderAgent:
         }
         if effect_type in effects:
             return effects[effect_type]()
-        return (f"# Unsupported effect: {effect_type}\n"
-                f"# Supported: {', '.join(effects.keys())}\n")
+        return f"# Unsupported effect: {effect_type}\n# Supported: {', '.join(effects.keys())}\n"
 
     def _effect_glow(self):
-        return ("import bpy\n\nbpy.context.scene.use_nodes = True\n"
-                "tree = bpy.context.scene.node_tree\nnodes = tree.nodes\nlinks = tree.links\n"
-                "for node in nodes:\n    nodes.remove(node)\n"
-                "render_layers = nodes.new(type='CompositorNodeRLayers')\n"
-                "composite = nodes.new(type='CompositorNodeComposite')\n"
-                "glare = nodes.new(type='CompositorNodeGlare')\n"
-                "glare.glare_type = 'FOG_GLOW'\nglare.quality = 'HIGH'\n"
-                "glare.threshold = 0.5\nglare.size = 6\n"
-                "links.new(render_layers.outputs['Image'], glare.inputs['Image'])\n"
-                "links.new(glare.outputs['Image'], composite.inputs['Image'])\n"
-                "print('Added glow/glare effect')\n")
+        return (
+            "import bpy\n\nbpy.context.scene.use_nodes = True\n"
+            "tree = bpy.context.scene.node_tree\nnodes = tree.nodes\nlinks = tree.links\n"
+            "for node in nodes:\n    nodes.remove(node)\n"
+            "render_layers = nodes.new(type='CompositorNodeRLayers')\n"
+            "composite = nodes.new(type='CompositorNodeComposite')\n"
+            "glare = nodes.new(type='CompositorNodeGlare')\n"
+            "glare.glare_type = 'FOG_GLOW'\nglare.quality = 'HIGH'\n"
+            "glare.threshold = 0.5\nglare.size = 6\n"
+            "links.new(render_layers.outputs['Image'], glare.inputs['Image'])\n"
+            "links.new(glare.outputs['Image'], composite.inputs['Image'])\n"
+            "print('Added glow/glare effect')\n"
+        )
 
     def _effect_motion_blur(self):
-        return ("import bpy\n\nbpy.context.scene.render.use_motion_blur = True\n"
-                "bpy.context.scene.render.motion_blur_shutter = 0.5\n"
-                "bpy.context.scene.render.motion_blur_position = 'CENTER'\n"
-                "if bpy.context.scene.render.engine == 'CYCLES':\n"
-                "    bpy.context.scene.cycles.motion_blur_position = 'CENTER'\n"
-                "print('Enabled motion blur (shutter=0.5)')\n")
+        return (
+            "import bpy\n\nbpy.context.scene.render.use_motion_blur = True\n"
+            "bpy.context.scene.render.motion_blur_shutter = 0.5\n"
+            "bpy.context.scene.render.motion_blur_position = 'CENTER'\n"
+            "if bpy.context.scene.render.engine == 'CYCLES':\n"
+            "    bpy.context.scene.cycles.motion_blur_position = 'CENTER'\n"
+            "print('Enabled motion blur (shutter=0.5)')\n"
+        )
 
     def _effect_depth_of_field(self):
-        return ("import bpy\n\ncam = bpy.context.scene.camera\n"
-                "if cam and cam.type == 'CAMERA':\n"
-                "    cam.data.dof.use_dof = True\n"
-                "    cam.data.dof.focus_distance = 5.0\n"
-                "    cam.data.dof.aperture_fstop = 1.4\n"
-                "    print(f'DOF enabled: focus={cam.data.dof.focus_distance}m')\n"
-                "else:\n    print('No active camera found for DOF')\n")
+        return (
+            "import bpy\n\ncam = bpy.context.scene.camera\n"
+            "if cam and cam.type == 'CAMERA':\n"
+            "    cam.data.dof.use_dof = True\n"
+            "    cam.data.dof.focus_distance = 5.0\n"
+            "    cam.data.dof.aperture_fstop = 1.4\n"
+            "    print(f'DOF enabled: focus={cam.data.dof.focus_distance}m')\n"
+            "else:\n    print('No active camera found for DOF')\n"
+        )
 
     def _effect_hdri_lighting(self):
-        return ("import bpy\nimport os\n\nworld = bpy.context.scene.world\n"
-                "if not world:\n    world = bpy.data.worlds.new('NovaWorld')\n"
-                "    bpy.context.scene.world = world\nworld.use_nodes = True\n"
-                "tree = world.node_tree\nnodes = tree.nodes\nlinks = tree.links\n"
-                "for node in nodes:\n    nodes.remove(node)\n"
-                "bg = nodes.new(type='ShaderNodeBackground')\n"
-                "bg.inputs['Strength'].default_value = 1.0\n"
-                "env_tex = nodes.new(type='ShaderNodeTexEnvironment')\n"
-                "tex_coord = nodes.new(type='ShaderNodeTexCoord')\n"
-                "output = nodes.new(type='ShaderNodeOutputWorld')\n"
-                "links.new(tex_coord.outputs['Generated'], env_tex.inputs['Vector'])\n"
-                "links.new(env_tex.outputs['Color'], bg.inputs['Color'])\n"
-                "links.new(bg.outputs['Background'], output.inputs['Surface'])\n"
-                "print('HDRI lighting setup complete')\n")
+        return (
+            "import bpy\nimport os\n\nworld = bpy.context.scene.world\n"
+            "if not world:\n    world = bpy.data.worlds.new('NovaWorld')\n"
+            "    bpy.context.scene.world = world\nworld.use_nodes = True\n"
+            "tree = world.node_tree\nnodes = tree.nodes\nlinks = tree.links\n"
+            "for node in nodes:\n    nodes.remove(node)\n"
+            "bg = nodes.new(type='ShaderNodeBackground')\n"
+            "bg.inputs['Strength'].default_value = 1.0\n"
+            "env_tex = nodes.new(type='ShaderNodeTexEnvironment')\n"
+            "tex_coord = nodes.new(type='ShaderNodeTexCoord')\n"
+            "output = nodes.new(type='ShaderNodeOutputWorld')\n"
+            "links.new(tex_coord.outputs['Generated'], env_tex.inputs['Vector'])\n"
+            "links.new(env_tex.outputs['Color'], bg.inputs['Color'])\n"
+            "links.new(bg.outputs['Background'], output.inputs['Surface'])\n"
+            "print('HDRI lighting setup complete')\n"
+        )
 
     def _effect_ambient_occlusion(self):
         """Generate bpy script to enable ambient occlusion."""
-        return ("import bpy\n\n"
-                "bpy.context.scene.world.light_settings.use_ambient_occlusion = True\n"
-                "bpy.context.scene.world.light_settings.ao_factor = 1.0\n"
-                "if bpy.context.scene.render.engine == 'BLENDER_EEVEE':\n"
-                "    bpy.context.scene.eevee.use_gtao = True\n"
-                "    bpy.context.scene.eevee.gtao_distance = 1.0\n"
-                "print('Enabled ambient occlusion')\n")
+        return (
+            "import bpy\n\n"
+            "bpy.context.scene.world.light_settings.use_ambient_occlusion = True\n"
+            "bpy.context.scene.world.light_settings.ao_factor = 1.0\n"
+            "if bpy.context.scene.render.engine == 'BLENDER_EEVEE':\n"
+            "    bpy.context.scene.eevee.use_gtao = True\n"
+            "    bpy.context.scene.eevee.gtao_distance = 1.0\n"
+            "print('Enabled ambient occlusion')\n"
+        )
 
     def _effect_bloom(self):
         """Generate bpy script to enable bloom in EEVEE."""
-        return ("import bpy\n\n"
-                "if bpy.context.scene.render.engine == 'BLENDER_EEVEE':\n"
-                "    bpy.context.scene.eevee.use_bloom = True\n"
-                "    bpy.context.scene.eevee.bloom_threshold = 0.8\n"
-                "    bpy.context.scene.eevee.bloom_intensity = 0.05\n"
-                "    bpy.context.scene.eevee.bloom_radius = 6.5\n"
-                "    print('Enabled bloom effect (EEVEE)')\n"
-                "else:\n    print('Bloom is only available in EEVEE')\n")
+        return (
+            "import bpy\n\n"
+            "if bpy.context.scene.render.engine == 'BLENDER_EEVEE':\n"
+            "    bpy.context.scene.eevee.use_bloom = True\n"
+            "    bpy.context.scene.eevee.bloom_threshold = 0.8\n"
+            "    bpy.context.scene.eevee.bloom_intensity = 0.05\n"
+            "    bpy.context.scene.eevee.bloom_radius = 6.5\n"
+            "    print('Enabled bloom effect (EEVEE)')\n"
+            "else:\n    print('Bloom is only available in EEVEE')\n"
+        )
 
     def _effect_wireframe(self):
         """Generate bpy script to add wireframe modifier to active object."""
-        return ("import bpy\n\nobj = bpy.context.active_object\n"
-                "if obj and obj.type == 'MESH':\n"
-                "    mod = obj.modifiers.new(name='Wireframe', type='WIREFRAME')\n"
-                "    mod.thickness = 0.02\n    mod.use_replace = False\n"
-                "    print(f'Added wireframe to {obj.name}')\n"
-                "else:\n    print('No active mesh for wireframe')\n")
+        return (
+            "import bpy\n\nobj = bpy.context.active_object\n"
+            "if obj and obj.type == 'MESH':\n"
+            "    mod = obj.modifiers.new(name='Wireframe', type='WIREFRAME')\n"
+            "    mod.thickness = 0.02\n    mod.use_replace = False\n"
+            "    print(f'Added wireframe to {obj.name}')\n"
+            "else:\n    print('No active mesh for wireframe')\n"
+        )
 
     def _effect_subdivision(self):
         """Generate bpy script to add subdivision surface modifier."""
-        return ("import bpy\n\nobj = bpy.context.active_object\n"
-                "if obj and obj.type == 'MESH':\n"
-                "    mod = obj.modifiers.new(name='Subdivision', type='SUBSURF')\n"
-                "    mod.levels = 2\n    mod.render_levels = 2\n"
-                "    print(f'Added subdivision (levels=2) to {obj.name}')\n"
-                "else:\n    print('No active mesh for subdivision')\n")
+        return (
+            "import bpy\n\nobj = bpy.context.active_object\n"
+            "if obj and obj.type == 'MESH':\n"
+            "    mod = obj.modifiers.new(name='Subdivision', type='SUBSURF')\n"
+            "    mod.levels = 2\n    mod.render_levels = 2\n"
+            "    print(f'Added subdivision (levels=2) to {obj.name}')\n"
+            "else:\n    print('No active mesh for subdivision')\n"
+        )
 
     def _effect_bevel(self):
         """Generate bpy script to add bevel modifier to active object."""
-        return ("import bpy\n\nobj = bpy.context.active_object\n"
-                "if obj and obj.type == 'MESH':\n"
-                "    mod = obj.modifiers.new(name='Bevel', type='BEVEL')\n"
-                "    mod.width = 0.1\n    mod.segments = 3\n"
-                "    print(f'Added bevel (w=0.1, seg=3) to {obj.name}')\n"
-                "else:\n    print('No active mesh for bevel')\n")
+        return (
+            "import bpy\n\nobj = bpy.context.active_object\n"
+            "if obj and obj.type == 'MESH':\n"
+            "    mod = obj.modifiers.new(name='Bevel', type='BEVEL')\n"
+            "    mod.width = 0.1\n    mod.segments = 3\n"
+            "    print(f'Added bevel (w=0.1, seg=3) to {obj.name}')\n"
+            "else:\n    print('No active mesh for bevel')\n"
+        )

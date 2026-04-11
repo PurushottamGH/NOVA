@@ -35,6 +35,7 @@ OUTPUT_FILE = OUTPUT_DIR / "training_corpus.jsonl"
 #  Format functions — one per dataset
 # ====================================================================== #
 
+
 def format_competition_math(sample: dict) -> dict | None:
     """
     Format a sample from hendrycks/competition_math.
@@ -53,11 +54,7 @@ def format_competition_math(sample: dict) -> dict | None:
         sol_clean = solution.strip()
         boxed_marker = "\\boxed"
         answer_part = sol_clean.split(boxed_marker)[-1] if boxed_marker in solution else sol_clean
-        text = (
-            f"User: {question.strip()}\n\n"
-            f"Nova: {sol_clean}\n\n"
-            f"Answer: {answer_part}"
-        )
+        text = f"User: {question.strip()}\n\nNova: {sol_clean}\n\nAnswer: {answer_part}"
         return {"text": text}
     except Exception:
         return None
@@ -165,11 +162,7 @@ def format_mathinstruct(sample: dict) -> dict | None:
         output = sample.get("output", "")
         if not instruction or not output:
             return None
-        text = (
-            f"User: {instruction.strip()}\n\n"
-            f"Nova: {output.strip()}\n\n"
-            f"Answer: {output.strip()}"
-        )
+        text = f"User: {instruction.strip()}\n\nNova: {output.strip()}\n\nAnswer: {output.strip()}"
         return {"text": text}
     except Exception:
         return None
@@ -178,6 +171,7 @@ def format_mathinstruct(sample: dict) -> dict | None:
 # ====================================================================== #
 #  Deduplication
 # ====================================================================== #
+
 
 def deduplicate(samples: list[dict]) -> list[dict]:
     """
@@ -203,8 +197,10 @@ def deduplicate(samples: list[dict]) -> list[dict]:
 #  Dataset loading and processing
 # ====================================================================== #
 
-def load_and_format_dataset(name: str, config: str | None,
-                            split: str, formatter, label: str) -> list[dict]:
+
+def load_and_format_dataset(
+    name: str, config: str | None, split: str, formatter, label: str
+) -> list[dict]:
     """
     Load a HuggingFace dataset and format all samples.
 

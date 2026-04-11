@@ -277,8 +277,7 @@ class NovaMathEngine:
         except Exception as e:
             return f"Could not compute limit: {e}"
 
-    def taylor_series(self, expr_str: str, var: str = "x",
-                      point: int = 0, order: int = 6) -> str:
+    def taylor_series(self, expr_str: str, var: str = "x", point: int = 0, order: int = 6) -> str:
         """
         Compute the Taylor series expansion of an expression.
 
@@ -315,12 +314,7 @@ class NovaMathEngine:
             prime = isprime(n)
             factorization = factorint(n)
             factors = sorted(
-                set(
-                    f
-                    for p, exp in factorization.items()
-                    for f in [p]
-                    for _ in range(exp)
-                )
+                set(f for p, exp in factorization.items() for f in [p] for _ in range(exp))
             )
             # Provide example gcd/lcm with n and n+1
             gcd_val = gcd(n, n + 1)
@@ -387,7 +381,8 @@ class NovaMathEngine:
             # Try to parse "limit of <expr> as <var> -> <point>"
             match = re.search(
                 r"(?:limit|lim)\s+(?:of\s+)?(.+?)\s+(?:as\s+)?(\w)\s*(?:->|→|approaches?)\s*(.+?)(?:\s*$)",
-                text, re.IGNORECASE,
+                text,
+                re.IGNORECASE,
             )
             if match:
                 return self.compute_limit(
@@ -400,7 +395,8 @@ class NovaMathEngine:
         if "series" in text_lower or "taylor" in text_lower:
             match = re.search(
                 r"(?:series|taylor|expand)\s+(?:of\s+)?(.+?)(?:\s+around\s+(.+?))?(?:\s*$)",
-                text, re.IGNORECASE,
+                text,
+                re.IGNORECASE,
             )
             if match:
                 expr = match.group(1).strip()
@@ -430,6 +426,7 @@ class NovaMathEngine:
             if match:
                 try:
                     import json
+
                     matrix_data = json.loads(match.group(1))
                     result = self.matrix_ops(matrix_data)
                     return str(result)

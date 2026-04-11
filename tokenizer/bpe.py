@@ -195,7 +195,9 @@ class BPETrainer:
             List of subword token strings
         """
         # Lazy initialization for rank lookup
-        if not hasattr(self, 'bpe_ranks') or len(getattr(self, 'bpe_ranks', {})) != len(self.merges):
+        if not hasattr(self, "bpe_ranks") or len(getattr(self, "bpe_ranks", {})) != len(
+            self.merges
+        ):
             self.bpe_ranks = {pair: i for i, pair in enumerate(self.merges)}
 
         # Start with character-level split with end-of-word marker
@@ -207,25 +209,29 @@ class BPETrainer:
                 break
 
             # Find pair with lowest rank (highest priority)
-            lowest_rank = float('inf')
+            lowest_rank = float("inf")
             best_pair = None
 
             for i in range(len(symbols) - 1):
                 pair = (symbols[i], symbols[i + 1])
-                rank = self.bpe_ranks.get(pair, float('inf'))
+                rank = self.bpe_ranks.get(pair, float("inf"))
                 if rank < lowest_rank:
                     lowest_rank = rank
                     best_pair = pair
 
             # Stop if no more valid pairs found
-            if lowest_rank == float('inf'):
+            if lowest_rank == float("inf"):
                 break
 
             # Apply merge across all occurrences cleanly
             new_symbols = []
             i = 0
             while i < len(symbols):
-                if i < len(symbols) - 1 and symbols[i] == best_pair[0] and symbols[i + 1] == best_pair[1]:
+                if (
+                    i < len(symbols) - 1
+                    and symbols[i] == best_pair[0]
+                    and symbols[i + 1] == best_pair[1]
+                ):
                     new_symbols.append(best_pair[0] + best_pair[1])
                     i += 2
                 else:

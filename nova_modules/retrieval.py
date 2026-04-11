@@ -29,8 +29,7 @@ class NovaRetriever:
     - Supports search, save/load, and folder indexing with chunking
     """
 
-    def __init__(self, index_path: str | None = None,
-                 model_name: str = "all-MiniLM-L6-v2"):
+    def __init__(self, index_path: str | None = None, model_name: str = "all-MiniLM-L6-v2"):
         """
         Initialize the NovaRetriever.
 
@@ -112,10 +111,12 @@ class NovaRetriever:
                 if idx < 0 or idx >= len(self.documents):
                     continue
                 score = 1.0 / (1.0 + float(distances[0][i]))
-                results.append({
-                    "text": self.documents[idx],
-                    "score": round(score, 4),
-                })
+                results.append(
+                    {
+                        "text": self.documents[idx],
+                        "score": round(score, 4),
+                    }
+                )
 
             return results
         except Exception as e:
@@ -207,8 +208,7 @@ class NovaRetriever:
         except Exception as e:
             print(f"Load error: {e}")
 
-    def chunk_text(self, text: str, chunk_size: int = 512,
-                   overlap: int = 64) -> list[str]:
+    def chunk_text(self, text: str, chunk_size: int = 512, overlap: int = 64) -> list[str]:
         """
         Split text into overlapping chunks.
 
@@ -241,8 +241,7 @@ class NovaRetriever:
             print(f"Chunking error: {e}")
             return []
 
-    def index_from_folder(self, folder_path: str,
-                          extensions: list[str] | None = None) -> int:
+    def index_from_folder(self, folder_path: str, extensions: list[str] | None = None) -> int:
         """
         Recursively index all matching files from a folder.
 
@@ -297,10 +296,12 @@ class NovaRetriever:
 
 if __name__ == "__main__":
     r = NovaRetriever()
-    r.add_documents([
-        "Nova is a custom transformer.",
-        "NovaMind uses PyTorch.",
-        "Blender uses bpy for scripting.",
-    ])
+    r.add_documents(
+        [
+            "Nova is a custom transformer.",
+            "NovaMind uses PyTorch.",
+            "Blender uses bpy for scripting.",
+        ]
+    )
     results = r.search("How does Nova work?")
     print(results)
