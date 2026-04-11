@@ -29,7 +29,7 @@ class NovaRetriever:
     - Supports search, save/load, and folder indexing with chunking
     """
 
-    def __init__(self, index_path: str = None,
+    def __init__(self, index_path: str | None = None,
                  model_name: str = "all-MiniLM-L6-v2"):
         """
         Initialize the NovaRetriever.
@@ -151,7 +151,7 @@ class NovaRetriever:
         except Exception as e:
             return f"[Retrieved Knowledge]\nError: {e}\n[End of Retrieved Knowledge]"
 
-    def save(self, path: str = None):
+    def save(self, path: str | None = None):
         """
         Save the FAISS index and documents to disk.
 
@@ -242,7 +242,7 @@ class NovaRetriever:
             return []
 
     def index_from_folder(self, folder_path: str,
-                          extensions: list[str] = None) -> int:
+                          extensions: list[str] | None = None) -> int:
         """
         Recursively index all matching files from a folder.
 
