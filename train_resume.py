@@ -1,11 +1,19 @@
-import os, sys, math, importlib, torch
+import glob
+import importlib
+import json
+import math
+import os
+import random
+import re
+import sys
+from concurrent.futures import ThreadPoolExecutor
+
+import torch
 import torch.distributed as dist
-from torch.nn.parallel import DistributedDataParallel as DDP
+from huggingface_hub import HfApi
+from torch.nn.parallel import DistributedDataParallel as DDP  # noqa: N817
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.distributed import DistributedSampler
-from huggingface_hub import HfApi
-from concurrent.futures import ThreadPoolExecutor
-import glob, random, json, re
 
 PROJECT_DIR = "/kaggle/working/NOVA"
 sys.path.insert(0, PROJECT_DIR)
@@ -77,13 +85,13 @@ log("DDP ready — " + str(world_size) + " GPUs")
 
 class FastTokenizer:
     def __init__(self, tok_dir):
-        with open(os.path.join(tok_dir, "vocab.json"), "r") as f:
+        with open(os.path.join(tok_dir, "vocab.json")) as f:
             self.encoder = json.load(f)
         self.decoder = {v: k for k, v in self.encoder.items()}
         txt_path  = os.path.join(tok_dir, "merges.txt")
         json_path = os.path.join(tok_dir, "merges.json")
         if os.path.exists(txt_path):
-            with open(txt_path, "r") as f:
+            with open(txt_path) as f:
                 lines = f.read().split("\n")[1:]
             self.bpe_ranks = {tuple(m.split()): i for i, m in enumerate(lines) if m.strip()}
         elif os.path.exists(json_path):
@@ -129,7 +137,7 @@ class NovaStreamDataset(Dataset):
             print("Tokenizing " + str(len(self.files)) + " files [" + split + "]...", flush=True)
         def tok_file(path):
             try:
-                with open(path, "r", encoding="utf-8", errors="ignore") as f:
+                with open(path, encoding="utf-8", errors="ignore") as f:
                     return tok.encode(f.read())
             except Exception:
                 return []
@@ -153,14 +161,14 @@ class NovaStreamDataset(Dataset):
         return {"input_ids": x, "labels": y}
 
 DATA_DIR = None
-for root, dirs, files in os.walk("/kaggle/input"):
+for root, _dirs, files in os.walk("/kaggle/input"):
     if any(f.endswith(".txt") for f in files):
         DATA_DIR = root
         break
 assert DATA_DIR, "No .txt files found!"
 
 TOK_DIR = None
-for root, dirs, files in os.walk("/kaggle/input"):
+for root, _dirs, files in os.walk("/kaggle/input"):
     if "vocab.json" in files:
         TOK_DIR = root
         break
