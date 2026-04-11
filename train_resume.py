@@ -1,11 +1,13 @@
 import glob
 import json
 import math
+import multiprocessing
 import os
 import random
 import re
 import sys
-from concurrent.futures import ThreadPoolExecutor
+import time
+from concurrent.futures import ProcessPoolExecutor
 
 import torch
 import torch.distributed as dist
@@ -13,6 +15,11 @@ from huggingface_hub import HfApi
 from torch.nn.parallel import DistributedDataParallel as DDP  # noqa: N817
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.distributed import DistributedSampler
+
+# ── Max performance settings ──────────────────────────────────────────────────
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
+torch.backends.cudnn.benchmark = True
 
 PROJECT_DIR = "/kaggle/working/NOVA"
 sys.path.insert(0, PROJECT_DIR)
@@ -24,23 +31,23 @@ for pkg in ["model", "data", "tokenizer", "training"]:
     if os.path.isdir(p) and not os.path.exists(i):
         open(i, "w").close()
 
-# import the real config and model from the repo
 from model.architecture import NovaMind  # noqa: E402
 from model.config import NovaMindConfig  # noqa: E402
 
-# use kaggle_config — built into your repo, perfectly matched
+# ── Use kaggle_config — optimized for 2xT4 ───────────────────────────────────
 config = NovaMindConfig.kaggle_config()
-
-# override a few training params for resume
 config.max_steps = 30000
 config.save_every = 1000
 config.eval_every = 500
 config.gradient_checkpointing = True
 config.device = "cuda"
+config.batch_size = 16  # increased from 4 — T4s can handle it
+config.accumulation_steps = 4  # effective batch = 16 * 4 * 2 GPUs = 128
 
 CHECKPOINT_STEP = 8000
 HF_REPO = "iPurushottam/NOAV_LLM"
 HF_TOKEN = os.environ.get("HF_TOKEN", "")
+NUM_CPU = multiprocessing.cpu_count()
 
 dist.init_process_group(backend="nccl")
 rank = dist.get_rank()
@@ -55,21 +62,16 @@ def log(msg):
         print(msg, flush=True)
 
 
-log("DDP ready — " + str(world_size) + " GPUs")
-log(
-    "Config: vocab="
-    + str(config.vocab_size)
-    + " embed="
-    + str(config.embed_dim)
-    + " layers="
-    + str(config.num_layers)
-    + " heads="
-    + str(config.num_heads)
-    + " ctx="
-    + str(config.context_length)
-)
+log("=" * 60)
+log("NovaMind v2 — High Performance Training")
+log("GPUs      : " + str(world_size))
+log("CPU cores : " + str(NUM_CPU))
+log("Batch/GPU : " + str(config.batch_size))
+log("Eff batch : " + str(config.batch_size * config.accumulation_steps * world_size))
+log("=" * 60)
 
 
+# ── Fast tokenizer ────────────────────────────────────────────────────────────
 class FastTokenizer:
     def __init__(self, tok_dir):
         with open(os.path.join(tok_dir, "vocab.json")) as f:
@@ -86,9 +88,7 @@ class FastTokenizer:
                 merges = json.load(f)
             self.bpe_ranks = {tuple(m): i for i, m in enumerate(merges)}
         else:
-            raise FileNotFoundError("No merges.txt or merges.json in " + tok_dir)
-        self.vocab_size = len(self.encoder)
-        log("Tokenizer vocab size: " + str(self.vocab_size))
+            raise FileNotFoundError("No merges file in " + tok_dir)
         self.pat = re.compile(r"'s|'t|'re|'ve|'m|'ll|'d| ?\w+| ?\d+| ?[^\s\w\d]+|\s+(?!\S)|\s+")
 
     def encode(self, text):
@@ -114,54 +114,87 @@ class FastTokenizer:
         return tokens
 
 
+# ── Global tokenizer for multiprocessing ─────────────────────────────────────
+_TOK = None
+_TOK_DIR = None
+
+
+def _init_worker(tok_dir):
+    global _TOK, _TOK_DIR
+    _TOK_DIR = tok_dir
+    _TOK = FastTokenizer(tok_dir)
+
+
+def _tokenize_file(path):
+    global _TOK
+    try:
+        with open(path, encoding="utf-8", errors="ignore") as f:
+            return _TOK.encode(f.read())
+    except Exception:
+        return []
+
+
 class NovaStreamDataset(Dataset):
     def __init__(self, data_dir, tok_dir, context_len, split="train", val_fraction=0.05):
         self.context_len = context_len
-        tok = FastTokenizer(tok_dir)
         all_files = sorted(glob.glob(os.path.join(data_dir, "*.txt")))
         if not all_files:
-            raise RuntimeError("No .txt files found in " + data_dir)
+            raise RuntimeError("No .txt files in " + data_dir)
         random.seed(42)
         random.shuffle(all_files)
         split_idx = max(1, int(len(all_files) * (1 - val_fraction)))
         self.files = all_files[:split_idx] if split == "train" else all_files[split_idx:]
+
         cache_path = os.path.join(data_dir, f"tokens_{split}.pt")
 
+        # Only rank 0 tokenizes to avoid disk I/O contention
         if rank == 0:
-            if is_master:
-                print(
-                    "Tokenizing " + str(len(self.files)) + " files [" + split + "]...", flush=True
-                )
-
-            def tok_file(path):
-                try:
-                    with open(path, encoding="utf-8", errors="ignore") as f:
-                        text = f.read()
-                    ids = tok.encode(text)
-                    return ids
-                except Exception as e:
-                    print("Error tokenizing " + path + ": " + str(e), flush=True)
-                    return []
-
-            with ThreadPoolExecutor(max_workers=4) as ex:
-                results = list(ex.map(tok_file, self.files))
+            t0 = time.time()
+            print(
+                "Tokenizing "
+                + str(len(self.files))
+                + " files ["
+                + split
+                + "] using "
+                + str(NUM_CPU)
+                + " CPUs...",
+                flush=True,
+            )
+            # Use all CPU cores with process pool for true parallel tokenization
+            workers = min(NUM_CPU, len(self.files))
+            if workers > 0:
+                with ProcessPoolExecutor(
+                    max_workers=workers, initializer=_init_worker, initargs=(tok_dir,)
+                ) as ex:
+                    results = list(ex.map(_tokenize_file, self.files, chunksize=4))
+            else:
+                results = [_tokenize_file(f) for f in self.files]
 
             self.token_ids = []
             for r in results:
                 self.token_ids.extend(r)
-
-            if is_master:
-                print("Tokens [" + split + "]: " + str(len(self.token_ids)), flush=True)
+            elapsed = time.time() - t0
+            print(
+                "Tokens ["
+                + split
+                + "]: "
+                + str(len(self.token_ids))
+                + " in "
+                + str(round(elapsed, 1))
+                + "s",
+                flush=True,
+            )
 
             torch.save(self.token_ids, cache_path)
 
-        dist.barrier()  # ranks wait here until rank 0 finishes tokenizing and saving
+        # Sync all ranks — rank 1 waits here
+        dist.barrier()
 
         if rank != 0:
             self.token_ids = torch.load(cache_path, weights_only=False)
 
-        if len(self.token_ids) == 0:
-            raise RuntimeError("0 tokens after tokenizing [" + split + "] — check tokenizer path")
+        if len(self.token_ids) == 0 and rank == 0:
+            raise RuntimeError("0 tokens — check tokenizer path!")
 
     def __len__(self):
         return max(0, len(self.token_ids) - self.context_len - 1)
@@ -175,15 +208,14 @@ class NovaStreamDataset(Dataset):
         return {"input_ids": x, "labels": y}
 
 
-# locate data
+# ── Locate data + tokenizer ───────────────────────────────────────────────────
 DATA_DIR = None
 for root, _dirs, files in os.walk("/kaggle/input"):
     if any(f.endswith(".txt") for f in files):
         DATA_DIR = root
         break
-assert DATA_DIR, "No .txt files found — attach nova-llmv1 dataset!"
+assert DATA_DIR, "No .txt files found!"
 
-# locate tokenizer
 TOK_DIR = None
 for root, _dirs, files in os.walk("/kaggle/input"):
     if "vocab.json" in files:
@@ -198,6 +230,7 @@ log("Tok  : " + TOK_DIR)
 train_ds = NovaStreamDataset(DATA_DIR, TOK_DIR, config.context_length, split="train")
 val_ds = NovaStreamDataset(DATA_DIR, TOK_DIR, config.context_length, split="val")
 
+# ── High performance DataLoaders ──────────────────────────────────────────────
 train_sampler = DistributedSampler(train_ds, num_replicas=world_size, rank=rank, shuffle=True)
 train_loader = DataLoader(
     train_ds,
@@ -205,39 +238,58 @@ train_loader = DataLoader(
     sampler=train_sampler,
     num_workers=4,
     pin_memory=True,
-    prefetch_factor=2,
+    prefetch_factor=4,
+    persistent_workers=True,
 )
 val_loader = DataLoader(
-    val_ds, batch_size=config.batch_size, shuffle=False, num_workers=2, pin_memory=True
+    val_ds,
+    batch_size=config.batch_size,
+    shuffle=False,
+    num_workers=2,
+    pin_memory=True,
+    persistent_workers=True,
 )
 
 log("Train: " + str(len(train_ds)) + " | Val: " + str(len(val_ds)))
 
-# build model using the repo's own NovaMind + NovaMindConfig
+# ── Model ─────────────────────────────────────────────────────────────────────
 model = NovaMind(config).to(device)
+
+# Print param count on master
+if is_master:
+    info = model.count_parameters()
+    log(
+        "Parameters: "
+        + str(info["total_million"])
+        + "M total | "
+        + str(info["trainable_million"])
+        + "M trainable"
+    )
+
 model = DDP(model, device_ids=[rank], find_unused_parameters=False)
 
-# load checkpoint
+# ── Load checkpoint ───────────────────────────────────────────────────────────
 ckpt_path = "weights/checkpoints/step_" + str(CHECKPOINT_STEP) + ".pt"
 assert os.path.exists(ckpt_path), "Checkpoint not found: " + ckpt_path
-ckpt = torch.load(ckpt_path, map_location=device)
+ckpt = torch.load(ckpt_path, map_location=device, weights_only=False)
 model.module.load_state_dict(ckpt["model_state_dict"])
 log("Loaded checkpoint from step " + str(ckpt["step"]))
 
+# ── Optimizer ─────────────────────────────────────────────────────────────────
 optimizer = torch.optim.AdamW(
     model.parameters(),
     lr=config.learning_rate,
     weight_decay=config.weight_decay,
     betas=(0.9, 0.95),
     eps=1e-8,
+    fused=True,  # fused AdamW — faster on CUDA
 )
 
 
-# cosine schedule with linear warmup
-def get_lr(step):
-    if step < config.warmup_steps:
-        return config.learning_rate * step / max(1, config.warmup_steps)
-    progress = (step - config.warmup_steps) / max(1, config.max_steps - config.warmup_steps)
+def get_lr(current_step):
+    if current_step < config.warmup_steps:
+        return config.learning_rate * current_step / max(1, config.warmup_steps)
+    progress = (current_step - config.warmup_steps) / max(1, config.max_steps - config.warmup_steps)
     return config.learning_rate * 0.1 + 0.5 * (
         config.learning_rate - config.learning_rate * 0.1
     ) * (1.0 + math.cos(math.pi * progress))
@@ -249,51 +301,54 @@ start_step = ckpt["step"]
 best_val_loss = ckpt["best_val_loss"]
 log("Resumed from step " + str(start_step) + " | best_val=" + str(round(best_val_loss, 4)))
 
+# ── AMP scaler ────────────────────────────────────────────────────────────────
 scaler = torch.amp.GradScaler("cuda")
 
 
-def upload_hf(path, step):
+def upload_hf(path, current_step):
     if not HF_TOKEN:
         return
     try:
         HfApi().upload_file(
             path_or_fileobj=path,
-            path_in_repo="checkpoints/step_" + str(step) + ".pt",
+            path_in_repo="checkpoints/step_" + str(current_step) + ".pt",
             repo_id=HF_REPO,
             token=HF_TOKEN,
         )
-        log("Uploaded step_" + str(step) + ".pt to HF")
+        log("Uploaded step_" + str(current_step) + ".pt")
     except Exception as e:
         log("HF upload failed: " + str(e))
 
 
-def evaluate(model, loader, device, max_b):
-    model.eval()
-    tl = torch.tensor(0.0, device=device)
-    tc = torch.tensor(0, device=device)
+def evaluate(eval_model, loader, eval_device, max_b):
+    eval_model.eval()
+    tl = torch.tensor(0.0, device=eval_device)
+    tc = torch.tensor(0, device=eval_device)
     with torch.no_grad():
         for i, b in enumerate(loader):
             if i >= max_b:
                 break
-            x = b["input_ids"].to(device, non_blocking=True)
-            y = b["labels"].to(device, non_blocking=True)
+            x_eval = b["input_ids"].to(eval_device, non_blocking=True)
+            y_eval = b["labels"].to(eval_device, non_blocking=True)
             with torch.amp.autocast("cuda"):
-                _logits, loss = model(x, targets=y)
-            tl += loss.detach()
+                _logits_eval, loss_eval = eval_model(x_eval, targets=y_eval)
+            tl += loss_eval.detach()
             tc += 1
     dist.all_reduce(tl, op=dist.ReduceOp.SUM)
     dist.all_reduce(tc, op=dist.ReduceOp.SUM)
-    model.train()
+    eval_model.train()
     return (tl / tc).item()
 
 
+# ── Training loop ─────────────────────────────────────────────────────────────
 data_iter = iter(train_loader)
 step = start_step
 running_loss = 0.0
+t_start = time.time()
 model.train()
 optimizer.zero_grad()
 
-log("Starting training from step " + str(step) + "...")
+log("Training starts now...")
 
 while step < config.max_steps:
     try:
@@ -306,7 +361,6 @@ while step < config.max_steps:
     x = batch["input_ids"].to(device, non_blocking=True)
     y = batch["labels"].to(device, non_blocking=True)
 
-    # set lr for this step
     lr = get_lr(step)
     for pg in optimizer.param_groups:
         pg["lr"] = lr
@@ -325,8 +379,13 @@ while step < config.max_steps:
         scaler.update()
         optimizer.zero_grad()
 
-    if is_master and step % 100 == 0:
-        avg = running_loss / 100 if step > start_step else running_loss
+    if is_master and step % 50 == 0:
+        elapsed = time.time() - t_start
+        steps_so_far = max(1, step - start_step)
+        sps = steps_so_far / elapsed  # steps per second
+        eta_secs = (config.max_steps - step) / max(sps, 1e-6)
+        eta_hrs = round(eta_secs / 3600, 1)
+        avg = running_loss / 50 if step > start_step else running_loss
         print(
             "Step "
             + str(step)
@@ -335,7 +394,13 @@ while step < config.max_steps:
             + " | Loss: "
             + str(round(avg, 4))
             + " | LR: "
-            + str(round(lr, 8)),
+            + str(round(lr, 7))
+            + " | "
+            + str(round(sps, 2))
+            + " steps/s"
+            + " | ETA: "
+            + str(eta_hrs)
+            + "h",
             flush=True,
         )
         running_loss = 0.0
@@ -343,7 +408,7 @@ while step < config.max_steps:
     if step % config.eval_every == 0 and step > start_step:
         vl = evaluate(model, val_loader, device, 50)
         ppl = math.exp(min(vl, 20))
-        log("=" * 50)
+        log("=" * 55)
         log(
             "EVAL step="
             + str(step)
@@ -352,10 +417,10 @@ while step < config.max_steps:
             + " | ppl="
             + str(round(ppl, 2))
         )
-        log("=" * 50)
+        log("=" * 55)
         if vl < best_val_loss:
             best_val_loss = vl
-            log("New best val loss: " + str(round(best_val_loss, 4)))
+            log("New best: " + str(round(best_val_loss, 4)))
 
     if is_master and step % config.save_every == 0 and step > start_step:
         os.makedirs("weights/checkpoints", exist_ok=True)
